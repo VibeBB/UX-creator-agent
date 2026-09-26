@@ -1,0 +1,40 @@
+# ux-dsl style: idiomatic plain-stdlib Ruby 4.
+AllCops:
+  TargetRubyVersion: 4.0
+  NewCops: disable
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/TrailingCommaInHashLiteral:
+  Enabled: false
+
+Style/TrailingCommaInArrayLiteral:
+  Enabled: false
+
+Style/KeywordParametersOrder:
+  Enabled: false
+
+Naming/BlockForwarding:
+  Enabled: false
+
+Style/ArgumentsForwarding:
+  Enabled: false
+
+Security/Eval:
+  Enabled: true
+
+Metrics/AbcSize:
+  Enabled: false
+Metrics/CyclomaticComplexity:
+  Enabled: false
+Metrics/PerceivedComplexity:
+  Enabled: false
+Metrics/MethodLength:
+  Enabled: false
+Metrics/ClassLength:
+  Enabled: false
+Metrics/ParameterLists:
+  Enabled: false
+Metrics/BlockLength:
+  Enabled: false

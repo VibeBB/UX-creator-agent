@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "system": "ux-creator",
+  "product": {
+    "name": "smart-kettle",
+    "surfaces": [
+      {
+        "id": "kettle_body",
+        "layer": "industrial_design",
+        "name": "kettle body & handle",
+        "notes": ""
+      },
+      {
+        "id": "hardware_button",
+        "layer": "hardware",
+        "name": "single boil button",
+        "notes": ""
+      },
+      {
+        "id": "status_led",
+        "layer": "circuit",
+        "name": "ring status LED",
+        "notes": ""
+      },
+      {
+        "id": "thermostat",
+        "layer": "firmware",
+        "name": "boil/keep-warm controller",
+        "notes": ""
+      },
+      {
+        "id": "mobile_app",
+        "layer": "smartphone_app",
+        "name": "companion app",
+        "notes": ""
+      }
+    ]
+  },
+  "core_experience": "one press, walk away — hot water that waits for you",
+  "implementation_spec": [
+    "plastic vs steel body",
+    "beep vs chime",
+    "app optional"
+  ],
+  "qcd": {
+    "quality": "high",
+    "cost": "medium",
+    "delivery": "fast",
+    "rationale": "core_experience is the boil job; app features stay optional"
+  },
+  "personas": [
+    {
+      "id": "busy_parent",
+      "name": "",
+      "goals": [
+        "hot water fast",
+        "no watching the kettle"
+      ],
+      "context": "morning rush with kids",
+      "pains": [
+        "forgot boiling water",
+        "scald worry"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": "boil",
+      "functional": "boil 500 ml of water in under 3 minutes",
+      "emotional": "confidence it will not overflow or be forgotten",
+      "social": "a tidy, quiet kitchen while guests arrive",
+      "importance": 9,
+      "satisfaction": 4
+    },
+    {
+      "id": "keep_warm",
+      "functional": "hold water at 80°C for 30 minutes",
+      "emotional": "trust that a second cup is ready",
+      "social": "hospitality without re-boiling in front of guests",
+      "importance": 6,
+      "satisfaction": 5
+    }
+  ],
+  "journeys": [
+    {
+      "id": "morning",
+      "persona": "",
+      "stages": [
+        {
+          "id": "fill",
+          "touchpoints": [
+            "lid",
+            "handle",
+            "spout"
+          ],
+          "emotion": 3,
+          "pain_points": [
+            "lid hinge pinches fingers"
+          ],
+          "surfaces": [
+            "kettle_body"
+          ]
+        },
+        {
+          "id": "boil",
+          "touchpoints": [
+            "button",
+            "led",
+            "beep"
+          ],
+          "emotion": 4,
+          "pain_points": [],
+          "surfaces": [
+            "hardware_button",
+            "status_led"
+          ]
+        },
+        {
+          "id": "pour",
+          "touchpoints": [
+            "handle",
+            "spout"
+          ],
+          "emotion": 5,
+          "pain_points": [],
+          "surfaces": [
+            "kettle_body"
+          ]
+        },
+        {
+          "id": "forgot",
+          "touchpoints": [
+            "app_notification"
+          ],
+          "emotion": 2,
+          "pain_points": [
+            "no reminder when water cools"
+          ],
+          "surfaces": [
+            "mobile_app"
+          ]
+        }
+      ]
+    }
+  ],
+  "service_blueprint": {
+    "frontstage": [
+      "button_press",
+      "led_feedback",
+      "beep"
+    ],
+    "backstage": [
+      "thermostat_control",
+      "boil_detection"
+    ],
+    "support_processes": [
+      "firmware_update_service"
+    ]
+  },
+  "statecharts": [
+    {
+      "id": "power",
+      "states": [
+        {
+          "id": "idle",
+          "initial": true,
+          "final": false
+        },
+        {
+          "id": "heating",
+          "initial": false,
+          "final": false
+        },
+        {
+          "id": "keep_warm",
+          "initial": false,
+          "final": false
+        },
+        {
+          "id": "done",
+          "initial": false,
+          "final": true
+        }
+      ],
+      "transitions": [
+        {
+          "from": "idle",
+          "event": "press",
+          "to": "heating"
+        },
+        {
+          "from": "heating",
+          "event": "boiled",
+          "to": "done"
+        },
+        {
+          "from": "heating",
+          "event": "keep_warm_selected",
+          "to": "keep_warm"
+        },
+        {
+          "from": "keep_warm",
+          "event": "timeout",
+          "to": "idle"
+        },
+        {
+          "from": "done",
+          "event": "lifted",
+          "to": "idle"
+        }
+      ]
+    }
+  ],
+  "imports": []
+}

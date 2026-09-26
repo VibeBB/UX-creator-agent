@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: false
+        default: ""
+  workflow_dispatch:
+    inputs:
+      ref:
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # Superseded pull_request runs are cancelled; main pushes and dispatched
+  # runs are never cancelled so in-flight main verification always lands.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          # The 3.12 and 3.13 matrix legs save uv caches concurrently; a
+          # distinct suffix per leg avoids "Unable to reserve cache" races.
+          cache-suffix: verify-${{ matrix.python-version }}
+      - name: Sync dependencies
+        run: uv sync --locked
+      - name: Verify fast stage
+        run: uv run python scripts/verify_all.py --stage fast
+
+  e2e:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.12"
+          cache-suffix: e2e
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Sync dependencies
+        run: uv sync --locked
+      # First-publish chicken-and-egg: no docker/image-digests.json exists yet,
+      # so CI builds the image itself (same pattern as circuit-agent's
+      # docker-smoke job) and selects it via UX_TOOLS_IMAGE.
+      - name: Build ux-tools image for e2e
+        run: >-
+          docker buildx build --load
+          -f docker/ux-tools.Dockerfile -t ux-tools:ci
+          --cache-from type=gha,scope=ux-tools
+          --cache-to type=gha,mode=max,scope=ux-tools,ignore-error=true
+          .
+      - name: Author example contract end to end (inside image)
+        run: |
+          UX_TOOLS_IMAGE=ux-tools:ci uv run python scripts/run_in_locked_image.py -- \
+            python scripts/e2e_authoring.py \
+            --contract examples/smart-kettle/smart-kettle.ux.json \
+            --out out/ci/smart-kettle --render
+      - name: Ruby DSL parity + lint (inside image)
+        run: |
+          UX_TOOLS_IMAGE=ux-tools:ci uv run python scripts/run_in_locked_image.py -- \
+            python scripts/check_ruby_dsl.py
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ux-smart-kettle
+          path: out/ci
+          retention-days: 14
+
+  plugin-load:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.12"
+          cache-suffix: plugin-load
+      - name: Sync dependencies
+        run: uv sync --locked --group sdk-check
+      - name: Check plugin loads via SDK
+        run: uv run --group sdk-check python scripts/check_plugin_load.py

@@ -1,0 +1,12 @@
+{
+  "name": "ux",
+  "version": "0.1.0",
+  "description": "OpenHands plugin for conversational UX design (personas, JTBD/ODI, journeys, statecharts, wireframe and story projections)",
+  "author": {
+    "name": "VibeBB",
+    "url": "https://github.com/VibeBB/UX-creator-agent"
+  },
+  "license": "BSD-3-Clause",
+  "repository": "https://github.com/VibeBB/UX-creator-agent",
+  "entry_command": "doctor"
+}
