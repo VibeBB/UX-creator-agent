@@ -1,0 +1,18 @@
+# Rubocop config for the UX DSL library. Stdlib-only Ruby 4.x style.
+AllCops:
+  TargetRubyVersion: 4.0
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - "test/**/*"
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+
+Metrics/MethodLength:
+  Max: 30
+
+Metrics/BlockLength:
+  Max: 60
+  Exclude:
+    - "lib/ux_dsl.rb"
