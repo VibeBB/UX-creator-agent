@@ -34,7 +34,6 @@ SurfaceLayer = Literal[
     "pc_app",
 ]
 
-SignalClass = Literal["low", "medium", "high"]
 QCDLevel = Literal["low", "medium", "high"]
 QCDDelivery = Literal["slow", "normal", "fast"]
 RiskLevel = Literal["low", "high"]
