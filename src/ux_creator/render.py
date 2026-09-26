@@ -31,13 +31,21 @@ def _plantuml_jar() -> Path | None:
     return default if default.is_file() else None
 
 
+def _mmdc_cmd(mmdc: str, source: Path, output: Path) -> list[str]:
+    cmd = [mmdc, "-i", str(source), "-o", str(output), "-b", "transparent"]
+    config = os.environ.get("PUPPETEER_CONFIG")
+    if config and Path(config).is_file():
+        cmd += ["-p", config]
+    return cmd
+
+
 def render_mermaid(source: Path, out_dir: Path, fmt: str = "svg") -> RenderResult:
     mmdc = shutil.which("mmdc")
     output = out_dir / f"{source.stem}.{fmt}"
     if mmdc is None:
         return RenderResult(source, None, "unknown", "mmdc not on PATH")
     proc = subprocess.run(
-        [mmdc, "-i", str(source), "-o", str(output), "-b", "transparent"],
+        _mmdc_cmd(mmdc, source, output),
         capture_output=True,
         text=True,
         check=False,

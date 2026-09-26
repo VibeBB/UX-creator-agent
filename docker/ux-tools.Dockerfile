@@ -174,7 +174,7 @@ RUN ruby -w -c /opt/ux/ruby/lib/ux_dsl.rb \
     && printf 'class Smoke; def ok? = true; end\n' > /tmp/smoke.rb \
     && mrbc -c /tmp/smoke.rb \
     && printf 'journey\n  title smoke\n  section s\n    t: 5: user\n' > /tmp/smoke.mmd \
-    && mmdc -i /tmp/smoke.mmd -o /tmp/smoke.svg -b transparent \
+    && mmdc -i /tmp/smoke.mmd -o /tmp/smoke.svg -b transparent -p /opt/ux/docker/puppeteer-config.json \
     && test -s /tmp/smoke.svg \
     && java -jar /opt/plantuml/plantuml.jar -testdot \
     && printf '@startuml\n[*] --> a\na --> b : go\nb --> [*]\n@enduml\n' > /tmp/smoke.puml \
