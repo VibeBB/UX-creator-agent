@@ -109,9 +109,7 @@
             "beep"
           ],
           "emotion": 4,
-          "pain_points": [
-
-          ],
+          "pain_points": [],
           "surfaces": [
             "hardware_button",
             "status_led"
@@ -124,9 +122,7 @@
             "spout"
           ],
           "emotion": 5,
-          "pain_points": [
-
-          ],
+          "pain_points": [],
           "surfaces": [
             "kettle_body"
           ]
@@ -215,7 +211,5 @@
       ]
     }
   ],
-  "imports": [
-
-  ]
+  "imports": []
 }

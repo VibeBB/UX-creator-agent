@@ -132,7 +132,7 @@ COPY docker/puppeteer-config.json /opt/ux/docker/puppeteer-config.json
 
 RUN cd /opt/ux \
     && uv export --frozen --no-dev --no-emit-project --format requirements-txt \
-        --output /tmp/ux-requirements.txt \
+        --output-file /tmp/ux-requirements.txt \
     && uv pip install --python /opt/ux/.venv/bin/python \
         --requirement /tmp/ux-requirements.txt \
     && uv pip install --python /opt/ux/.venv/bin/python --no-deps /opt/ux \

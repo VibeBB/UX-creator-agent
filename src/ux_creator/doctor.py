@@ -34,7 +34,7 @@ def _probe_module(name: str) -> DoctorCheck:
     return DoctorCheck(name, "pass", f"{name} {version}")
 
 
-def _probe_command(cmd: str, *args: str) -> DoctorCheck:
+def _probe_command(cmd: str, *args: str, nonzero_ok: bool = False) -> DoctorCheck:
     path = shutil.which(cmd)
     if path is None:
         return DoctorCheck(cmd, "fail", f"{cmd} not on PATH")
@@ -46,7 +46,9 @@ def _probe_command(cmd: str, *args: str) -> DoctorCheck:
         return DoctorCheck(cmd, "fail", f"probe failed: {exc}")
     out = (proc.stdout or proc.stderr).strip().splitlines()
     detail = out[0] if out else f"exit {proc.returncode}"
-    status: Literal["pass", "fail"] = "pass" if proc.returncode == 0 else "fail"
+    # Some tools print their banner then exit non-zero (e.g. `mrbc -v`).
+    ok = proc.returncode == 0 or (nonzero_ok and bool(out))
+    status: Literal["pass", "fail"] = "pass" if ok else "fail"
     return DoctorCheck(cmd, status, detail)
 
 
@@ -56,7 +58,7 @@ def run_doctor() -> dict[str, Any]:
         _probe_module("pydantic"),
         _probe_module("mcp"),
         _probe_command("ruby", "--version"),
-        _probe_command("mrbc", "-v"),
+        _probe_command("mrbc", "-v", nonzero_ok=True),
         _probe_command("mmdc", "--version"),
         _probe_command("java", "-version"),
         _probe_command("dot", "-V"),
