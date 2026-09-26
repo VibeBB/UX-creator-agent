@@ -23,6 +23,8 @@
 
 require "json"
 
+# UX — the design-expression DSL namespace. `UX.design` builds a
+# `.ux.json` contract hash; judgement lives in the Python gates.
 module UX
   LAYERS = %i[
     hardware mechanism industrial_design circuit firmware
