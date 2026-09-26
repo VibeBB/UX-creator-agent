@@ -62,11 +62,13 @@ def main(argv: list[str] | None = None) -> int:
     if docker is None:
         print("FAIL: docker not found on PATH")
         return 1
-    try:
-        image = locked_image(args.lock, args.entry)
-    except ValueError as exc:
-        print(f"FAIL: {exc}")
-        return 1
+    image = os.environ.get("UX_TOOLS_IMAGE")
+    if not image:
+        try:
+            image = locked_image(args.lock, args.entry)
+        except ValueError as exc:
+            print(f"FAIL: {exc}")
+            return 1
 
     present = (
         subprocess.run(
