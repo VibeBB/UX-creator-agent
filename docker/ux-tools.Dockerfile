@@ -180,4 +180,4 @@ RUN ruby -w -c /opt/ux/ruby/lib/ux_dsl.rb \
     && printf '@startuml\n[*] --> a\na --> b : go\nb --> [*]\n@enduml\n' > /tmp/smoke.puml \
     && java -jar /opt/plantuml/plantuml.jar -tsvg -output /tmp /tmp/smoke.puml \
     && test -s /tmp/smoke.svg \
-    && rm -f /tmp/smoke*
+    && rm -f /tmp/smoke*&& rm -f /tmp/smoke* rm -rf /tmp/smoke*
