@@ -6,12 +6,13 @@ require "json"
 $LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
 require "ux_dsl"
 
+# Parity checks: the DSL output validates against the contract shape.
 class UxDslTest < Minitest::Test
   def design
     UX.design "kettle" do
       persona :busy_parent, goals: ["hot water fast"], context: "morning rush"
-      job :boil, functional: "boil 500ml in <3min", emotional: "confidence it won't overflow",
-          social: "kitchen looks tidy", importance: 9, satisfaction: 4
+      job :boil, functional: "boil 500ml in <3min", emotional: "confidence it will not overflow",
+                 social: "kitchen looks tidy", importance: 9, satisfaction: 4
       journey :morning do
         stage :fill, touchpoints: %w[lid handle], emotion: 3
         stage :boil, touchpoints: %w[button led], emotion: 4, surfaces: %w[hardware_button]
