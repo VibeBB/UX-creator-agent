@@ -29,6 +29,12 @@
         "notes": ""
       },
       {
+        "id": "buzzer",
+        "layer": "circuit",
+        "name": "piezo beeper",
+        "notes": ""
+      },
+      {
         "id": "mobile_app",
         "layer": "smartphone_app",
         "name": "companion app",
@@ -87,7 +93,22 @@
       "persona": "",
       "stages": [
         {
+          "id": "pair_app",
+          "kind": "onboard",
+          "touchpoints": [
+            "app_pairing"
+          ],
+          "emotion": 3,
+          "pain_points": [
+            "pairing needs account"
+          ],
+          "surfaces": [
+            "mobile_app"
+          ]
+        },
+        {
           "id": "fill",
+          "kind": "use",
           "touchpoints": [
             "lid",
             "handle",
@@ -103,6 +124,7 @@
         },
         {
           "id": "boil",
+          "kind": "use",
           "touchpoints": [
             "button",
             "led",
@@ -117,6 +139,7 @@
         },
         {
           "id": "pour",
+          "kind": "use",
           "touchpoints": [
             "handle",
             "spout"
@@ -129,6 +152,7 @@
         },
         {
           "id": "forgot",
+          "kind": "use",
           "touchpoints": [
             "app_notification"
           ],
@@ -164,51 +188,129 @@
         {
           "id": "idle",
           "initial": true,
-          "final": false
+          "final": false,
+          "description": "kettle idle, LED off",
+          "surface": "hardware_button",
+          "entry": [],
+          "exit": []
         },
         {
           "id": "heating",
           "initial": false,
-          "final": false
+          "final": false,
+          "description": "water heating, LED pulsing",
+          "surface": "status_led",
+          "entry": [
+            "led_pulse"
+          ],
+          "exit": []
         },
         {
           "id": "keep_warm",
           "initial": false,
-          "final": false
+          "final": false,
+          "description": "holding temperature, LED steady",
+          "surface": "status_led",
+          "entry": [],
+          "exit": []
         },
         {
           "id": "done",
           "initial": false,
-          "final": true
+          "final": true,
+          "description": "",
+          "surface": "",
+          "entry": [],
+          "exit": []
         }
       ],
       "transitions": [
         {
           "from": "idle",
           "event": "press",
-          "to": "heating"
+          "to": "heating",
+          "guard": "",
+          "actions": []
         },
         {
           "from": "heating",
           "event": "boiled",
-          "to": "done"
+          "to": "done",
+          "guard": "temp >= 100",
+          "actions": [
+            "beep"
+          ]
+        },
+        {
+          "from": "heating",
+          "event": "boiled",
+          "to": "keep_warm",
+          "guard": "keep_warm_armed",
+          "actions": []
         },
         {
           "from": "heating",
           "event": "keep_warm_selected",
-          "to": "keep_warm"
+          "to": "keep_warm",
+          "guard": "",
+          "actions": []
         },
         {
           "from": "keep_warm",
           "event": "timeout",
-          "to": "idle"
+          "to": "idle",
+          "guard": "",
+          "actions": []
         },
         {
           "from": "done",
           "event": "lifted",
-          "to": "idle"
+          "to": "idle",
+          "guard": "",
+          "actions": []
         }
       ]
+    }
+  ],
+  "feedback": [
+    {
+      "id": "led_boiling",
+      "trigger": "press",
+      "surface": "status_led",
+      "modality": "visual",
+      "latency_ms": 50,
+      "progress_indicator": false,
+      "description": "LED starts pulsing within one blink of the press"
+    },
+    {
+      "id": "beep_done",
+      "trigger": "boiled",
+      "surface": "buzzer",
+      "modality": "audio",
+      "latency_ms": 100,
+      "progress_indicator": false,
+      "description": "two-tone done chime at boil detection"
+    },
+    {
+      "id": "app_reminder",
+      "trigger": "app_notification",
+      "surface": "mobile_app",
+      "modality": "text",
+      "latency_ms": 3000,
+      "progress_indicator": true,
+      "description": "push card counts down cooling time"
+    }
+  ],
+  "loops": [
+    {
+      "id": "morning_brew",
+      "steps": [
+        "press",
+        "boiled",
+        "lifted"
+      ],
+      "reward": "hot water without waiting",
+      "cadence": "daily"
     }
   ],
   "imports": []

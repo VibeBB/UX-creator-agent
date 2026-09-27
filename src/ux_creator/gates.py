@@ -127,6 +127,59 @@ def _statechart_checks(contract: UXContract) -> list[GateCheck]:
                 detail=f"non-final states with no exit: {', '.join(dead)}" if dead else "",
             )
         )
+        collisions = sorted(
+            {
+                (t.from_state, t.event)
+                for t in chart.transitions
+                if sum(
+                    1
+                    for u in chart.transitions
+                    if u.from_state == t.from_state and u.event == t.event
+                )
+                > 1
+            }
+        )
+        bad = [
+            f"{src}/{event}"
+            for src, event in collisions
+            if not all(
+                t.guard.strip()
+                for t in chart.transitions
+                if t.from_state == src and t.event == event
+            )
+            or len({t.guard for t in chart.transitions if t.from_state == src and t.event == event})
+            != sum(1 for t in chart.transitions if t.from_state == src and t.event == event)
+        ]
+        checks.append(
+            GateCheck(
+                f"{cid}.deterministic",
+                chart.id,
+                "pass" if not bad else "fail",
+                detail=(
+                    "shared (from,event) without distinct non-empty guards: " + ", ".join(bad)
+                    if bad
+                    else ""
+                ),
+            )
+        )
+        surface_ids = contract.surface_ids()
+        bad_surfaces = sorted(
+            f"{st.id}:{st.surface}"
+            for st in chart.states
+            if st.surface and st.surface not in surface_ids
+        )
+        checks.append(
+            GateCheck(
+                f"{cid}.state_surface_declared",
+                chart.id,
+                "pass" if not bad_surfaces else "fail",
+                detail=(
+                    f"states referencing undeclared surfaces: {', '.join(bad_surfaces)}"
+                    if bad_surfaces
+                    else ""
+                ),
+            )
+        )
     if not contract.statecharts:
         checks.append(
             GateCheck("statechart.present", "statecharts", "fail", detail="no statecharts declared")
@@ -167,6 +220,27 @@ def _journey_checks(contract: UXContract) -> list[GateCheck]:
         checks.append(
             GateCheck("journey.present", "journeys", "fail", detail="no journeys declared")
         )
+    app_layers = {"web_ui", "smartphone_app", "pc_app"}
+    has_app = any(s.layer in app_layers for s in contract.product.surfaces)
+    if has_app:
+        onboard = [
+            stage.id
+            for journey in contract.journeys
+            for stage in journey.stages
+            if stage.kind == "onboard"
+        ]
+        checks.append(
+            GateCheck(
+                "journey.onboarding_present",
+                "journeys",
+                "pass" if onboard else "fail",
+                detail=(
+                    "app surfaces declared but no onboard stage"
+                    if not onboard
+                    else f"onboard stages: {', '.join(onboard)}"
+                ),
+            )
+        )
     return checks
 
 
@@ -186,6 +260,99 @@ def _job_checks(contract: UXContract) -> list[GateCheck]:
                 "no jobs declared"
                 if not contract.jobs
                 else (f"jobs missing dimensions: {', '.join(thin)}" if thin else "")
+            ),
+        )
+    )
+    return checks
+
+
+def _known_triggers(contract: UXContract) -> set[str]:
+    events = {t.event for chart in contract.statecharts for t in chart.transitions}
+    touchpoints = {
+        tp for journey in contract.journeys for stage in journey.stages for tp in stage.touchpoints
+    }
+    return events | touchpoints
+
+
+def _feedback_checks(contract: UXContract) -> list[GateCheck]:
+    checks: list[GateCheck] = []
+    surface_ids = contract.surface_ids()
+    known = _known_triggers(contract)
+    bad_surfaces = sorted(f.id for f in contract.feedback if f.surface not in surface_ids)
+    checks.append(
+        GateCheck(
+            "feedback.surface_declared",
+            "feedback",
+            "pass" if not bad_surfaces else "fail",
+            detail=(
+                f"feedback on undeclared surfaces: {', '.join(bad_surfaces)}"
+                if bad_surfaces
+                else ""
+            ),
+        )
+    )
+    bad_triggers = sorted(f.id for f in contract.feedback if f.trigger not in known)
+    checks.append(
+        GateCheck(
+            "feedback.trigger_known",
+            "feedback",
+            "pass" if not bad_triggers else "fail",
+            detail=(
+                f"feedback with unknown triggers: {', '.join(bad_triggers)}" if bad_triggers else ""
+            ),
+        )
+    )
+    bad_latency = sorted(
+        f"{f.id}:{f.latency_ms}ms"
+        for f in contract.feedback
+        if f.latency_ms > 10000 or (f.latency_ms > 1000 and not f.progress_indicator)
+    )
+    worst = max((f.latency_ms for f in contract.feedback), default=None)
+    checks.append(
+        GateCheck(
+            "feedback.latency_budget",
+            "feedback",
+            "pass" if not bad_latency else "fail",
+            measured=float(worst) if worst is not None else None,
+            limit=10000.0,
+            detail=(
+                "latency >1s without progress_indicator or >10s: " + ", ".join(bad_latency)
+                if bad_latency
+                else ""
+            ),
+        )
+    )
+    return checks
+
+
+def _loop_checks(contract: UXContract) -> list[GateCheck]:
+    checks: list[GateCheck] = []
+    known = _known_triggers(contract)
+    bad = sorted(
+        f"{loop.id}:{step}" for loop in contract.loops for step in loop.steps if step not in known
+    )
+    checks.append(
+        GateCheck(
+            "loop.steps_known",
+            "loops",
+            "pass" if not bad else "fail",
+            detail=f"loop steps unknown: {', '.join(bad)}" if bad else "",
+        )
+    )
+    open_loops = sorted(
+        loop.id
+        for loop in contract.loops
+        if loop.cadence in ("moment", "session") and not loop.reward.strip()
+    )
+    checks.append(
+        GateCheck(
+            "loop.closes",
+            "loops",
+            "pass" if not open_loops else "fail",
+            detail=(
+                f"moment/session loops without reward: {', '.join(open_loops)}"
+                if open_loops
+                else ""
             ),
         )
     )
@@ -229,6 +396,8 @@ def run_gates(contract: UXContract, workspace: Path | None = None) -> GateReport
     checks += _wrap("statechart", _statechart_checks, contract)
     checks += _wrap("journey", _journey_checks, contract)
     checks += _wrap("jobs", _job_checks, contract)
+    checks += _wrap("feedback", _feedback_checks, contract)
+    checks += _wrap("loops", _loop_checks, contract)
     checks += _wrap("core_experience", _core_experience_checks, contract)
     if contract.imports:
         checks += _wrap("imports", _import_checks, contract, workspace or Path.cwd())

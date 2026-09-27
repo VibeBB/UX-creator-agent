@@ -6,6 +6,21 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added (phase 3)
+
+- Richer statecharts: `description`/`surface`/`entry`/`exit` on states,
+  `guard`/`actions` on transitions; XState/SCXML/Mermaid/PlantUML
+  projections emit them.
+- `feedback[]` and `loops[]` contract models + deterministic gates
+  (`deterministic`, `state_surface_declared`, `surface_declared`,
+  `trigger_known`, `latency_budget` Nielsen budgets, `steps_known`,
+  `closes`, `onboarding_present`).
+- `<name>.experience-loops.mmd` projection; Storybook `states`/
+  `feedback` requirements; `lenses.game_design` measured section in
+  `ux-report.json/.md`.
+- Ruby DSL parity: `experience_loop`, `feedback`, new `state`/`on`/
+  `stage` kwargs. ADR-0005.
+
 ### Added
 
 - Initial scaffold: `src/ux_creator` Python core (contract, gates,

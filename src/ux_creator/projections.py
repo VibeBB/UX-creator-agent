@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 from xml.sax.saxutils import escape
 
-from .contract import Journey, Statechart, UXContract, contract_sha256
+from .contract import Journey, Statechart, Transition, UXContract, contract_sha256
 
 
 def _mermaid_journey(contract: UXContract, journey: Journey) -> str:
@@ -25,6 +25,15 @@ def _mermaid_journey(contract: UXContract, journey: Journey) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _transition_label(t: Transition) -> str:
+    label = t.event
+    if t.guard:
+        label += f" [{t.guard}]"
+    if t.actions:
+        label += f" / {', '.join(t.actions)}"
+    return label
+
+
 def _mermaid_statechart(chart: Statechart) -> str:
     lines = ["stateDiagram-v2", f'    state "{chart.id}" as {chart.id}']
     for s in chart.states:
@@ -33,7 +42,7 @@ def _mermaid_statechart(chart: Statechart) -> str:
         if s.final:
             lines.append(f"    {s.id} --> [*]")
     for t in chart.transitions:
-        lines.append(f"    {t.from_state} --> {t.to} : {t.event}")
+        lines.append(f"    {t.from_state} --> {t.to} : {_transition_label(t)}")
     return "\n".join(lines) + "\n"
 
 
@@ -45,7 +54,7 @@ def _plantuml_statechart(chart: Statechart) -> str:
         if s.final:
             lines.append(f"{s.id} --> [*]")
     for t in chart.transitions:
-        lines.append(f"{t.from_state} --> {t.to} : {t.event}")
+        lines.append(f"{t.from_state} --> {t.to} : {_transition_label(t)}")
     lines.append("@enduml")
     return "\n".join(lines) + "\n"
 
@@ -84,15 +93,37 @@ def _xstate_machine(chart: Statechart) -> dict[str, Any]:
     initial = next((s.id for s in chart.states if s.initial), None)
     states: dict[str, Any] = {}
     for s in chart.states:
-        on: dict[str, str] = {}
+        on: dict[str, Any] = {}
+        grouped: dict[str, list[Any]] = {}
         for t in chart.transitions:
             if t.from_state == s.id:
-                on[t.event] = t.to
+                grouped.setdefault(t.event, []).append(t)
+        for event, transitions in grouped.items():
+            if len(transitions) == 1 and not transitions[0].guard and not transitions[0].actions:
+                on[event] = transitions[0].to
+            else:
+                entries: list[dict[str, Any]] = []
+                for t in transitions:
+                    entry: dict[str, Any] = {"target": t.to}
+                    if t.guard:
+                        entry["guard"] = t.guard
+                    if t.actions:
+                        entry["actions"] = t.actions
+                    entries.append(entry)
+                on[event] = entries
         node: dict[str, Any] = {}
         if on:
             node["on"] = on
         if s.final:
             node["type"] = "final"
+        if s.description:
+            node["description"] = s.description
+        if s.entry:
+            node["entry"] = s.entry
+        if s.exit:
+            node["exit"] = s.exit
+        if s.surface:
+            node["meta"] = {"surface": s.surface}
         states[s.id] = node
     machine: dict[str, Any] = {"id": chart.id, "states": states}
     if initial is not None:
@@ -110,10 +141,25 @@ def _scxml(chart: Statechart) -> str:
     for s in chart.states:
         tag = "final" if s.final else "state"
         transitions = [] if s.final else [t for t in chart.transitions if t.from_state == s.id]
-        if transitions:
+        body: list[str] = []
+        for phase, names in (("onentry", s.entry), ("onexit", s.exit)):
+            if names:
+                body.append(f"    <{phase}>")
+                body += [f'      <log label="action" expr="\'{escape(a)}\'"/>' for a in names]
+                body.append(f"    </{phase}>")
+        for t in transitions:
+            attrs = f'event="{escape(t.event)}" target="{escape(t.to)}"'
+            if t.guard:
+                attrs += f' cond="{escape(t.guard)}"'
+            if t.actions:
+                body.append(f"    <transition {attrs}>")
+                body += [f'      <log label="action" expr="\'{escape(a)}\'"/>' for a in t.actions]
+                body.append("    </transition>")
+            else:
+                body.append(f"    <transition {attrs}/>")
+        if body:
             lines.append(f'  <{tag} id="{escape(s.id)}">')
-            for t in transitions:
-                lines.append(f'    <transition event="{escape(t.event)}" target="{escape(t.to)}"/>')
+            lines += body
             lines.append(f"  </{tag}>")
         else:
             lines.append(f'  <{tag} id="{escape(s.id)}"/>')
@@ -125,19 +171,30 @@ def _stories(contract: UXContract) -> dict[str, Any]:
     stories: list[dict[str, Any]] = []
     for surface in contract.product.surfaces:
         title = f"{contract.product.name}/{surface.id}"
+        state_ids = sorted(
+            {
+                s.id
+                for chart in contract.statecharts
+                for s in chart.states
+                if s.surface == surface.id
+            }
+        )
+        required = [
+            "default",
+            "empty-state",
+            "error",
+            "loading" if surface.layer in ("web_ui", "smartphone_app", "pc_app") else "idle",
+        ]
+        required += state_ids
+        feedback_ids = sorted(f.id for f in contract.feedback if f.surface == surface.id)
         stories.append(
             {
                 "title": title,
                 "surface": surface.id,
                 "layer": surface.layer,
-                "required_stories": [
-                    "default",
-                    "empty-state",
-                    "error",
-                    "loading"
-                    if surface.layer in ("web_ui", "smartphone_app", "pc_app")
-                    else "idle",
-                ],
+                "required_stories": sorted(set(required)),
+                "states": state_ids,
+                "feedback": feedback_ids,
                 "touchpoints": sorted(
                     {
                         tp
@@ -150,6 +207,26 @@ def _stories(contract: UXContract) -> dict[str, Any]:
             }
         )
     return {"schema_version": 1, "system": "ux-creator", "stories": stories}
+
+
+def _mermaid_loops(contract: UXContract) -> str:
+    lines = ["flowchart LR"]
+    for loop in contract.loops:
+        lines.append(f'    subgraph {loop.id} ["{loop.id} ({loop.cadence})"]')
+        previous = f"{loop.id}_start"
+        lines.append(f'        {previous}(["start"])')
+        for i, step in enumerate(loop.steps):
+            node = f"{loop.id}_{i}"
+            lines.append(f'        {node}["{step}"]')
+            lines.append(f"        {previous} --> {node}")
+            previous = node
+        reward = loop.reward or "reward"
+        lines.append(f'        {loop.id}_reward[["{reward}"]]')
+        lines.append(f"        {previous} --> {loop.id}_reward")
+        lines.append("    end")
+    if not contract.loops:
+        lines.append('    empty["no experience loops"]')
+    return "\n".join(lines) + "\n"
 
 
 def _odi_csv(contract: UXContract) -> str:
@@ -186,6 +263,8 @@ def write_projections(contract: UXContract, name: str, out_dir: Path) -> dict[st
         json.dumps(_stories(contract), indent=2, sort_keys=True) + "\n"
     )
     artifacts[f"{name}.odi.csv"] = _odi_csv(contract)
+    if contract.loops:
+        artifacts[f"{name}.experience-loops.mmd"] = _mermaid_loops(contract)
 
     paths: dict[str, Path] = {}
     for filename, text in artifacts.items():

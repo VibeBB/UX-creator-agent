@@ -30,6 +30,15 @@ never hand-edit.
 | `<name>.<chart>.scxml` | SCXML document | `ux author` |
 | `<name>.stories.json` | Storybook story requirements per surface (default/empty/error/loading-or-idle + touchpoints) | `ux author` |
 | `<name>.odi.csv` | ODI opportunity table sorted by score | `ux author` |
+| `<name>.experience-loops.mmd` | Mermaid `flowchart LR` per `loops[]` (steps → reward) | `ux author` |
+
+Transition labels render as `event [guard] / action1, action2` on
+Mermaid and PlantUML; XState emits guarded transitions as
+`on[event]: [{target, guard, actions}]` lists plus `entry`/`exit`/
+`description`/`meta.surface` on states; SCXML emits `cond=` and `<log>`
+actions inside `<onentry>`/`<onexit>`/`<transition>`; `.stories.json`
+gains `states`/`feedback` per surface and folds state ids into
+`required_stories`.
 
 Rendering runs `--render` inside the pinned ux-tools image: `mmdc` for
 Mermaid, `java -jar $PLANTUML_JAR` (PlantUML MIT build) for PlantUML.

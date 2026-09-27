@@ -32,16 +32,22 @@ module UX
   ].freeze
   QCD_LEVELS = %i[low medium high].freeze
   QCD_DELIVERY = %i[slow normal fast].freeze
+  STAGE_KINDS = %i[discover onboard use recover exit].freeze
+  MODALITIES = %i[visual audio haptic motion text].freeze
+  CADENCES = %i[moment session daily weekly].freeze
 
   Surface = Struct.new(:id, :layer, :name, :notes)
   Persona = Struct.new(:id, :name, :goals, :context, :pains)
   Job = Struct.new(:id, :functional, :emotional, :social, :importance, :satisfaction)
-  Stage = Struct.new(:id, :touchpoints, :emotion, :pain_points, :surfaces)
+  Stage = Struct.new(:id, :kind, :touchpoints, :emotion, :pain_points, :surfaces)
   Journey = Struct.new(:id, :persona, :stages)
-  StateDef = Struct.new(:id, :initial, :final)
-  Transition = Struct.new(:from_state, :event, :to)
+  StateDef = Struct.new(:id, :initial, :final, :description, :surface, :entry, :exit)
+  Transition = Struct.new(:from_state, :event, :to, :guard, :actions)
   Statechart = Struct.new(:id, :states, :transitions)
   Blueprint = Struct.new(:frontstage, :backstage, :support_processes)
+  Feedback = Struct.new(:id, :trigger, :surface, :modality, :latency_ms,
+                        :progress_indicator, :description)
+  ExperienceLoop = Struct.new(:id, :steps, :reward, :cadence)
 
   class DesignError < StandardError; end
 
@@ -56,6 +62,8 @@ module UX
       @jobs = []
       @journeys = []
       @statecharts = []
+      @feedback = []
+      @loops = []
       @blueprint = nil
       @core_experience = ""
       @implementation_spec = []
@@ -108,6 +116,26 @@ module UX
       @implementation_spec.concat(items.flatten.map(&:to_s))
     end
 
+    def feedback(id, trigger:, surface:, modality:, latency_ms: 100,
+                 progress_indicator: false, description: "")
+      unless MODALITIES.include?(modality)
+        raise DesignError, "unknown feedback modality #{modality.inspect}; expected #{MODALITIES.inspect}"
+      end
+
+      @feedback << Feedback.new(id.to_s, trigger.to_s, surface.to_s, modality.to_s,
+                                Integer(latency_ms), progress_indicator ? true : false,
+                                description.to_s)
+    end
+
+    # `loop` is Kernel#loop, so the DSL verb is `experience_loop`.
+    def experience_loop(id, steps:, reward: "", cadence: :session)
+      unless CADENCES.include?(cadence)
+        raise DesignError, "unknown loop cadence #{cadence.inspect}; expected #{CADENCES.inspect}"
+      end
+
+      @loops << ExperienceLoop.new(id.to_s, steps.map(&:to_s), reward.to_s, cadence.to_s)
+    end
+
     def qcd(quality:, cost:, delivery:, rationale: "")
       unless QCD_LEVELS.include?(quality) && QCD_LEVELS.include?(cost) && QCD_DELIVERY.include?(delivery)
         raise DesignError, "qcd expects quality/cost ∈ #{QCD_LEVELS.inspect}, delivery ∈ #{QCD_DELIVERY.inspect}"
@@ -140,7 +168,7 @@ module UX
         journeys: @journeys.map do |j|
           { id: j.id, persona: j.persona,
             stages: j.stages.map do |s|
-              { id: s.id, touchpoints: s.touchpoints, emotion: s.emotion,
+              { id: s.id, kind: s.kind, touchpoints: s.touchpoints, emotion: s.emotion,
                 pain_points: s.pain_points, surfaces: s.surfaces }
             end }
         end,
@@ -151,8 +179,22 @@ module UX
         },
         statecharts: @statecharts.map do |c|
           { id: c.id,
-            states: c.states.map { |s| { id: s.id, initial: s.initial, final: s.final } },
-            transitions: c.transitions.map { |t| { "from" => t.from_state, event: t.event, to: t.to } } }
+            states: c.states.map do |s|
+              { id: s.id, initial: s.initial, final: s.final, description: s.description,
+                surface: s.surface, entry: s.entry, exit: s.exit }
+            end,
+            transitions: c.transitions.map do |t|
+              { "from" => t.from_state, event: t.event, to: t.to,
+                guard: t.guard, actions: t.actions }
+            end }
+        end,
+        feedback: @feedback.map do |f|
+          { id: f.id, trigger: f.trigger, surface: f.surface, modality: f.modality,
+            latency_ms: f.latency_ms, progress_indicator: f.progress_indicator,
+            description: f.description }
+        end,
+        loops: @loops.map do |l|
+          { id: l.id, steps: l.steps, reward: l.reward, cadence: l.cadence }
         end,
         imports: @imports,
       }.compact
@@ -167,8 +209,12 @@ module UX
       @stages = []
     end
 
-    def stage(id, touchpoints: [], emotion:, pain_points: [], surfaces: [])
-      @stages << Stage.new(id.to_s, touchpoints.map(&:to_s), Integer(emotion),
+    def stage(id, kind: :use, touchpoints: [], emotion:, pain_points: [], surfaces: [])
+      unless STAGE_KINDS.include?(kind)
+        raise DesignError, "unknown stage kind #{kind.inspect}; expected #{STAGE_KINDS.inspect}"
+      end
+
+      @stages << Stage.new(id.to_s, kind.to_s, touchpoints.map(&:to_s), Integer(emotion),
                            pain_points.map(&:to_s), surfaces.map(&:to_s))
     end
   end
@@ -182,12 +228,15 @@ module UX
       @transitions = []
     end
 
-    def state(id, initial: false, final: false)
-      @states << StateDef.new(id.to_s, initial, final)
+    def state(id, initial: false, final: false, description: "", surface: "",
+              entry: [], exit: [])
+      @states << StateDef.new(id.to_s, initial, final, description.to_s, surface.to_s,
+                              entry.map(&:to_s), exit.map(&:to_s))
     end
 
-    def on(from_state, event, to:)
-      @transitions << Transition.new(from_state.to_s, event.to_s, to.to_s)
+    def on(from_state, event, to:, guard: "", actions: [])
+      @transitions << Transition.new(from_state.to_s, event.to_s, to.to_s,
+                                     guard.to_s, actions.map(&:to_s))
     end
   end
 

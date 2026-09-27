@@ -37,6 +37,9 @@ SurfaceLayer = Literal[
 QCDLevel = Literal["low", "medium", "high"]
 QCDDelivery = Literal["slow", "normal", "fast"]
 RiskLevel = Literal["low", "high"]
+StageKind = Literal["discover", "onboard", "use", "recover", "exit"]
+FeedbackModality = Literal["visual", "audio", "haptic", "motion", "text"]
+LoopCadence = Literal["moment", "session", "daily", "weekly"]
 
 LAYERS: tuple[SurfaceLayer, ...] = (
     "hardware",
@@ -92,6 +95,7 @@ class Stage(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: str = Field(min_length=1)
+    kind: StageKind = "use"
     touchpoints: list[str] = Field(default_factory=list[str])
     emotion: int = Field(ge=1, le=5)
     pain_points: list[str] = Field(default_factory=list[str])
@@ -120,6 +124,10 @@ class StateDef(BaseModel):
     id: str = Field(min_length=1)
     initial: bool = False
     final: bool = False
+    description: str = ""
+    surface: str = ""  # surface id the state renders on; "" = none
+    entry: list[str] = Field(default_factory=list[str])
+    exit: list[str] = Field(default_factory=list[str])
 
 
 class Transition(BaseModel):
@@ -128,6 +136,8 @@ class Transition(BaseModel):
     from_state: str = Field(min_length=1, alias="from")
     event: str = Field(min_length=1)
     to: str = Field(min_length=1)
+    guard: str = ""
+    actions: list[str] = Field(default_factory=list[str])
 
 
 class Statechart(BaseModel):
@@ -145,6 +155,31 @@ class QCD(BaseModel):
     cost: QCDLevel = "medium"
     delivery: QCDDelivery = "normal"
     rationale: str = ""
+
+
+class Feedback(BaseModel):
+    """One trigger->response pair (Nielsen-measurable feedback)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    trigger: str = Field(min_length=1)  # statechart event or stage touchpoint
+    surface: str = Field(min_length=1)
+    modality: FeedbackModality
+    latency_ms: int = Field(default=100, ge=0)
+    progress_indicator: bool = False
+    description: str = ""
+
+
+class ExperienceLoop(BaseModel):
+    """A closed action->reward loop (game-design lens)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    steps: list[str] = Field(min_length=1)
+    reward: str = ""
+    cadence: LoopCadence = "session"
 
 
 class Product(BaseModel):
@@ -180,6 +215,8 @@ class UXContract(BaseModel):
     journeys: list[Journey] = Field(default_factory=list[Journey])
     service_blueprint: ServiceBlueprint | None = None
     statecharts: list[Statechart] = Field(default_factory=list[Statechart])
+    feedback: list[Feedback] = Field(default_factory=list[Feedback])
+    loops: list[ExperienceLoop] = Field(default_factory=list[ExperienceLoop])
     imports: list[ImportRef] = Field(default_factory=list[ImportRef])
 
     @model_validator(mode="after")
@@ -190,6 +227,8 @@ class UXContract(BaseModel):
             ("journey", self.journeys),
             ("statechart", self.statecharts),
             ("surface", self.product.surfaces),
+            ("feedback", self.feedback),
+            ("loop", self.loops),
         ):
             ids = [item.id for item in items]
             if len(ids) != len(set(ids)):

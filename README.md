@@ -17,7 +17,11 @@ in English — see the `ux-persona` skill.
 
 - **Target**: OpenHands Software Agent SDK **v1.49.6**, Python 3.12+
 - **Contract**: `{product}.ux.json` (`schema_version: 1`,
-  `system: "ux-creator"`) — see `src/ux_creator/contract.py`
+  `system: "ux-creator"`) — personas, jobs (ODI), journeys (typed
+  stages), service blueprint, statecharts (guards/actions/entry/exit),
+  `feedback[]` (Nielsen-budgeted trigger→response), `loops[]`
+  (action→reward cadence), QCD, imports — see
+  `src/ux_creator/contract.py`
 - **Design expression**: idiomatic Ruby via `ruby/lib/ux_dsl.rb` —
   `python -m ux_creator from-ruby design.rb`
 - **Plugin**: `plugins/ux` — agents `ux-creator`, `ux-research`,
@@ -87,9 +91,11 @@ high-risk requests must cite a job id in the rationale. See ADR-0003.
 ## Safety model
 
 - Gates (`gates.py`) are the only verdict source — statechart
-  reachability/initial/events/dead-ends, journey surface references,
-  emotion≤2 ⇒ pain point, JTBD three-dimension, non-empty
-  `core_experience`, import sha256. `unknown` never passes.
+  reachability/initial/events/dead-ends/determinism, journey surface
+  references, emotion≤2 ⇒ pain point, JTBD three-dimension, non-empty
+  `core_experience`, import sha256, feedback surface/trigger/latency
+  budgets, loop step/closure, onboarding presence. `unknown` never
+  passes.
 - `protect_generated` + `safety_rail` hooks deny hand edits to generated
   projections and dangerous writes.
 - Vision observations are L2 advisory records (`*.ux-vision.jsonl`) —

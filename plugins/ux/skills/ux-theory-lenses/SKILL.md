@@ -30,11 +30,15 @@ Consistency, direct manipulation, feedback, metaphors, user control.
 - **Flow (Csikszentmihalyi)** — challenge vs skill balance; anxiety and
   boredom are both failures. Watch difficulty curves and friction.
 - **Core loop** — the repeated action→reward cycle; every product has
-  one. Make it explicit in the journey.
+  one. Model it in `loops[]` (steps = statechart events/touchpoints,
+  reward, cadence); `loop.closes` fails unclosed moment/session loops.
 - **Feedback** — every action deserves visible/audible/haptic response;
-  silent systems erode trust (journey `emotion` drops below 3).
+  silent systems erode trust. Model it in `feedback[]` (trigger, surface,
+  modality, `latency_ms`, `progress_indicator`); Nielsen budgets are
+  gated deterministically (`feedback.latency_budget`).
 - **Onboarding** — teach inside the loop, not in a manual; first success
-  in under a minute.
+  in under a minute. Use stage `kind: "onboard"`; app surfaces without
+  an onboard stage fail `journey.onboarding_present`.
 - **Self-Determination Theory** — autonomy, competence, relatedness.
   Jobs map: functional ≈ competence, emotional ≈ autonomy, social ≈
   relatedness.
