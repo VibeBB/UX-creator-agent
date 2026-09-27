@@ -43,6 +43,9 @@ def main(argv: list[str] | None = None) -> int:
     for response in args.contract.parent.glob("*.ux-response.json"):
         args.out.mkdir(parents=True, exist_ok=True)
         (args.out / response.name).write_bytes(response.read_bytes())
+    for intake in args.contract.parent.glob("intake-touchpoints-*.advisory.json"):
+        args.out.mkdir(parents=True, exist_ok=True)
+        (args.out / intake.name).write_bytes(intake.read_bytes())
     report = run_gates(contract, args.contract.parent)
     paths = write_projections(contract, name, args.out)
     renders = render_all(args.out) if args.render else []
