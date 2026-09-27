@@ -37,4 +37,10 @@ ux-report.json. Bold (`bold: true`) proposals are only allowed against
 underserved jobs — anything else is blocked as
 `bold_without_opportunity`.
 
+**Coverage**: declare `jobs:` on journey stages (`stage :boil, jobs:
+%i[boil]` in the DSL, `"jobs": ["boil"]` in JSON) to link stages to the
+jobs they advance. `opportunity.coverage` fails when an underserved job
+is covered by no stage; `opportunity.stage_links` reports `unknown`
+when no stage links any job (legacy contracts warn, not fail).
+
 Gate: every job must carry all three dimensions (`jobs.three_dimensions`).

@@ -28,7 +28,8 @@ experience_loop :morning_brew, steps: %w[press boiled lifted],
 ```
 
 `state` accepts `description:`, `surface:`, `entry:`, `exit:`;
-`on` accepts `guard:` and `actions:`; `stage` accepts `kind:`∈
+`on` accepts `guard:` and `actions:`; `stage` accepts `jobs:` (job ids
+the stage advances) and `kind:`∈
 `{discover,onboard,use,recover,exit}` (default `:use`).
 
 ```ruby
