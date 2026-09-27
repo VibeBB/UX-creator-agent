@@ -11,6 +11,7 @@ from .advisory import load_visual_reviews, reconcile_findings
 from .contract import UXContract
 from .gates import GateReport
 from .render import RenderResult
+from .responses import liaison_status
 
 _REVIEW_IMAGE_SUFFIXES = {".svg", ".png"}
 
@@ -52,6 +53,34 @@ def review_lens(contract: UXContract, gate_report: GateReport, out_dir: Path) ->
             if f.reconciliation == "contradicted"
         ],
         "images_without_record": images_without,
+    }
+
+
+def liaison_lens(out_dir: Path) -> dict[str, Any]:
+    """Measured sister-agent response coverage; informational only."""
+    status = liaison_status(out_dir, out_dir)
+    by_status: dict[str, int] = {
+        "accepted": 0,
+        "rejected": 0,
+        "deferred": 0,
+        "needs_info": 0,
+    }
+    for entry in status.entries:
+        if entry.response_status is not None:
+            by_status[entry.response_status] += 1
+    return {
+        "requests": len(status.entries),
+        "answered": sum(1 for e in status.entries if e.state == "answered"),
+        "open": sum(1 for e in status.entries if e.state == "open"),
+        "mismatched": sum(1 for e in status.entries if e.state == "mismatched"),
+        "by_status": by_status,
+        "rejected_high_risk": [
+            e.request
+            for e in status.entries
+            if e.risk == "high" and e.response_status in ("rejected", "deferred")
+        ],
+        "orphans": status.orphans,
+        "malformed": status.malformed,
     }
 
 
@@ -108,6 +137,7 @@ def build_report(
     }
     if out_dir is not None and out_dir.is_dir():
         report["lenses"]["review"] = review_lens(contract, gate_report, out_dir)
+        report["lenses"]["liaison"] = liaison_lens(out_dir)
     if renders is not None:
         report["renders"] = [
             {
@@ -186,6 +216,22 @@ def render_markdown(report: dict[str, Any]) -> str:
         ]
         for c in review["contradicted"]:
             lines.append(f"  - contradicted: `{c['category']}` at {c['where']} ({c['record']})")
+    liaison = report.get("lenses", {}).get("liaison", {})
+    if liaison:
+        lines += [
+            "",
+            "## Liaison lens",
+            "",
+            f"- requests: {liaison['requests']} "
+            f"(answered {liaison['answered']}, open {liaison['open']}, "
+            f"mismatched {liaison['mismatched']})",
+            f"- response statuses: "
+            f"{', '.join(f'{k}={v}' for k, v in liaison['by_status'].items())}",
+            f"- rejected/deferred high-risk requests: "
+            f"{', '.join(liaison['rejected_high_risk']) or 'none'}",
+            f"- orphan responses: {len(liaison['orphans'])}, "
+            f"malformed files: {len(liaison['malformed'])}",
+        ]
     lines += ["", "## Checks", ""]
     for check in report["checks"]:
         detail = f" — {check['detail']}" if check.get("detail") else ""

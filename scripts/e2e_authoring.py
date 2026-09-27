@@ -37,11 +37,16 @@ def main(argv: list[str] | None = None) -> int:
 
     contract = load_contract(args.contract)
     name = args.contract.stem.removesuffix(".ux")
+
+    # Sister responses committed beside the contract are copied in so the
+    # liaison lens exercises end-to-end.
+    for response in args.contract.parent.glob("*.ux-response.json"):
+        args.out.mkdir(parents=True, exist_ok=True)
+        (args.out / response.name).write_bytes(response.read_bytes())
     report = run_gates(contract, args.contract.parent)
     paths = write_projections(contract, name, args.out)
     renders = render_all(args.out) if args.render else []
     write_provenance(contract, paths, args.out)
-    write_report(contract, report, args.out, renders)
 
     proposals_path = args.contract.with_name(
         args.contract.stem.removesuffix(".ux") + ".ux-proposals.json"
@@ -55,6 +60,8 @@ def main(argv: list[str] | None = None) -> int:
         blocked = [t.id for t in triage(contract, proposals) if t.status != "auto_send"]
         print(json.dumps({"stage": "propose", "blocked": blocked}))
 
+    # Report runs last so the liaison lens sees the requests triage wrote.
+    write_report(contract, report, args.out, renders)
     print(json.dumps({"verdict": report.verdict, "out": str(args.out)}))
     return 0 if report.verdict == "pass" else 1
 

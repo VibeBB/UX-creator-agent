@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "system": "ux-creator",
+  "request": "smart-kettle-led_brightness",
+  "responder": "circuit",
+  "status": "accepted",
+  "reason": "60% duty on the status LED during keep_warm fits the current driver",
+  "artifacts": []
+}
