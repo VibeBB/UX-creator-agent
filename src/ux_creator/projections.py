@@ -21,11 +21,12 @@ def _mermaid_journey(contract: UXContract, journey: Journey) -> str:
     lines = ["journey", f"    title {journey.id} — {contract.product.name}"]
     for stage in journey.stages:
         touchpoints = ", ".join(stage.touchpoints) if stage.touchpoints else "-"
-        label = stage.id
+        lines.append(f"    section {stage.id}")
+        task = touchpoints.replace(":", "-")
         if stage.jobs:
-            label += f" [jobs: {', '.join(stage.jobs)}]"
-        lines.append(f"    section {label}")
-        lines.append(f"        {touchpoints}: {stage.emotion}: {journey.persona or 'user'}")
+            task += f" (jobs {', '.join(stage.jobs)})"
+        persona = (journey.persona or "user").replace(":", "-")
+        lines.append(f"        {task}: {stage.emotion}: {persona}")
     return "\n".join(lines) + "\n"
 
 
@@ -86,11 +87,78 @@ def _plantuml_wireframe(contract: UXContract) -> str:
             }
         ):
             lines.append(f"    [ ] {tp}")
+        if not journey_hits and not any(
+            tp
+            for j in contract.journeys
+            for stage in j.stages
+            if surface.id in stage.surfaces
+            for tp in stage.touchpoints
+        ):
+            lines.append("    .")
         for stage_id in journey_hits:
             lines.append(f'    "{stage_id}"')
         lines.append("  }")
+        lines.append("}")
     lines += ["}", "@endsalt"]
     return "\n".join(lines) + "\n"
+
+
+def _puml_item(text: str) -> str:
+    """One-line PlantUML activity text: `;` -> `,`, newlines -> space."""
+    return text.replace(";", ",").replace("\n", " ").strip()
+
+
+def _plantuml_blueprint(contract: UXContract) -> str:
+    assert contract.service_blueprint is not None
+    lines = [
+        "@startuml",
+        f"title {contract.product.name} — service blueprint",
+        "|Customer|",
+    ]
+    if contract.journeys:
+        for journey in contract.journeys:
+            for stage in journey.stages:
+                tps = ", ".join(_puml_item(tp) for tp in stage.touchpoints)
+                label = f"{journey.id}/{stage.id}"
+                lines.append(f":{label} — touchpoints {tps};")
+    else:
+        lines.append(":no journeys declared;")
+    lanes = {
+        "Frontstage": contract.service_blueprint.frontstage,
+        "Backstage": contract.service_blueprint.backstage,
+        "Support": contract.service_blueprint.support_processes,
+    }
+    for lane, items in lanes.items():
+        lines.append(f"|{lane}|")
+        for item in items:
+            lines.append(f":{_puml_item(item)};")
+    lines.append("@enduml")
+    return "\n".join(lines) + "\n"
+
+
+def _mermaid_emotion(journey: Journey) -> str:
+    stages = ", ".join(f'"{stage.id}"' for stage in journey.stages)
+    values = ", ".join(str(stage.emotion) for stage in journey.stages)
+    return (
+        "xychart-beta\n"
+        f'    title "{journey.id} — emotion curve"\n'
+        f"    x-axis [{stages}]\n"
+        '    y-axis "emotion (1-5)" 1 --> 5\n'
+        f"    line [{values}]\n"
+    )
+
+
+def _emotion_data(journey: Journey) -> str:
+    rows = [
+        {
+            "stage": stage.id,
+            "emotion": stage.emotion,
+            "pain_points": stage.pain_points,
+            "jobs": stage.jobs,
+        }
+        for stage in journey.stages
+    ]
+    return json.dumps(rows, indent=2, sort_keys=True) + "\n"
 
 
 def _xstate_machine(chart: Statechart) -> dict[str, Any]:
@@ -268,6 +336,11 @@ def write_projections(contract: UXContract, name: str, out_dir: Path) -> dict[st
         )
         artifacts[f"{name}.{chart.id}.scxml"] = _scxml(chart)
     artifacts[f"{name}.wireframe.puml"] = _plantuml_wireframe(contract)
+    if contract.service_blueprint is not None:
+        artifacts[f"{name}.blueprint.puml"] = _plantuml_blueprint(contract)
+    for journey in contract.journeys:
+        artifacts[f"{name}.{journey.id}.emotion.mmd"] = _mermaid_emotion(journey)
+        artifacts[f"{name}.{journey.id}.emotion.json"] = _emotion_data(journey)
     artifacts[f"{name}.stories.json"] = (
         json.dumps(_stories(contract), indent=2, sort_keys=True) + "\n"
     )

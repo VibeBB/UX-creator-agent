@@ -40,7 +40,7 @@ It is the UX design member of the VibeBB sister-plugin family
 src/ux_creator/      # deterministic UX core
 ├── contract.py      # UXContract schema — the truth source
 ├── gates.py         # authoritative fail-closed gate runner
-├── projections.py   # mmd/puml/xstate/scxml/stories/odi/manifest/provenance
+├── projections.py   # mmd/puml/xstate/scxml/blueprint/emotion/stories/odi/manifest/provenance
 ├── render.py        # mmdc + plantuml subprocess rendering
 ├── imports.py       # sister contract import adapters (copy-in + sha256)
 ├── requests.py      # ux-request.json writers (low/high risk)

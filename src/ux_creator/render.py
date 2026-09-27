@@ -63,7 +63,15 @@ def render_plantuml(source: Path, out_dir: Path, fmt: str = "svg") -> RenderResu
     if jar is None:
         return RenderResult(source, None, "unknown", "PLANTUML_JAR not set / jar missing")
     proc = subprocess.run(
-        [java, "-jar", str(jar), f"-t{fmt}", "-output", str(out_dir), str(source)],
+        [
+            java,
+            "-jar",
+            str(jar),
+            f"-t{fmt}",
+            "-output",
+            str(out_dir.resolve()),
+            str(source.resolve()),
+        ],
         capture_output=True,
         text=True,
         check=False,
