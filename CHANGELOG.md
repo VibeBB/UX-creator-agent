@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- `*.journey.mmd` section labels no longer carry the `[jobs: …]` suffix
+  (invalid Mermaid journey syntax — parse error); jobs now ride the
+  task line as `(jobs: a, b)` after the touchpoints.
+- `*.wireframe.puml` Salt frames are balanced (`{+ … }`) and empty
+  inner blocks get a `.` placeholder — PlantUML no longer crashes.
+
 ### Added (phase 10)
 
 - Service-blueprint PlantUML projection `{name}.blueprint.puml` (Customer

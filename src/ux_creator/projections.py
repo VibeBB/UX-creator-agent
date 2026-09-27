@@ -21,11 +21,12 @@ def _mermaid_journey(contract: UXContract, journey: Journey) -> str:
     lines = ["journey", f"    title {journey.id} — {contract.product.name}"]
     for stage in journey.stages:
         touchpoints = ", ".join(stage.touchpoints) if stage.touchpoints else "-"
-        label = stage.id
+        lines.append(f"    section {stage.id}")
+        task = touchpoints.replace(":", "-")
         if stage.jobs:
-            label += f" [jobs: {', '.join(stage.jobs)}]"
-        lines.append(f"    section {label}")
-        lines.append(f"        {touchpoints}: {stage.emotion}: {journey.persona or 'user'}")
+            task += f" (jobs {', '.join(stage.jobs)})"
+        persona = (journey.persona or "user").replace(":", "-")
+        lines.append(f"        {task}: {stage.emotion}: {persona}")
     return "\n".join(lines) + "\n"
 
 
@@ -86,9 +87,18 @@ def _plantuml_wireframe(contract: UXContract) -> str:
             }
         ):
             lines.append(f"    [ ] {tp}")
+        if not journey_hits and not any(
+            tp
+            for j in contract.journeys
+            for stage in j.stages
+            if surface.id in stage.surfaces
+            for tp in stage.touchpoints
+        ):
+            lines.append("    .")
         for stage_id in journey_hits:
             lines.append(f'    "{stage_id}"')
         lines.append("  }")
+        lines.append("}")
     lines += ["}", "@endsalt"]
     return "\n".join(lines) + "\n"
 

@@ -81,7 +81,8 @@ def test_journey_mmd_jobs_label(example_contract: UXContract, tmp_path: Path) ->
     paths = write_projections(example_contract, "x", tmp_path)
     mmd = next(p for k, p in paths.items() if k.endswith(".journey.mmd"))
     text = mmd.read_text(encoding="utf-8")
-    assert "section boil [jobs: boil]" in text
+    assert "section boil" in text
+    assert "button, led, beep (jobs boil): " in text
 
 
 def test_innovation_lens_coverage(contract_dict: dict[str, Any], tmp_path: Path) -> None:
