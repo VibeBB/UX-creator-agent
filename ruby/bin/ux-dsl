@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Compile a `.ux.rb` DSL file to the `.ux.json` contract on stdout.
+#
+#   ruby bin/ux-dsl examples/smart-kettle/smart-kettle.ux.rb
+
+require "json"
+
+$LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
+require "ux_dsl"
+
+if ARGV.length != 1
+  warn "usage: ux-dsl <file.ux.rb>"
+  exit 2
+end
+
+begin
+  design = UX.compile_file(ARGV[0])
+rescue StandardError => e
+  warn "ux-dsl: #{e.message}"
+  exit 1
+end
+
+puts JSON.pretty_generate(design.to_h)
