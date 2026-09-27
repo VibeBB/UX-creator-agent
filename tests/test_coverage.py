@@ -30,12 +30,12 @@ def test_stage_jobs_unknown_rejected(contract_dict: dict[str, Any]) -> None:
         _contract(contract_dict)
 
 
-def test_stage_links_unknown_when_unlinked(contract_dict: dict[str, Any], tmp_path: Path) -> None:
-    # jobs declared but no stage links any of them -> warn, not fail
+def test_stage_links_fails_when_unlinked(contract_dict: dict[str, Any], tmp_path: Path) -> None:
+    # jobs declared but no stage links any of them -> fail-closed
     contract_dict["journeys"][0]["stages"][0]["jobs"] = []
     report = run_gates(_contract(contract_dict), tmp_path)
-    assert _check(report, "opportunity.stage_links").status == "unknown"
-    assert "coverage cannot be judged" in _check(report, "opportunity.stage_links").detail
+    assert _check(report, "opportunity.stage_links").status == "fail"
+    assert "link stages to jobs" in _check(report, "opportunity.stage_links").detail
 
 
 def test_coverage_pass_no_underserved(contract_dict: dict[str, Any], tmp_path: Path) -> None:

@@ -18,9 +18,10 @@ exact failure ODI exists to catch.
   (fail-closed). Additive; `schema_version` stays 1.
 - `opportunity.coverage` gate: every underserved job must appear in at
   least one `stage.jobs`; detail lists `uncovered underserved: ...`.
-- `opportunity.stage_links` companion check: `unknown` (warn, not fail)
-  when the contract has jobs but no stage links any — keeps legacy
-  contracts readable instead of silently passing coverage.
+- `opportunity.stage_links` companion check: `fail` when the contract
+  has jobs but no stage links any ("no stage declares jobs — link
+  stages to jobs"), consistent with the repo's `unknown = check could
+  not run` semantics — a missing linkage is a failure, not a warn.
 - `*.journey.mmd` gains `[jobs: a, b]` on section labels; `*.odi.csv`
   gains `covered_by` (`journey.stage` ids); `lenses.innovation` gains
   `coverage` and `uncovered_underserved`.

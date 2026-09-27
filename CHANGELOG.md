@@ -11,7 +11,8 @@ All notable changes to this project are documented here. The format follows
 - `Stage.jobs` links stages to the jobs they advance (fail-closed
   validator against declared job ids; Ruby DSL `stage ..., jobs:`).
 - `opportunity.coverage` gate fails on uncovered underserved jobs;
-  `opportunity.stage_links` reports `unknown` when no stage links jobs
+  `opportunity.stage_links` fails when jobs exist but
+  no stage links any
   (legacy contracts warn). `*.odi.csv` gains `covered_by`;
   `*.journey.mmd` labels stages with `[jobs: ...]`;
   `lenses.innovation.coverage`/`uncovered_underserved` in ux-report.

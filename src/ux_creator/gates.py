@@ -427,8 +427,8 @@ def _opportunity_checks(contract: UXContract) -> list[GateCheck]:
             GateCheck(
                 "opportunity.stage_links",
                 "jobs",
-                "unknown",
-                detail="no stage declares jobs — coverage cannot be judged",
+                "fail",
+                detail="no stage declares jobs — link stages to jobs",
             )
         )
     else:

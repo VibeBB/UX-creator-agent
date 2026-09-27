@@ -40,7 +40,7 @@ underserved jobs — anything else is blocked as
 **Coverage**: declare `jobs:` on journey stages (`stage :boil, jobs:
 %i[boil]` in the DSL, `"jobs": ["boil"]` in JSON) to link stages to the
 jobs they advance. `opportunity.coverage` fails when an underserved job
-is covered by no stage; `opportunity.stage_links` reports `unknown`
-when no stage links any job (legacy contracts warn, not fail).
+is covered by no stage; `opportunity.stage_links` fails closed when
+jobs exist but no stage links any.
 
 Gate: every job must carry all three dimensions (`jobs.three_dimensions`).
