@@ -23,7 +23,15 @@ import shlex
 import sys
 from typing import Any, cast
 
-ARTIFACT_SUFFIXES = (".mmd", ".puml", ".scxml", ".xstate.json", ".stories.json", ".odi.csv")
+ARTIFACT_SUFFIXES = (
+    ".mmd",
+    ".puml",
+    ".scxml",
+    ".xstate.json",
+    ".stories.json",
+    ".odi.csv",
+    ".emotion.json",
+)
 ARTIFACT_NAMES = (
     "manifest.json",
     "provenance.json",
