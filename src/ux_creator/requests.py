@@ -20,7 +20,7 @@ from .contract import UXContract
 SCHEMA_VERSION = 1
 SYSTEM = "ux-creator"
 TARGET_AGENTS = ("wire", "mech", "circuit", "bard")
-_JOB_ID = re.compile(r"\b[a-z][a-z0-9_]*\b")
+JOB_ID = re.compile(r"\b[a-z][a-z0-9_]*\b")
 
 
 class UXRequest(BaseModel):
@@ -46,7 +46,7 @@ def build_request(
         raise ValueError(f"unknown target_agent {target_agent!r}; expected one of {TARGET_AGENTS}")
     if risk == "high":
         job_ids = {j.id for j in contract.jobs}
-        cited = {tok for tok in _JOB_ID.findall(rationale.lower())} & job_ids
+        cited = {tok for tok in JOB_ID.findall(rationale.lower())} & job_ids
         if not cited:
             raise ValueError(
                 "high-risk requests must cite at least one job id in the rationale "

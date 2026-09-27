@@ -44,3 +44,24 @@ makes the `imports.*` gate report `unknown`.
 - **risk high** (tooling, board, firmware architecture): the CLI refuses
   unless `rationale` cites at least one declared job id — argue, never
   auto-send.
+
+## QCD triage: `ux propose` → `<name>.triage.json`
+
+`python -m ux_creator propose --contract C --proposals P.ux-proposals.json
+--out-dir out/` scores each change proposal deterministically and
+auto-sends the safe ones as ux-requests.
+
+| Surface layer | Risk | Default target |
+| --- | --- | --- |
+| hardware, mechanism, industrial_design | high | mech |
+| circuit | high | circuit |
+| firmware | high | — |
+| cloud_backend, web_ui, smartphone_app, pc_app | low | — |
+
+- `cost: high` or `delivery: slow` escalates any layer to high.
+- Statuses (first hit wins): `unknown_surface` → `unknown_job` →
+  `no_target` → `needs_rationale` → `auto_send`. Unknown surfaces fail
+  closed (`risk: high`, no request file).
+- Only `auto_send` proposals produce `*.ux-request.json`; high-risk ones
+  still need a job-cited rationale. Proposals may override
+  `target_agent` (must be a known sibling).

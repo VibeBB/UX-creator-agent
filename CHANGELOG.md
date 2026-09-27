@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added (phase 4)
+
+- `proposals.py` + `ux propose` / `ux_propose`: deterministic QCD triage
+  of `*.ux-proposals.json` — layer-based risk, statuses
+  (`auto_send`/`needs_rationale`/`no_target`/`unknown_job`/
+  `unknown_surface`), `<name>.triage.json` output, auto-emitted
+  ux-requests for `auto_send` proposals. Example proposals file for
+  smart-kettle; e2e runs propose when the file sits next to the
+  contract. ADR-0006.
+
 ### Added (phase 3)
 
 - Richer statecharts: `description`/`surface`/`entry`/`exit` on states,
