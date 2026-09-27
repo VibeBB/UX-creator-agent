@@ -75,6 +75,14 @@ def test_safety_rail_denies_push_main() -> None:
     assert _run_hook(RAIL_SCRIPT, payload).returncode == 2
 
 
+def test_safety_rail_denies_git_add_all() -> None:
+    for command in ("git add .", "git add -A", "git add --all"):
+        payload = {"tool_name": "terminal", "tool_input": {"command": command}}
+        assert _run_hook(RAIL_SCRIPT, payload).returncode == 2, command
+    payload = {"tool_name": "terminal", "tool_input": {"command": "git add src/ux_creator/cli.py"}}
+    assert _run_hook(RAIL_SCRIPT, payload).returncode == 0
+
+
 def test_safety_rail_allows_pytest() -> None:
     payload = {"tool_name": "terminal", "tool_input": {"command": "uv run pytest -q"}}
     assert _run_hook(RAIL_SCRIPT, payload).returncode == 0
