@@ -14,13 +14,17 @@ from typing import Any
 from xml.sax.saxutils import escape
 
 from .contract import Journey, Statechart, Transition, UXContract, contract_sha256
+from .gates import stage_job_coverage
 
 
 def _mermaid_journey(contract: UXContract, journey: Journey) -> str:
     lines = ["journey", f"    title {journey.id} — {contract.product.name}"]
     for stage in journey.stages:
         touchpoints = ", ".join(stage.touchpoints) if stage.touchpoints else "-"
-        lines.append(f"    section {stage.id}")
+        label = stage.id
+        if stage.jobs:
+            label += f" [jobs: {', '.join(stage.jobs)}]"
+        lines.append(f"    section {label}")
         lines.append(f"        {touchpoints}: {stage.emotion}: {journey.persona or 'user'}")
     return "\n".join(lines) + "\n"
 
@@ -230,7 +234,10 @@ def _mermaid_loops(contract: UXContract) -> str:
 
 
 def _odi_csv(contract: UXContract) -> str:
-    rows = ["job_id,functional,emotional,social,importance,satisfaction,opportunity,served"]
+    coverage = stage_job_coverage(contract)
+    rows = [
+        "job_id,functional,emotional,social,importance,satisfaction,opportunity,served,covered_by"
+    ]
     for job in sorted(contract.jobs, key=lambda j: (-j.opportunity, j.id)):
         fields = [
             job.id,
@@ -241,6 +248,7 @@ def _odi_csv(contract: UXContract) -> str:
             str(job.satisfaction),
             f"{job.opportunity:.1f}",
             job.served,
+            "|".join(coverage.get(job.id, [])),
         ]
         rows.append(",".join(f'"{f}"' if "," in f else f for f in fields))
     return "\n".join(rows) + "\n"
