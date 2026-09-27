@@ -19,6 +19,7 @@ from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
 
 from . import __version__
+from .advisory import load_visual_reviews, reconcile_findings
 from .contract import UXContract, load_contract
 from .doctor import run_doctor
 from .gates import run_gates
@@ -99,6 +100,16 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
         "type": "object",
         "properties": {"source": {"type": "string"}},
         "required": ["source"],
+        "additionalProperties": False,
+    },
+    "ux_review_reconcile": {
+        "type": "object",
+        "properties": {
+            "contract_path": {"type": "string"},
+            "out_dir": {"type": "string"},
+            "workspace": {"type": "string"},
+        },
+        "required": ["contract_path", "out_dir"],
         "additionalProperties": False,
     },
     "ux_render": {
@@ -217,6 +228,20 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     if name == "ux_mruby_check":
         result = mruby_check(Path(arguments["source"]))
         return {"verdict": "pass" if result.status == "ok" else "fail", "detail": result.detail}
+    if name == "ux_review_reconcile":
+        try:
+            contract = load_contract(arguments["contract_path"])
+            report = run_gates(contract, Path(arguments.get("workspace") or "."))
+            records, malformed = load_visual_reviews(Path(arguments["out_dir"]))
+            findings = reconcile_findings(contract, report, records)
+        except Exception as exc:
+            return {"verdict": "fail", "stage": "review-reconcile", "detail": str(exc)}
+        return {
+            "verdict": "pass",
+            "stage": "review-reconcile",
+            "findings": [f.model_dump() for f in findings],
+            "malformed": [str(p) for p in malformed],
+        }
     if name == "ux_render":
         results = render_all(Path(arguments["dir"]))
         return {

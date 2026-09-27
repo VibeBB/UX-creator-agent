@@ -26,7 +26,9 @@ triggers:
    out/<name> --render` writes Mermaid/PlantUML/XState/SCXML/stories/ODI
    projections plus manifest.json, provenance.json, ux-report.json/md.
    Rendered images need a `review-visual-*.advisory.json` record before
-   finishing (`python -m ux_creator review-record`).
+   finishing (`python -m ux_creator review-record`), then
+   `review-reconcile` checks findings against the gates — contradicted
+   findings must be re-examined, never used to override a verdict.
 5. **Cooperation** — sibling artifacts are imported with sha256
    provenance (`ux import`); outgoing change requests use
    `ux request` (see `ux-sibling-cooperation`).

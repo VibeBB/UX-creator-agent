@@ -43,3 +43,10 @@ permission_mode: never_confirm
 Observations are L2 advisory data. Write each review as
 `review-visual-<slug>.advisory.json` via `python -m ux_creator
 review-record`; a rendered image without a record is flagged at stop.
+
+After writing records, run `python -m ux_creator review-reconcile
+--contract <contract.ux.json> --out-dir out/<name>`: it checks each
+finding against the deterministic contract and gate results. Findings
+marked `contradicted` were disproven by the gates — re-look at the image
+and correct or withdraw the record; never use a finding to override a
+gate. The verdict comes only from `gates`.

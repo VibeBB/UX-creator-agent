@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added (phase 5)
+
+- Advisory reconciliation: `reconcile_findings` checks review-visual
+  findings against contract + gate truth (corroborated/contradicted/
+  unverifiable); `review-reconcile` CLI + `ux_review_reconcile` MCP
+  read tool; `lenses.review` section in ux-report (records, malformed,
+  severity/reconciliation counts, images without records). Verdict stays
+  gate-only. ADR-0007.
+
 ### Added (phase 4)
 
 - `proposals.py` + `ux propose` / `ux_propose`: deterministic QCD triage

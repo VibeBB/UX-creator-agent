@@ -1,7 +1,7 @@
 """python -m ux_creator — deterministic CLI entry points.
 
 Subcommands: doctor, gates, author, render, import, from-ruby, mruby-check,
-request, propose, review-record.
+request, propose, review-record, review-reconcile.
 
 Every subcommand prints a JSON verdict object and exits 0 only on
 "pass"/"ok"; fail-closed throughout.
@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__
-from .advisory import write_visual_review
+from .advisory import load_visual_reviews, reconcile_findings, write_visual_review
 from .contract import load_contract
 from .doctor import run_doctor
 from .gates import run_gates
@@ -180,6 +180,25 @@ def _cmd_propose(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_review_reconcile(args: argparse.Namespace) -> int:
+    try:
+        contract = load_contract(args.contract)
+        report = run_gates(contract, Path(args.workspace or "."))
+        records, malformed = load_visual_reviews(Path(args.out_dir))
+        findings = reconcile_findings(contract, report, records)
+    except Exception as exc:
+        return _fail("review-reconcile", exc)
+    _print(
+        {
+            "verdict": "pass",
+            "stage": "review-reconcile",
+            "findings": [f.model_dump() for f in findings],
+            "malformed": [str(p) for p in malformed],
+        }
+    )
+    return 0
+
+
 def _cmd_review_record(args: argparse.Namespace) -> int:
     try:
         path = write_visual_review(
@@ -264,6 +283,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--summary", required=True)
     p.add_argument("--model", default="")
     p.set_defaults(func=_cmd_review_record)
+
+    p = sub.add_parser(
+        "review-reconcile", help="reconcile review-visual advisory findings with gates"
+    )
+    p.add_argument("--contract", required=True)
+    p.add_argument("--out-dir", required=True)
+    p.add_argument("--workspace")
+    p.set_defaults(func=_cmd_review_reconcile)
 
     args = parser.parse_args(argv)
     if args.command == "doctor" and getattr(args, "warn", False):
