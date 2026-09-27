@@ -230,7 +230,7 @@ def _mermaid_loops(contract: UXContract) -> str:
 
 
 def _odi_csv(contract: UXContract) -> str:
-    rows = ["job_id,functional,emotional,social,importance,satisfaction,opportunity"]
+    rows = ["job_id,functional,emotional,social,importance,satisfaction,opportunity,served"]
     for job in sorted(contract.jobs, key=lambda j: (-j.opportunity, j.id)):
         fields = [
             job.id,
@@ -240,6 +240,7 @@ def _odi_csv(contract: UXContract) -> str:
             str(job.importance),
             str(job.satisfaction),
             f"{job.opportunity:.1f}",
+            job.served,
         ]
         rows.append(",".join(f'"{f}"' if "," in f else f for f in fields))
     return "\n".join(rows) + "\n"

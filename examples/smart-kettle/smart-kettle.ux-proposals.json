@@ -6,7 +6,9 @@
       "id": "app_onboard_tour",
       "surface": "mobile_app",
       "summary": "add a first-run pairing tour to the companion app",
-      "jobs": ["boil"],
+      "jobs": [
+        "boil"
+      ],
       "rationale": "",
       "cost": "medium",
       "delivery": "normal"
@@ -15,7 +17,9 @@
       "id": "led_brightness",
       "surface": "status_led",
       "summary": "drive the status LED at 60% duty during keep_warm",
-      "jobs": ["keep_warm"],
+      "jobs": [
+        "keep_warm"
+      ],
       "rationale": "keep_warm users need ambient feedback they can read across the kitchen",
       "cost": "low",
       "delivery": "fast"
@@ -24,8 +28,23 @@
       "id": "capacitive_button",
       "surface": "hardware_button",
       "summary": "replace the dome switch with a capacitive touch pad",
-      "jobs": ["boil"],
+      "jobs": [
+        "boil"
+      ],
       "rationale": "",
+      "cost": "high",
+      "delivery": "slow"
+    },
+    {
+      "id": "no_button_boil",
+      "surface": "kettle_body",
+      "summary": "remove the boil button — lift-and-place starts boil via the base load cell",
+      "jobs": [
+        "boil"
+      ],
+      "rationale": "boil is the core job; the pour ritual already signals intent",
+      "bold": true,
+      "theory_break": "HIG/affordance: primary action must have a visible control — we bet the pour ritual itself is the affordance",
       "cost": "high",
       "delivery": "slow"
     }
