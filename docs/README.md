@@ -28,3 +28,4 @@ specifications and design decisions.
 - [ADR-0011](adr/0011-stage-job-linkage-and-coverage-gate.md) — stage→job linkage and the coverage gate
 - [ADR-0012](adr/0012-intake-touchpoint-candidates.md) — intake-image touchpoint candidates
 - [ADR-0013](adr/0013-service-blueprint-and-emotion-curve-projections.md) — blueprint swimlane + CJM emotion projections
+- [ADR-0014](adr/0014-hig-numeric-gates-and-structural-projections.md) — HIG numeric gates + mindmap/sequence/WBS

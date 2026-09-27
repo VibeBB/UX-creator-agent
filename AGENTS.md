@@ -23,7 +23,8 @@ service blueprints, statecharts, QCD — and projects them into diagrams
 - UX output files are `{product}.ux.json`, `*.ux-proposals.json` +
   `*.triage.json`/`*.ux-request.json`/`*.ux-response.json` liaison files, `out/<name>/` projections
   (`*.journey.mmd`, `*.statechart.{mmd,puml,xstate.json,scxml}`,
-  `*.wireframe.puml`, `*.blueprint.puml`, `*.emotion.mmd`/`*.emotion.json`,
+  `*.wireframe.puml`, `*.blueprint.puml`, `*.emotion.mmd`/`*.emotion.json`, `*.mindmap.mmd`,
+  `*.sequence.puml`, `*.wbs.puml`,
   `*.stories.json`, `*.odi.csv`, `manifest.json`,
   `provenance.json`, `ux-report.json/.md`), `*.ux-request.json`, and
   `*.ux-vision.jsonl` advisory records.

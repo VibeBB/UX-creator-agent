@@ -40,7 +40,8 @@ It is the UX design member of the VibeBB sister-plugin family
 src/ux_creator/      # deterministic UX core
 ├── contract.py      # UXContract schema — the truth source
 ├── gates.py         # authoritative fail-closed gate runner
-├── projections.py   # mmd/puml/xstate/scxml/blueprint/emotion/stories/odi/manifest/provenance
+├── projections.py   # mmd/puml/xstate/scxml/blueprint/emotion/mindmap/
+│                          sequence/wbs/stories/odi/manifest/provenance
 ├── render.py        # mmdc + plantuml subprocess rendering
 ├── imports.py       # sister contract import adapters (copy-in + sha256)
 ├── requests.py      # ux-request.json writers (low/high risk)
@@ -103,6 +104,8 @@ layer-based risk decides auto-send vs hold. See ADR-0003 and ADR-0006.
   `core_experience`, import sha256, feedback surface/trigger/latency
   budgets, loop step/closure, onboarding presence. `unknown` never
   passes.
+  `hig.*` adds target-size (≥7.8 mm) and WCAG contrast checks on
+  declared `controls:`.
 - `protect_generated` + `safety_rail` hooks deny hand edits to generated
   projections and dangerous writes.
 - Vision observations are L2 advisory records (`*.ux-vision.jsonl`,
