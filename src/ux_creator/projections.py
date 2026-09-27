@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 from xml.sax.saxutils import escape
 
-from .contract import Journey, Statechart, UXContract, contract_sha256
+from .contract import Journey, Statechart, Transition, UXContract, contract_sha256
 
 
 def _mermaid_journey(contract: UXContract, journey: Journey) -> str:
@@ -25,7 +25,7 @@ def _mermaid_journey(contract: UXContract, journey: Journey) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _transition_label(t: Any) -> str:
+def _transition_label(t: Transition) -> str:
     label = t.event
     if t.guard:
         label += f" [{t.guard}]"
