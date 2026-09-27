@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added (phase 7)
+
+- Innovation lens: `Job.served` (underserved/appropriate/overserved),
+  `served` column in `*.odi.csv`, `lenses.innovation` in ux-report
+  (by_served, bold_proposals, bold_blocked, core_experience).
+- Bold proposals: `bold`/`theory_break` fields; blocked statuses
+  `needs_theory_break` and `bold_without_opportunity`; bold auto-send
+  forces high risk and prefixes the request rationale with
+  `[bold] breaks: <theory_break> — `. ADR-0010.
+
 ### Added (phase 6)
 
 - Sister response contract: `responses.py` + `liaison` CLI +

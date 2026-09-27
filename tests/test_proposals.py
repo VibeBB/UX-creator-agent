@@ -229,7 +229,11 @@ def test_cli_propose_round_trip(tmp_path: Path) -> None:
     payload = json.loads(proc.stdout)
     assert payload["verdict"] == "pass"
     assert payload["stage"] == "propose"
-    assert payload["blocked"] == ["app_onboard_tour", "capacitive_button"]
+    assert payload["blocked"] == [
+        "app_onboard_tour",
+        "capacitive_button",
+        "no_button_boil",
+    ]
     written = {Path(p).name for p in payload["written"].values()}
     assert "smart-kettle.triage.json" in written
     assert "smart-kettle-led_brightness.ux-request.json" in written

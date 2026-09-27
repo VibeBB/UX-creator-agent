@@ -90,6 +90,15 @@ class Job(BaseModel):
         """ODI opportunity score: importance + max(importance - satisfaction, 0)."""
         return self.importance + max(self.importance - self.satisfaction, 0)
 
+    @property
+    def served(self) -> Literal["underserved", "appropriate", "overserved"]:
+        """ODI classification: >=15 underserved, <=10 overserved, else appropriate."""
+        if self.opportunity >= 15:
+            return "underserved"
+        if self.opportunity <= 10:
+            return "overserved"
+        return "appropriate"
+
 
 class Stage(BaseModel):
     model_config = ConfigDict(extra="forbid")

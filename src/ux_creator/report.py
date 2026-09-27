@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from .advisory import load_visual_reviews, reconcile_findings
 from .contract import UXContract
@@ -84,6 +84,39 @@ def liaison_lens(out_dir: Path) -> dict[str, Any]:
     }
 
 
+def innovation_lens(contract: UXContract, out_dir: Path) -> dict[str, Any]:
+    """ODI classification + bold-proposal accounting; informational only."""
+    by_served: dict[str, list[str]] = {
+        "underserved": [],
+        "appropriate": [],
+        "overserved": [],
+    }
+    for job in contract.jobs:
+        by_served[job.served].append(job.id)
+    bold_proposals = 0
+    bold_blocked: list[str] = []
+    for triage_file in sorted(out_dir.glob("*.triage.json")):
+        try:
+            data = json.loads(triage_file.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        for item in data.get("triaged", []):
+            if not isinstance(item, dict):
+                continue
+            entry = cast(dict[str, Any], item)
+            if not entry.get("bold"):
+                continue
+            bold_proposals += 1
+            if entry.get("status") in ("needs_theory_break", "bold_without_opportunity"):
+                bold_blocked.append(str(entry.get("id")))
+    return {
+        "by_served": {k: sorted(v) for k, v in by_served.items()},
+        "bold_proposals": bold_proposals,
+        "bold_blocked": sorted(bold_blocked),
+        "core_experience": contract.core_experience,
+    }
+
+
 def build_report(
     contract: UXContract,
     gate_report: GateReport,
@@ -138,6 +171,7 @@ def build_report(
     if out_dir is not None and out_dir.is_dir():
         report["lenses"]["review"] = review_lens(contract, gate_report, out_dir)
         report["lenses"]["liaison"] = liaison_lens(out_dir)
+        report["lenses"]["innovation"] = innovation_lens(contract, out_dir)
     if renders is not None:
         report["renders"] = [
             {
@@ -231,6 +265,20 @@ def render_markdown(report: dict[str, Any]) -> str:
             f"{', '.join(liaison['rejected_high_risk']) or 'none'}",
             f"- orphan responses: {len(liaison['orphans'])}, "
             f"malformed files: {len(liaison['malformed'])}",
+        ]
+    innovation = report.get("lenses", {}).get("innovation", {})
+    if innovation:
+        served = innovation["by_served"]
+        lines += [
+            "",
+            "## Innovation lens",
+            "",
+            f"- underserved jobs: {', '.join(served['underserved']) or 'none'}",
+            f"- appropriate jobs: {', '.join(served['appropriate']) or 'none'}",
+            f"- overserved jobs: {', '.join(served['overserved']) or 'none'}",
+            f"- bold proposals: {innovation['bold_proposals']} "
+            f"(blocked: {', '.join(innovation['bold_blocked']) or 'none'})",
+            f"- core experience: {innovation['core_experience']}",
         ]
     lines += ["", "## Checks", ""]
     for check in report["checks"]:

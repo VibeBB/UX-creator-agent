@@ -10,6 +10,8 @@ Use `python -m ux_creator propose`. Each proposal is scored
 deterministically: low-risk changes become ux-request.json files
 immediately (`auto_send`), high-risk changes are held until the
 rationale cites a job id (`needs_rationale`), and layers with no sibling
-agent report `no_target`. Single requests can still be written directly
+agent report `no_target`. A `bold: true` proposal must also name the
+guideline it breaks (`theory_break`) and serve an underserved job — else
+`needs_theory_break` / `bold_without_opportunity`. Single requests can still be written directly
 with `python -m ux_creator request`; high-risk requests must cite a job
 id in the rationale.

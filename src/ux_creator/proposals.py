@@ -4,11 +4,13 @@ A `*.ux-proposals.json` file describes candidate changes the persona (or
 a sibling) wants to make. `triage` scores each proposal against the
 contract and assigns a deterministic status:
 
-- `auto_send`        — becomes a ux-request.json immediately
-- `needs_rationale`  — high-risk, and the rationale does not cite a job id
-- `no_target`        — no sibling agent exists for that surface's layer
-- `unknown_job`      — cites a job id that is not in the contract
-- `unknown_surface`  — references a surface that is not in the contract
+- `auto_send`               — becomes a ux-request.json immediately
+- `needs_rationale`         — high-risk, rationale does not cite a job id
+- `needs_theory_break`      — bold but no `theory_break` named
+- `bold_without_opportunity`— bold but none of its jobs is underserved
+- `no_target`               — no sibling agent exists for that layer
+- `unknown_job`             — cites a job id that is not in the contract
+- `unknown_surface`         — references a surface not in the contract
 
 Risk is layer-based: hardware-adjacent layers (hardware, mechanism,
 industrial_design, circuit, firmware) are `high` because they cost real
@@ -34,7 +36,13 @@ SYSTEM = "ux-creator"
 
 ProposalRisk = Literal["low", "high"]
 ProposalStatus = Literal[
-    "auto_send", "needs_rationale", "no_target", "unknown_job", "unknown_surface"
+    "auto_send",
+    "needs_rationale",
+    "needs_theory_break",
+    "bold_without_opportunity",
+    "no_target",
+    "unknown_job",
+    "unknown_surface",
 ]
 
 HIGH_RISK_LAYERS: frozenset[SurfaceLayer] = frozenset(
@@ -65,6 +73,8 @@ class ChangeProposal(BaseModel):
     target_agent: str = ""
     cost: QCDLevel = "medium"
     delivery: QCDDelivery = "normal"
+    bold: bool = False
+    theory_break: str = ""
 
 
 class ProposalSet(BaseModel):
@@ -85,6 +95,8 @@ class TriagedProposal(BaseModel):
     status: ProposalStatus
     target_agent: str
     opportunity: float
+    bold: bool = False
+    served: dict[str, str] = Field(default_factory=dict[str, str])
     reasons: list[str]
 
 
@@ -114,11 +126,14 @@ def triage(contract: UXContract, proposals: ProposalSet) -> list[TriagedProposal
         )
         if risk == "high" and layer is not None:
             reasons.append(f"high risk: layer {layer!r}/cost/delivery escalation")
+        served = {j.id: j.served for j in contract.jobs if j.id in set(prop.jobs)}
         opportunity = round(sum(job_scores[j] for j in prop.jobs if j in job_scores), 2)
         unknown_jobs = sorted(j for j in prop.jobs if j not in job_scores)
         target = prop.target_agent or (
             LAYER_TARGETS[layer][0] if layer is not None and LAYER_TARGETS[layer] else ""
         )
+        if prop.bold:
+            risk = "high"  # bold bets are always argued as high risk
 
         if surface is None:
             status: ProposalStatus = "unknown_surface"
@@ -129,6 +144,12 @@ def triage(contract: UXContract, proposals: ProposalSet) -> list[TriagedProposal
         elif not target:
             status = "no_target"
             reasons.append(f"no sibling agent exists for layer {layer!r}")
+        elif prop.bold and not prop.theory_break.strip():
+            status = "needs_theory_break"
+            reasons.append("bold proposal must name the theory/guideline it breaks")
+        elif prop.bold and "underserved" not in served.values():
+            status = "bold_without_opportunity"
+            reasons.append("bold proposals must serve at least one underserved job")
         elif risk == "high" and not _cites_job(prop.rationale, prop.jobs):
             status = "needs_rationale"
             reasons.append(
@@ -147,6 +168,8 @@ def triage(contract: UXContract, proposals: ProposalSet) -> list[TriagedProposal
                 status=status,
                 target_agent=target,
                 opportunity=opportunity,
+                bold=prop.bold,
+                served=served,
                 reasons=reasons,
             )
         )
@@ -184,11 +207,14 @@ def write_triage(
         if t.status != "auto_send":
             continue
         prop = by_id[t.id]
+        rationale = prop.rationale or prop.summary
+        if prop.bold:
+            rationale = f"[bold] breaks: {prop.theory_break} — {rationale}"
         request = build_request(
             contract,
             target_agent=t.target_agent,
             risk=t.risk,
-            rationale=prop.rationale or prop.summary,
+            rationale=rationale,
             requested_changes=[prop.summary],
         )
         paths[t.id] = write_request(request, out_dir, f"{name}-{t.id}")
