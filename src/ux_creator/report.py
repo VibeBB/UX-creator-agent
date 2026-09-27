@@ -3,18 +3,63 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
+from .advisory import load_visual_reviews, reconcile_findings
 from .contract import UXContract
 from .gates import GateReport
 from .render import RenderResult
+
+_REVIEW_IMAGE_SUFFIXES = {".svg", ".png"}
+
+
+def _review_slug(stem: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", stem.lower()).strip("-") or "image"
+
+
+def review_lens(contract: UXContract, gate_report: GateReport, out_dir: Path) -> dict[str, Any]:
+    """Measured advisory-review coverage; informational only, never a verdict."""
+    records, malformed = load_visual_reviews(out_dir)
+    findings = reconcile_findings(contract, gate_report, records)
+    by_severity: dict[str, int] = {"info": 0, "minor": 0, "major": 0}
+    for f in findings:
+        by_severity[f.severity] += 1
+    reconciliation = {"corroborated": 0, "contradicted": 0, "unverifiable": 0}
+    for f in findings:
+        reconciliation[f.reconciliation] += 1
+    reviewed = {
+        _review_slug(path.stem.removeprefix("review-visual-").removesuffix(".advisory"))
+        for path, _r in records
+    }
+    images_without = sorted(
+        str(image)
+        for image in out_dir.iterdir()
+        if image.is_file()
+        and image.suffix.lower() in _REVIEW_IMAGE_SUFFIXES
+        and not (out_dir / f"review-visual-{_review_slug(image.stem)}.advisory.json").exists()
+        and _review_slug(image.stem) not in reviewed
+    )
+    return {
+        "records": sum(1 for _p, r in records if r.status == "ok"),
+        "malformed": [str(p) for p in malformed],
+        "findings_by_severity": by_severity,
+        "reconciliation": reconciliation,
+        "contradicted": [
+            {"category": f.category, "where": f.where, "record": f.record}
+            for f in findings
+            if f.reconciliation == "contradicted"
+        ],
+        "images_without_record": images_without,
+    }
 
 
 def build_report(
     contract: UXContract,
     gate_report: GateReport,
     renders: list[RenderResult] | None = None,
+    out_dir: Path | None = None,
 ) -> dict[str, Any]:
     report = gate_report.to_dict(contract)
     report["schema_version"] = 1
@@ -61,6 +106,8 @@ def build_report(
             ),
         }
     }
+    if out_dir is not None and out_dir.is_dir():
+        report["lenses"]["review"] = review_lens(contract, gate_report, out_dir)
     if renders is not None:
         report["renders"] = [
             {
@@ -80,7 +127,7 @@ def write_report(
     out_dir: Path,
     renders: list[RenderResult] | None = None,
 ) -> Path:
-    report = build_report(contract, gate_report, renders)
+    report = build_report(contract, gate_report, renders, out_dir=out_dir)
     path = out_dir / "ux-report.json"
     path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (out_dir / "ux-report.md").write_text(render_markdown(report), encoding="utf-8")
@@ -122,6 +169,23 @@ def render_markdown(report: dict[str, Any]) -> str:
             f"{', '.join(lens['surfaces_without_feedback']) or 'none'}",
             f"- onboard stages: {lens['onboard_stages']}, recover stages: {lens['recover_stages']}",
         ]
+    review = report.get("lenses", {}).get("review", {})
+    if review:
+        recon = review["reconciliation"]
+        lines += [
+            "",
+            "## Review lens (advisory)",
+            "",
+            f"- advisory records: {review['records']} (malformed: {len(review['malformed'])})",
+            f"- findings by severity: "
+            f"{', '.join(f'{k}={v}' for k, v in review['findings_by_severity'].items())}",
+            f"- reconciliation: corroborated={recon['corroborated']}, "
+            f"contradicted={recon['contradicted']}, "
+            f"unverifiable={recon['unverifiable']}",
+            f"- images without a review record: {len(review['images_without_record'])}",
+        ]
+        for c in review["contradicted"]:
+            lines.append(f"  - contradicted: `{c['category']}` at {c['where']} ({c['record']})")
     lines += ["", "## Checks", ""]
     for check in report["checks"]:
         detail = f" — {check['detail']}" if check.get("detail") else ""
