@@ -443,9 +443,86 @@ def run_gates(contract: UXContract, workspace: Path | None = None) -> GateReport
     checks += _wrap("jobs", _job_checks, contract)
     checks += _wrap("opportunity", _opportunity_checks, contract)
     checks += _wrap("feedback", _feedback_checks, contract)
+    checks += _wrap("hig", _hig_checks, contract)
     checks += _wrap("loops", _loop_checks, contract)
     checks += _wrap("core_experience", _core_experience_checks, contract)
     if contract.imports:
         checks += _wrap("imports", _import_checks, contract, workspace or Path.cwd())
     verdict: Literal["pass", "fail"] = "pass" if all(c.status == "pass" for c in checks) else "fail"
     return GateReport(checks=checks, verdict=verdict)
+
+
+MIN_TARGET_MM = 7.8  # 44pt @163ppi
+_TARGET_KINDS = {"button", "touch", "dial", "switch"}
+
+
+def _rel_luminance(hex6: str) -> float:
+    def channel(v: float) -> float:
+        return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+
+    r, g, b = (int(hex6[i : i + 2], 16) / 255 for i in (1, 3, 5))
+    return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+
+
+def contrast_ratio(fg: str, bg: str) -> float:
+    """WCAG 2.x contrast ratio of two #RRGGBB colors."""
+    l1, l2 = sorted((_rel_luminance(fg), _rel_luminance(bg)), reverse=True)
+    return (l1 + 0.05) / (l2 + 0.05)
+
+
+def _hig_checks(contract: UXContract) -> list[GateCheck]:
+    sized = [
+        c
+        for c in contract.controls
+        if c.kind in _TARGET_KINDS and (c.width_mm is not None or c.height_mm is not None)
+    ]
+    too_small = [
+        f"{c.id}:{c.width_mm}x{c.height_mm}"
+        for c in sized
+        if (c.width_mm is not None and c.width_mm < MIN_TARGET_MM)
+        or (c.height_mm is not None and c.height_mm < MIN_TARGET_MM)
+    ]
+    smallest = min(
+        (min(v for v in (c.width_mm, c.height_mm) if v is not None) for c in sized),
+        default=None,
+    )
+    checks = [
+        GateCheck(
+            "hig.target_size",
+            "controls",
+            "fail" if too_small else "pass",
+            measured=smallest,
+            limit=MIN_TARGET_MM,
+            detail=(
+                f"undersized controls: {', '.join(too_small)}"
+                if too_small
+                else "no undersized controls"
+                if sized
+                else "no sized controls"
+            ),
+        )
+    ]
+    colored = [c for c in contract.controls if c.fg and c.bg]
+    ratios = {c.id: round(contrast_ratio(c.fg, c.bg), 2) for c in colored}
+    failing = [
+        f"{cid}:{ratio}"
+        for cid, ratio in sorted(ratios.items())
+        if ratio < (3.0 if next(c for c in colored if c.id == cid).large_text else 4.5)
+    ]
+    checks.append(
+        GateCheck(
+            "hig.contrast",
+            "controls",
+            "fail" if failing else "pass",
+            measured=min(ratios.values(), default=None),
+            limit=4.5,
+            detail=(
+                f"low contrast: {', '.join(failing)}"
+                if failing
+                else "no low-contrast controls"
+                if colored
+                else "no colored controls"
+            ),
+        )
+    )
+    return checks

@@ -161,6 +161,94 @@ def _emotion_data(journey: Journey) -> str:
     return json.dumps(rows, indent=2, sort_keys=True) + "\n"
 
 
+def _mm_label(text: str) -> str:
+    """Mindmap-safe node text: ()/[] -> -, whitespace collapsed."""
+    return text.replace("(", "-").replace(")", "-").replace("[", "-").replace("]", "-")
+
+
+def _mermaid_mindmap(contract: UXContract) -> str:
+    lines = ["mindmap", f"  root(({_mm_label(contract.product.name)}))", "    Personas"]
+    for persona in contract.personas:
+        lines.append(f"      {_mm_label(persona.id)}")
+    lines.append("    Jobs")
+    for job in contract.jobs:
+        lines.append(f"      {_mm_label(job.id)} -{_mm_label(job.served)}-")
+    lines.append("    Surfaces")
+    for surface in contract.product.surfaces:
+        lines.append(f"      {_mm_label(surface.id)}")
+        touchpoints = sorted(
+            {
+                tp
+                for journey in contract.journeys
+                for stage in journey.stages
+                if surface.id in stage.surfaces
+                for tp in stage.touchpoints
+            }
+        )
+        for tp in touchpoints:
+            lines.append(f"        {_mm_label(tp)}")
+    lines.append("    Journeys")
+    for journey in contract.journeys:
+        lines.append(f"      {_mm_label(journey.id)}")
+        for stage in journey.stages:
+            lines.append(f"        {_mm_label(stage.id)}")
+    return "\n".join(lines) + "\n"
+
+
+def _puml_text(text: str) -> str:
+    return text.replace(":", "-").replace("\n", " ").strip()
+
+
+def _plantuml_sequence(contract: UXContract, journey: Journey) -> str:
+    surfaces: list[str] = []
+    for stage in journey.stages:
+        for sid in stage.surfaces:
+            if sid not in surfaces:
+                surfaces.append(sid)
+    lines = [
+        "@startuml",
+        f"title {journey.id} — sequence",
+        f'actor "{_puml_text(journey.persona or "user")}" as U',
+    ]
+    for i, sid in enumerate(surfaces):
+        lines.append(f'participant "{sid}" as S_{i}')
+    if not surfaces:
+        lines.append('participant "unassigned" as S_0')
+    for stage in journey.stages:
+        lines.append(f"== {stage.id} ({stage.kind}) ==")
+        for sid in stage.surfaces or ["unassigned"]:
+            alias = f"S_{surfaces.index(sid)}" if sid in surfaces else "S_0"
+            lines.append(f"U -> {alias} : {_puml_text(', '.join(stage.touchpoints) or '-')}")
+        note = f"emotion {stage.emotion}/5"
+        if stage.pain_points:
+            note += " — pain: " + _puml_text(", ".join(stage.pain_points))
+        lines.append(f"note right of U : {note}")
+    lines.append("@enduml")
+    return "\n".join(lines) + "\n"
+
+
+def _plantuml_wbs(contract: UXContract) -> str:
+    lines = ["@startwbs", f"* {_puml_text(contract.product.name)}"]
+    surface_touchpoints: dict[str, set[str]] = {}
+    for journey in contract.journeys:
+        for stage in journey.stages:
+            for sid in stage.surfaces:
+                surface_touchpoints.setdefault(sid, set()).update(stage.touchpoints)
+    for surface in contract.product.surfaces:
+        lines.append(f"** {surface.id} ({surface.layer})")
+        for tp in sorted(surface_touchpoints.get(surface.id, set())):
+            lines.append(f"*** {_puml_text(tp)}")
+        for control in contract.controls:
+            if control.surface == surface.id:
+                lines.append(f"*** control: {control.id}")
+    if contract.implementation_spec:
+        lines.append("** Implementation spec")
+        for item in contract.implementation_spec:
+            lines.append(f"*** {_puml_text(item)}")
+    lines.append("@endwbs")
+    return "\n".join(lines) + "\n"
+
+
 def _xstate_machine(chart: Statechart) -> dict[str, Any]:
     initial = next((s.id for s in chart.states if s.initial), None)
     states: dict[str, Any] = {}
@@ -338,6 +426,10 @@ def write_projections(contract: UXContract, name: str, out_dir: Path) -> dict[st
     artifacts[f"{name}.wireframe.puml"] = _plantuml_wireframe(contract)
     if contract.service_blueprint is not None:
         artifacts[f"{name}.blueprint.puml"] = _plantuml_blueprint(contract)
+    artifacts[f"{name}.mindmap.mmd"] = _mermaid_mindmap(contract)
+    artifacts[f"{name}.wbs.puml"] = _plantuml_wbs(contract)
+    for journey in contract.journeys:
+        artifacts[f"{name}.{journey.id}.sequence.puml"] = _plantuml_sequence(contract, journey)
     for journey in contract.journeys:
         artifacts[f"{name}.{journey.id}.emotion.mmd"] = _mermaid_emotion(journey)
         artifacts[f"{name}.{journey.id}.emotion.json"] = _emotion_data(journey)

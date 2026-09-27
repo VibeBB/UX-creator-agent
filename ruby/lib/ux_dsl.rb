@@ -34,6 +34,7 @@ module UX
   QCD_DELIVERY = %i[slow normal fast].freeze
   STAGE_KINDS = %i[discover onboard use recover exit].freeze
   MODALITIES = %i[visual audio haptic motion text].freeze
+  CONTROL_KINDS = %i[button touch dial switch link gesture].freeze
   CADENCES = %i[moment session daily weekly].freeze
 
   Surface = Struct.new(:id, :layer, :name, :notes)
@@ -45,6 +46,8 @@ module UX
   Transition = Struct.new(:from_state, :event, :to, :guard, :actions)
   Statechart = Struct.new(:id, :states, :transitions)
   Blueprint = Struct.new(:frontstage, :backstage, :support_processes)
+  Control = Struct.new(:id, :surface, :kind, :touchpoint, :width_mm, :height_mm,
+                       :fg, :bg, :large_text)
   Feedback = Struct.new(:id, :trigger, :surface, :modality, :latency_ms,
                         :progress_indicator, :description)
   ExperienceLoop = Struct.new(:id, :steps, :reward, :cadence)
@@ -63,6 +66,7 @@ module UX
       @journeys = []
       @statecharts = []
       @feedback = []
+      @controls = []
       @loops = []
       @blueprint = nil
       @core_experience = ""
@@ -127,6 +131,18 @@ module UX
                                 description.to_s)
     end
 
+    def control(id, surface:, kind: :touch, size_mm: nil, touchpoint: "",
+                fg: "", bg: "", large_text: false)
+      unless CONTROL_KINDS.include?(kind)
+        raise DesignError, "unknown control kind #{kind.inspect}; expected #{CONTROL_KINDS.inspect}"
+      end
+
+      width_mm, height_mm = size_mm || []
+      @controls << Control.new(id.to_s, surface.to_s, kind.to_s, touchpoint.to_s,
+                               width_mm, height_mm, fg.to_s, bg.to_s,
+                               large_text ? true : false)
+    end
+
     # `loop` is Kernel#loop, so the DSL verb is `experience_loop`.
     def experience_loop(id, steps:, reward: "", cadence: :session)
       unless CADENCES.include?(cadence)
@@ -187,6 +203,11 @@ module UX
               { "from" => t.from_state, event: t.event, to: t.to,
                 guard: t.guard, actions: t.actions }
             end }
+        end,
+        controls: @controls.map do |c|
+          { id: c.id, surface: c.surface, kind: c.kind, touchpoint: c.touchpoint,
+            width_mm: c.width_mm, height_mm: c.height_mm, fg: c.fg, bg: c.bg,
+            large_text: c.large_text }
         end,
         feedback: @feedback.map do |f|
           { id: f.id, trigger: f.trigger, surface: f.surface, modality: f.modality,

@@ -42,3 +42,7 @@ must record a pain_point — the gates enforce it.
 Declare `jobs:` on journey stages to link each stage to the job ids it
 advances (`stage :boil, jobs: %i[boil]`). `opportunity.coverage` fails
 when an underserved job is covered by no stage.
+
+Declare every physical or in-app control with `control :id, surface:…,
+kind:…, size_mm: [w, h], fg:/bg:, touchpoint:` — `hig.*` gates check
+target size and contrast, so omit only what you truly cannot measure.

@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added (phase 11)
+
+- `controls:` contract list — physical/app controls with surface,
+  kind, optional `size_mm`, `fg`/`bg` `#RRGGBB` and `large_text`;
+  fail-closed validators (unknown surface/touchpoint, partial colors).
+- `hig.*` gate group: `hig.target_size` (≥7.8 mm ≈ 44pt) and
+  `hig.contrast` (WCAG 4.5:1, 3:1 for large_text) — real verdict gates.
+- Projections: `{name}.mindmap.mmd`, `{name}.{journey}.sequence.puml`,
+  `{name}.wbs.puml`. ADR-0014.
+
 ### Fixed
 
 - `*.journey.mmd` section labels no longer carry the `[jobs: …]` suffix

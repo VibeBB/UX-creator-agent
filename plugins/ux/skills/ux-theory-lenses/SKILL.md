@@ -78,3 +78,15 @@ support processes beneath. Pain lives at the seams.
 
 Quality / cost / delivery is a triangle: pick two to lead, state the
 third honestly in `qcd.rationale`.
+
+## HIG numbers that are gates, not vibes
+
+Two HIG/WCAG rules are enforced by `hig.*` gates on declared
+`controls:`:
+
+- **Target size**: button/touch/dial/switch controls with declared
+  `size_mm` must be ≥ 7.8 mm on a side (44pt @163ppi). Undeclared
+  dimensions are ignored — measure, don't guess.
+- **Contrast**: a control with `fg`/`bg` must reach WCAG 4.5:1
+  (3:1 when `large_text`), computed via relative luminance —
+  `contrast_ratio(fg, bg)`.

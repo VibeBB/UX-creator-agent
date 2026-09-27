@@ -33,6 +33,9 @@ never hand-edit.
 | `<name>.blueprint.puml` | PlantUML swimlane service blueprint (Customer journey lane + Frontstage/Backstage/Support); only when `service_blueprint` is declared | `ux author` |
 | `<name>.<journey>.emotion.mmd` | Mermaid `xychart-beta` emotion curve (stage emotion 1-5) | `ux author` |
 | `<name>.<journey>.emotion.json` | Emotion-curve data `[{stage, emotion, pain_points, jobs}]` for tooling | `ux author` |
+| `<name>.mindmap.mmd` | Mermaid `mindmap`: personas, jobs (served class), surfaces→touchpoints, journeys→stages | `ux author` |
+| `<name>.<journey>.sequence.puml` | PlantUML sequence: actor × journey surfaces, per-stage messages + emotion notes | `ux author` |
+| `<name>.wbs.puml` | PlantUML WBS: product → surfaces → touchpoints/controls → implementation spec | `ux author` |
 | `<name>.experience-loops.mmd` | Mermaid `flowchart LR` per `loops[]` (steps → reward) | `ux author` |
 
 Transition labels render as `event [guard] / action1, action2` on
