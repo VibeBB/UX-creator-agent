@@ -50,3 +50,11 @@ finding against the deterministic contract and gate results. Findings
 marked `contradicted` were disproven by the gates — re-look at the image
 and correct or withdraw the record; never use a finding to override a
 gate. The verdict comes only from `gates`.
+
+Intake: for a product photo or screenshot, record observed touchpoints
+with `python -m ux_creator intake-record <image> --touchpoint
+id[@surface]=evidence ...`, then `intake-reconcile` compares them with
+the contract's declared stage touchpoints. `undeclared` candidates are
+new-touchpoint leads — open a proposal (`ux propose`), never hand-edit
+the contract; `unobserved` means the contract declares something no
+image shows. Advisory only — never a gate input.

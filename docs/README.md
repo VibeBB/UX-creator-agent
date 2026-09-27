@@ -26,3 +26,4 @@ specifications and design decisions.
 - [ADR-0009](adr/0009-rust-mermaid-renderer-evaluation.md) — mmdr evaluation (not adopted)
 - [ADR-0010](adr/0010-bold-proposals-and-opportunity-coverage.md) — bold proposals and ODI served classes
 - [ADR-0011](adr/0011-stage-job-linkage-and-coverage-gate.md) — stage→job linkage and the coverage gate
+- [ADR-0012](adr/0012-intake-touchpoint-candidates.md) — intake-image touchpoint candidates

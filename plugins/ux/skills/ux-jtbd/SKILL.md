@@ -44,3 +44,12 @@ is covered by no stage; `opportunity.stage_links` fails closed when
 jobs exist but no stage links any.
 
 Gate: every job must carry all three dimensions (`jobs.three_dimensions`).
+
+## Observed vs declared touchpoints
+
+Intake images yield `TouchpointCandidate` records
+(`intake-touchpoints-*.advisory.json`) — what the reviewer actually saw.
+`intake-reconcile` diffs them against `stage.touchpoints`: `undeclared`
+candidates are design leads (route through `ux propose`), `unobserved`
+touchpoints are contract claims no photo confirms. Advisory data only;
+the contract is still the truth source.
