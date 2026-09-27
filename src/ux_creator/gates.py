@@ -8,6 +8,7 @@ Every check emits a structured result: status is "pass", "fail", or
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -61,7 +62,7 @@ class GateReport:
         }
 
 
-def _wrap(check_id: str, fn: Any, *args: Any) -> list[GateCheck]:
+def _wrap(check_id: str, fn: Callable[..., list[GateCheck]], *args: Any) -> list[GateCheck]:
     try:
         return fn(*args)
     except Exception as exc:  # fail-closed: unexpected error → unknown
