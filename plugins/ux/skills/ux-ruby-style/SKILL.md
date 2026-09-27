@@ -17,6 +17,20 @@ Author contracts as `*.ux.rb` and compile with
 `python -m ux_creator from-ruby file.ux.rb --out <project>.ux.json`
 (or `ruby ruby/bin/ux-dsl file.ux.rb` for raw JSON).
 
+Note: `loop` collides with `Kernel#loop`, so experience loops are
+declared with `experience_loop`:
+
+```ruby
+feedback :led, trigger: :press, surface: :status_led,
+         modality: :visual, latency_ms: 50
+experience_loop :morning_brew, steps: %w[press boiled lifted],
+                reward: "hot water without waiting", cadence: :daily
+```
+
+`state` accepts `description:`, `surface:`, `entry:`, `exit:`;
+`on` accepts `guard:` and `actions:`; `stage` accepts `kind:`∈
+`{discover,onboard,use,recover,exit}` (default `:use`).
+
 ```ruby
 UX.design "kettle" do
   persona :busy_parent, goals: ["hot water fast"], context: "morning rush"

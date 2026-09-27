@@ -37,10 +37,17 @@ as gates.
 - **Flow**: challenge/skill balance; friction and boredom both show up
   as journey emotion dips.
 - **Core loop**: the repeated action→reward cycle a product must make
-  explicit.
+  explicit. The contract's `loops[]` records it: `steps` (statechart
+  events or stage touchpoints), `reward`, `cadence`; the `loop.closes`
+  gate fails moment/session loops with no reward.
 - **Feedback**: every action needs a response — silent transitions are
-  where trust leaks.
+  where trust leaks. `feedback[]` pairs a `trigger` with a `surface`,
+  `modality`, and `latency_ms`; `feedback.latency_budget` enforces
+  Nielsen's response-time limits (≤1 s fine, >1 s needs a
+  `progress_indicator`, >10 s always fails).
 - **Onboarding**: teach inside the loop; first success in under a minute.
+  Stage `kind: "onboard"` marks it; `journey.onboarding_present` fails
+  when app surfaces exist without one.
 - **Self-Determination Theory**: autonomy/competence/relatedness ≈ the
   JTBD emotional/functional/social split.
 
