@@ -43,12 +43,13 @@ src/ux_creator/      # deterministic UX core
 ├── render.py        # mmdc + plantuml subprocess rendering
 ├── imports.py       # sibling contract import adapters (copy-in + sha256)
 ├── requests.py      # ux-request.json writers (low/high risk)
+├── proposals.py     # QCD triage: .ux-proposals.json → triage + auto ux-requests
 ├── advisory.py      # typed L2 visual-review records (never verdicts)
 ├── report.py        # ux-report.json/.md
 ├── doctor.py        # environment probe
 ├── ruby_bridge.py   # ruby/mrbc subprocess adapters
 ├── cli.py           # python -m ux_creator {doctor,gates,author,render,
-│                    #   import,from-ruby,mruby-check,request,review-record}
+│                    #   import,from-ruby,mruby-check,request,propose,review-record}
 └── mcp_server.py    # stdio MCP boundary (deterministic tools only)
 plugins/ux/          # OpenHands plugin (agents/commands/skills/hooks/launcher)
 ruby/                # ux-dsl library, bin/ux-dsl, .rubocop.yml, minitest
@@ -86,7 +87,9 @@ envelopes (`"mech"`), wire harness contracts (`"wire"`), and bard
 artifacts as **touchpoint candidates** — copied in with sha256
 provenance, recorded in `imports[]`. It sends change proposals to
 siblings via `<name>.ux-request.json`: low-risk requests are deliverable;
-high-risk requests must cite a job id in the rationale. See ADR-0003.
+high-risk requests must cite a job id in the rationale. `ux propose`
+triages a `*.ux-proposals.json` batch deterministically — layer-based
+risk decides auto-send vs hold. See ADR-0003 and ADR-0006.
 
 ## Safety model
 

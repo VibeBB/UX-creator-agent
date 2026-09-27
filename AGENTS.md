@@ -20,7 +20,8 @@ service blueprints, statecharts, QCD — and projects them into diagrams
   Agent/command/skill files are Markdown with YAML frontmatter — do not
   put logic in them; every executable step delegates to
   `python -m ux_creator` inside the `ux-tools` container image.
-- UX output files are `{product}.ux.json`, `out/<name>/` projections
+- UX output files are `{product}.ux.json`, `*.ux-proposals.json` +
+  `*.triage.json`/`*.ux-request.json` triage outputs, `out/<name>/` projections
   (`*.journey.mmd`, `*.statechart.{mmd,puml,xstate.json,scxml}`,
   `*.wireframe.puml`, `*.stories.json`, `*.odi.csv`, `manifest.json`,
   `provenance.json`, `ux-report.json/.md`), `*.ux-request.json`, and
@@ -62,8 +63,8 @@ service blueprints, statecharts, QCD — and projects them into diagrams
 
 ```
 src/ux_creator/         Python core: contract, gates, projections, imports,
-                        requests, advisory, report, render, doctor,
-                        ruby_bridge, cli, mcp_server
+                        requests, proposals, advisory, report, render,
+                        doctor, ruby_bridge, cli, mcp_server
 plugins/ux/             OpenHands plugin (agents, commands, skills, hooks,
                         launcher, .mcp.json)
 ruby/                   ux-dsl library, runner, rubocop config, minitest

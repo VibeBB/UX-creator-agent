@@ -20,3 +20,4 @@ specifications and design decisions.
 - [ADR-0003](adr/0003-sibling-cooperation-via-contracts.md) — sibling cooperation via workspace contracts
 - [ADR-0004](adr/0004-plantuml-mit-and-tool-licenses.md) — PlantUML MIT jar and tool license policy
 - [ADR-0005](adr/0005-experience-loops-and-feedback-lens.md) — experience loops, feedback records, game-design lens
+- [ADR-0006](adr/0006-qcd-triage-of-proposals.md) — QCD triage of change proposals
