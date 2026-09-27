@@ -30,6 +30,9 @@ never hand-edit.
 | `<name>.<chart>.scxml` | SCXML document | `ux author` |
 | `<name>.stories.json` | Storybook story requirements per surface (default/empty/error/loading-or-idle + touchpoints) | `ux author` |
 | `<name>.odi.csv` | ODI opportunity table sorted by score | `ux author` |
+| `<name>.blueprint.puml` | PlantUML swimlane service blueprint (Customer journey lane + Frontstage/Backstage/Support); only when `service_blueprint` is declared | `ux author` |
+| `<name>.<journey>.emotion.mmd` | Mermaid `xychart-beta` emotion curve (stage emotion 1-5) | `ux author` |
+| `<name>.<journey>.emotion.json` | Emotion-curve data `[{stage, emotion, pain_points, jobs}]` for tooling | `ux author` |
 | `<name>.experience-loops.mmd` | Mermaid `flowchart LR` per `loops[]` (steps → reward) | `ux author` |
 
 Transition labels render as `event [guard] / action1, action2` on

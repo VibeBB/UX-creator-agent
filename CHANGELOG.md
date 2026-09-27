@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added (phase 10)
+
+- Service-blueprint PlantUML projection `{name}.blueprint.puml` (Customer
+  journey lane + Frontstage/Backstage/Support swimlanes) when the
+  contract declares `service_blueprint`; per-journey CJM emotion curve
+  `{name}.{journey}.emotion.mmd` (Mermaid `xychart-beta`) plus
+  `{name}.{journey}.emotion.json` data. ADR-0013.
+
 ### Added (phase 8)
 
 - `Stage.jobs` links stages to the jobs they advance (fail-closed
