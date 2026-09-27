@@ -1,4 +1,4 @@
-name: Publish ux_creator images
+name: Publish ux images
 
 on:
   push:
@@ -19,12 +19,12 @@ on:
       - "!docker/image-digests.json"
       # The plugin pin is written by this workflow itself; exclude it so a
       # merged pin PR does not trigger another publish.
-      - "!plugins/ux/skills/ux_creator-workflow/tools-image.json"
+      - "!plugins/ux/skills/ux-workflow/tools-image.json"
       - "!docker/README.md"
   workflow_dispatch:
 
 concurrency:
-  group: publish-ux_creator-images
+  group: publish-ux-images
   cancel-in-progress: false
 
 permissions:
@@ -98,14 +98,14 @@ jobs:
         run: |
           set -euo pipefail
           docker pull "$TOOLS_REF"
-          docker run --rm --user ux_creator "$TOOLS_REF" \
+          docker run --rm --user ux "$TOOLS_REF" \
             python /opt/ux/scripts/e2e_authoring.py \
               --contract /opt/ux/examples/smart-kettle/smart-kettle.ux.json \
               --out /tmp/ux-smoke/smart-kettle
       - name: Record published image summary
         run: |
           {
-            echo "## ux_creator images"
+            echo "## ux images"
             echo
             echo "- **tools**: \`$TOOLS_REF\`"
             echo "- **tools digest**: \`$TOOLS_DIGEST\`"
@@ -188,24 +188,24 @@ jobs:
           import json
 
           entry = json.load(open("docker/image-digests.json"))["ux_tools"]
-          pin = "plugins/ux/skills/ux_creator-workflow/tools-image.json"
+          pin = "plugins/ux/skills/ux-workflow/tools-image.json"
           with open(pin, "w", encoding="utf-8") as out:
               json.dump(entry, out, indent=2)
               out.write("\n")
           PY
           # status --porcelain (not diff --quiet) so a still-untracked lock
           # file on the very first publish is detected as a change too.
-          if [ -z "$(git status --porcelain -- docker/image-digests.json plugins/ux/skills/ux_creator-workflow/tools-image.json)" ]; then
+          if [ -z "$(git status --porcelain -- docker/image-digests.json plugins/ux/skills/ux-workflow/tools-image.json)" ]; then
             echo "Image digest lock is unchanged; no pull request is needed."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docker/image-digests.json plugins/ux/skills/ux_creator-workflow/tools-image.json
-          git commit -m "Update ux_creator image digest lock"
+          git add docker/image-digests.json plugins/ux/skills/ux-workflow/tools-image.json
+          git commit -m "Update ux image digest lock"
           retry git push --set-upstream origin "$branch"
           body=$(printf '%s\n' \
-            "The publish workflow updated the ux_creator image digest lock." \
+            "The publish workflow updated the ux image digest lock." \
             "" \
             "tools: ${TOOLS_REF}" \
             "workflow run: ${workflow_run}")
@@ -219,7 +219,7 @@ jobs:
               --delete-branch || true
           done
           pr_url=$(retry gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$branch" \
-            --title "Update ux_creator image digest lock" --body "$body")
+            --title "Update ux image digest lock" --body "$body")
           # pull_request-triggered runs on the bot branch (ci.yml, workflow
           # lint, ...) can land as action_required under an approval-gated
           # Actions policy. Their check suites become the newest

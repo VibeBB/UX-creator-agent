@@ -62,7 +62,7 @@
         {
           "type": "command",
           "name": "report-ux-status",
-          "command": "p=$(for c in \"${UX_PLUGIN_ROOT:-}\" \"${OPENHANDS_PROJECT_DIR:-.}/plugins/ux\" \"${HOME:-}/.agents/plugins/ux\" \"${HOME:-}/.openhands/plugins/installed/ux\"; do [ -f \"$c/hooks/scripts/report_ux_status.py\" ] && printf %s \"$c\" && break; done); [ -n \"$p\" ] || { echo \"ux plugin root unresolved\" >&2; exit 1; }; exec python3 \"$p/hooks/scripts/report_design_status.py\""
+          "command": "p=$(for c in \"${UX_PLUGIN_ROOT:-}\" \"${OPENHANDS_PROJECT_DIR:-.}/plugins/ux\" \"${HOME:-}/.agents/plugins/ux\" \"${HOME:-}/.openhands/plugins/installed/ux\"; do [ -f \"$c/hooks/scripts/report_ux_status.py\" ] && printf %s \"$c\" && break; done); [ -n \"$p\" ] || { echo \"ux plugin root unresolved\" >&2; exit 1; }; exec python3 \"$p/hooks/scripts/report_ux_status.py\""
         },
         {
           "type": "command",

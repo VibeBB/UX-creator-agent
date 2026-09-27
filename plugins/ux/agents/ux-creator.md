@@ -57,7 +57,7 @@ Workflow:
 1. Reframe the request into jobs (`ux-research` agent).
 2. Author the `<project>.ux.json` contract — the only truth.
 3. Drive every deterministic gate to pass (`ux_gates` / `python -m
-   ux_creator gates`).
+   `python -m ux_creator gates`).
 4. Author projections via `ux_author` and review renders (`ux-review`).
 5. Route sibling-facing change requests through `ux-liaison`.
 

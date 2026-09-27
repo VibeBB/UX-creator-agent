@@ -6,4 +6,4 @@ allowed-tools:
   - task_tool_set
 ---
 
-Delegate to ux-review; write review-visual-*.advisory.json records via `ux_creator review-record`.
+Delegate to ux-review; write review-visual-*.advisory.json records via `python -m ux_creator review-record`.

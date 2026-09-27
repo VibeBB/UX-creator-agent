@@ -231,7 +231,7 @@ jobs:
           REF: ${{ needs.bump-version.outputs.sha }}
         run: >
           uv run --group sdk-check python scripts/smoke_install_plugin.py
-          --repo VibeBB/ux-creator-agent --ref "$REF" --repo-path plugins/ux
+          --repo VibeBB/UX-creator-agent --ref "$REF" --repo-path plugins/ux
 
   release:
     needs: [bump-version, verify, install-smoke]
@@ -262,7 +262,7 @@ jobs:
             --out dist/samples/smart-kettle
       - name: Build release zips
         run: |
-          (cd plugins && zip -r "../dist/ux-plugin-v${VERSION}.zip" ux_creator)
+          (cd plugins && zip -r "../dist/ux-plugin-v${VERSION}.zip" ux)
           zip -r "dist/ux-samples-v${VERSION}.zip" dist/samples
       - name: Create release and tag
         env:
@@ -278,4 +278,4 @@ jobs:
             return 1
           }
           retry gh release create "v${VERSION}" --target "$SHA" \
-            --title "ux_creator v${VERSION}" --generate-notes dist/*.zip
+            --title "ux-creator-agent v${VERSION}" --generate-notes dist/*.zip
