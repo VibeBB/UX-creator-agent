@@ -27,7 +27,7 @@ from .advisory import (
 )
 from .contract import UXContract, load_contract
 from .doctor import run_doctor
-from .gates import run_gates
+from .gates import FAIL, PASS, run_gates
 from .imports import import_source
 from .projections import write_projections, write_provenance
 from .proposals import ProposalSet, triage, write_triage
@@ -180,8 +180,8 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         try:
             UXContract.model_validate(arguments["contract"])
         except Exception as exc:
-            return {"verdict": "fail", "stage": "validate", "detail": str(exc)}
-        return {"verdict": "pass", "stage": "validate"}
+            return {"verdict": FAIL, "stage": "validate", "detail": str(exc)}
+        return {"verdict": PASS, "stage": "validate"}
     if name == "ux_gates":
         contract = load_contract(arguments["contract_path"])
         report = run_gates(contract, Path(arguments.get("workspace") or "."))
@@ -199,14 +199,14 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     if name == "ux_from_ruby":
         result = contract_from_ruby(Path(arguments["source"]))
         if result.contract is None:
-            return {"verdict": "fail", "stage": "from-ruby", "detail": result.detail}
+            return {"verdict": FAIL, "stage": "from-ruby", "detail": result.detail}
         out = Path(arguments["out"])
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(
             json.dumps(result.contract.model_dump(by_alias=True), indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
-        return {"verdict": "pass", "stage": "from-ruby", "contract": str(out)}
+        return {"verdict": PASS, "stage": "from-ruby", "contract": str(out)}
     if name == "ux_import":
         contract = load_contract(arguments["contract_path"])
         contract = import_source(contract, arguments["system"], Path(arguments["file"]))
@@ -214,7 +214,7 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             json.dumps(contract.model_dump(by_alias=True), indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
-        return {"verdict": "pass", "imports": [r.model_dump() for r in contract.imports]}
+        return {"verdict": PASS, "imports": [r.model_dump() for r in contract.imports]}
     if name == "ux_request":
         try:
             contract = load_contract(arguments["contract_path"])
@@ -227,8 +227,8 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             )
             path = write_request(request, Path(arguments["out_dir"]))
         except Exception as exc:
-            return {"verdict": "fail", "stage": "request", "detail": str(exc)}
-        return {"verdict": "pass", "request": str(path)}
+            return {"verdict": FAIL, "stage": "request", "detail": str(exc)}
+        return {"verdict": PASS, "request": str(path)}
     if name == "ux_propose":
         try:
             contract = load_contract(arguments["contract_path"])
@@ -239,16 +239,16 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             paths = write_triage(contract, proposals, Path(arguments["out_dir"]), name_stem)
             blocked = [t.id for t in triage(contract, proposals) if t.status != "auto_send"]
         except Exception as exc:
-            return {"verdict": "fail", "stage": "propose", "detail": str(exc)}
+            return {"verdict": FAIL, "stage": "propose", "detail": str(exc)}
         return {
-            "verdict": "pass",
+            "verdict": PASS,
             "stage": "propose",
             "written": {k: str(p) for k, p in paths.items()},
             "blocked": blocked,
         }
     if name == "ux_mruby_check":
         result = mruby_check(Path(arguments["source"]))
-        return {"verdict": "pass" if result.status == "ok" else "fail", "detail": result.detail}
+        return {"verdict": PASS if result.status == "ok" else FAIL, "detail": result.detail}
     if name == "ux_review_reconcile":
         try:
             contract = load_contract(arguments["contract_path"])
@@ -256,9 +256,9 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             records, malformed = load_visual_reviews(Path(arguments["out_dir"]))
             findings = reconcile_findings(contract, report, records)
         except Exception as exc:
-            return {"verdict": "fail", "stage": "review-reconcile", "detail": str(exc)}
+            return {"verdict": FAIL, "stage": "review-reconcile", "detail": str(exc)}
         return {
-            "verdict": "pass",
+            "verdict": PASS,
             "stage": "review-reconcile",
             "findings": [f.model_dump() for f in findings],
             "malformed": [str(p) for p in malformed],
@@ -267,9 +267,9 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         try:
             status = liaison_status(Path(arguments["out_dir"]), Path(arguments["out_dir"]))
         except Exception as exc:
-            return {"verdict": "fail", "stage": "liaison", "detail": str(exc)}
+            return {"verdict": FAIL, "stage": "liaison", "detail": str(exc)}
         payload = status.model_dump()
-        payload["verdict"] = "pass"
+        payload["verdict"] = PASS
         payload["stage"] = "liaison"
         return payload
     if name == "ux_intake_reconcile":
@@ -279,15 +279,15 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             recon = reconcile_intake(contract, records)
             recon.malformed = [str(p) for p in malformed]
         except Exception as exc:
-            return {"verdict": "fail", "stage": "intake-reconcile", "detail": str(exc)}
+            return {"verdict": FAIL, "stage": "intake-reconcile", "detail": str(exc)}
         payload = recon.model_dump()
-        payload["verdict"] = "pass"
+        payload["verdict"] = PASS
         payload["stage"] = "intake-reconcile"
         return payload
     if name == "ux_render":
         results = render_all(Path(arguments["dir"]))
         return {
-            "verdict": "pass",
+            "verdict": PASS,
             "renders": [
                 {
                     "source": str(r.source),
@@ -298,7 +298,7 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
                 for r in results
             ],
         }
-    return {"verdict": "fail", "detail": f"unknown tool {name}"}
+    return {"verdict": FAIL, "detail": f"unknown tool {name}"}
 
 
 @server.call_tool()
@@ -306,7 +306,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.ContentB
     try:
         payload = await dispatch_tool(name, arguments or {})
     except Exception as exc:  # fail-closed transport
-        payload = {"verdict": "fail", "detail": f"{name} error: {exc}"}
+        payload = {"verdict": FAIL, "detail": f"{name} error: {exc}"}
     return _text(payload)
 
 

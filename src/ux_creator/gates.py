@@ -10,11 +10,15 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
 from .contract import UXContract, contract_sha256
 
 CheckStatus = Literal["pass", "fail", "unknown"]
+Verdict = Literal["pass", "fail"]
+PASS: Final = "pass"
+FAIL: Final = "fail"
+UNKNOWN: Final = "unknown"
 
 
 @dataclass(frozen=True)
@@ -30,13 +34,13 @@ class GateCheck:
 @dataclass(frozen=True)
 class GateReport:
     checks: list[GateCheck]
-    verdict: Literal["pass", "fail"]
+    verdict: Verdict
 
     def to_dict(self, contract: UXContract) -> dict[str, Any]:
         summary = {
-            "pass": sum(1 for c in self.checks if c.status == "pass"),
-            "fail": sum(1 for c in self.checks if c.status == "fail"),
-            "unknown": sum(1 for c in self.checks if c.status == "unknown"),
+            PASS: sum(1 for c in self.checks if c.status == PASS),
+            FAIL: sum(1 for c in self.checks if c.status == FAIL),
+            UNKNOWN: sum(1 for c in self.checks if c.status == UNKNOWN),
         }
         return {
             "schema_version": 1,
@@ -65,7 +69,7 @@ def _wrap(check_id: str, fn: Any, *args: Any) -> list[GateCheck]:
     try:
         return fn(*args)
     except Exception as exc:  # fail-closed: unexpected error → unknown
-        return [GateCheck(check_id, check_id, "unknown", detail=f"check error: {exc}")]
+        return [GateCheck(check_id, check_id, UNKNOWN, detail=f"check error: {exc}")]
 
 
 def _statechart_checks(contract: UXContract) -> list[GateCheck]:
@@ -78,7 +82,7 @@ def _statechart_checks(contract: UXContract) -> list[GateCheck]:
             GateCheck(
                 f"{cid}.single_initial",
                 chart.id,
-                "pass" if len(initials) == 1 else "fail",
+                PASS if len(initials) == 1 else FAIL,
                 measured=float(len(initials)),
                 limit=1.0,
                 detail=f"initial states: {initials or 'none'}",
@@ -92,7 +96,7 @@ def _statechart_checks(contract: UXContract) -> list[GateCheck]:
             GateCheck(
                 f"{cid}.states_defined",
                 chart.id,
-                "pass" if not undefined else "fail",
+                PASS if not undefined else FAIL,
                 detail=f"undefined state refs: {', '.join(undefined)}" if undefined else "",
             )
         )
@@ -113,7 +117,7 @@ def _statechart_checks(contract: UXContract) -> list[GateCheck]:
             GateCheck(
                 f"{cid}.reachability",
                 chart.id,
-                "pass" if not unreachable else "fail",
+                PASS if not unreachable else FAIL,
                 detail=f"unreachable: {', '.join(unreachable)}" if unreachable else "",
             )
         )
@@ -123,7 +127,7 @@ def _statechart_checks(contract: UXContract) -> list[GateCheck]:
             GateCheck(
                 f"{cid}.no_dead_end",
                 chart.id,
-                "pass" if not dead else "fail",
+                PASS if not dead else FAIL,
                 detail=f"non-final states with no exit: {', '.join(dead)}" if dead else "",
             )
         )
@@ -154,7 +158,7 @@ def _statechart_checks(contract: UXContract) -> list[GateCheck]:
             GateCheck(
                 f"{cid}.deterministic",
                 chart.id,
-                "pass" if not bad else "fail",
+                PASS if not bad else FAIL,
                 detail=(
                     "shared (from,event) without distinct non-empty guards: " + ", ".join(bad)
                     if bad
@@ -172,7 +176,7 @@ def _statechart_checks(contract: UXContract) -> list[GateCheck]:
             GateCheck(
                 f"{cid}.state_surface_declared",
                 chart.id,
-                "pass" if not bad_surfaces else "fail",
+                PASS if not bad_surfaces else FAIL,
                 detail=(
                     f"states referencing undeclared surfaces: {', '.join(bad_surfaces)}"
                     if bad_surfaces
@@ -182,7 +186,7 @@ def _statechart_checks(contract: UXContract) -> list[GateCheck]:
         )
     if not contract.statecharts:
         checks.append(
-            GateCheck("statechart.present", "statecharts", "fail", detail="no statecharts declared")
+            GateCheck("statechart.present", "statecharts", FAIL, detail="no statecharts declared")
         )
     return checks
 
@@ -199,7 +203,7 @@ def _journey_checks(contract: UXContract) -> list[GateCheck]:
             GateCheck(
                 f"{jid}.surfaces_declared",
                 journey.id,
-                "pass" if not missing else "fail",
+                PASS if not missing else FAIL,
                 detail=f"undeclared surfaces: {', '.join(missing)}" if missing else "",
             )
         )
@@ -210,16 +214,14 @@ def _journey_checks(contract: UXContract) -> list[GateCheck]:
             GateCheck(
                 f"{jid}.pain_points_recorded",
                 journey.id,
-                "pass" if not bare else "fail",
+                PASS if not bare else FAIL,
                 detail=(
                     f"stages with emotion<=2 and no pain_point: {', '.join(bare)}" if bare else ""
                 ),
             )
         )
     if not contract.journeys:
-        checks.append(
-            GateCheck("journey.present", "journeys", "fail", detail="no journeys declared")
-        )
+        checks.append(GateCheck("journey.present", "journeys", FAIL, detail="no journeys declared"))
     app_layers = {"web_ui", "smartphone_app", "pc_app"}
     has_app = any(s.layer in app_layers for s in contract.product.surfaces)
     if has_app:
@@ -233,7 +235,7 @@ def _journey_checks(contract: UXContract) -> list[GateCheck]:
             GateCheck(
                 "journey.onboarding_present",
                 "journeys",
-                "pass" if onboard else "fail",
+                PASS if onboard else FAIL,
                 detail=(
                     "app surfaces declared but no onboard stage"
                     if not onboard
@@ -255,7 +257,7 @@ def _job_checks(contract: UXContract) -> list[GateCheck]:
         GateCheck(
             "jobs.three_dimensions",
             "jobs",
-            "pass" if contract.jobs and not thin else "fail",
+            PASS if contract.jobs and not thin else FAIL,
             detail=(
                 "no jobs declared"
                 if not contract.jobs
@@ -283,7 +285,7 @@ def _feedback_checks(contract: UXContract) -> list[GateCheck]:
         GateCheck(
             "feedback.surface_declared",
             "feedback",
-            "pass" if not bad_surfaces else "fail",
+            PASS if not bad_surfaces else FAIL,
             detail=(
                 f"feedback on undeclared surfaces: {', '.join(bad_surfaces)}"
                 if bad_surfaces
@@ -296,7 +298,7 @@ def _feedback_checks(contract: UXContract) -> list[GateCheck]:
         GateCheck(
             "feedback.trigger_known",
             "feedback",
-            "pass" if not bad_triggers else "fail",
+            PASS if not bad_triggers else FAIL,
             detail=(
                 f"feedback with unknown triggers: {', '.join(bad_triggers)}" if bad_triggers else ""
             ),
@@ -312,7 +314,7 @@ def _feedback_checks(contract: UXContract) -> list[GateCheck]:
         GateCheck(
             "feedback.latency_budget",
             "feedback",
-            "pass" if not bad_latency else "fail",
+            PASS if not bad_latency else FAIL,
             measured=float(worst) if worst is not None else None,
             limit=10000.0,
             detail=(
@@ -335,7 +337,7 @@ def _loop_checks(contract: UXContract) -> list[GateCheck]:
         GateCheck(
             "loop.steps_known",
             "loops",
-            "pass" if not bad else "fail",
+            PASS if not bad else FAIL,
             detail=f"loop steps unknown: {', '.join(bad)}" if bad else "",
         )
     )
@@ -348,7 +350,7 @@ def _loop_checks(contract: UXContract) -> list[GateCheck]:
         GateCheck(
             "loop.closes",
             "loops",
-            "pass" if not open_loops else "fail",
+            PASS if not open_loops else FAIL,
             detail=(
                 f"moment/session loops without reward: {', '.join(open_loops)}"
                 if open_loops
@@ -364,7 +366,7 @@ def _core_experience_checks(contract: UXContract) -> list[GateCheck]:
         GateCheck(
             "core_experience.non_empty",
             "core_experience",
-            "pass" if contract.core_experience.strip() else "fail",
+            PASS if contract.core_experience.strip() else FAIL,
         )
     ]
 
@@ -376,7 +378,7 @@ def _import_checks(contract: UXContract, workspace: Path) -> list[GateCheck]:
         cid = f"imports.{ref.system}:{Path(ref.path).name}"
         if not path.is_file():
             checks.append(
-                GateCheck(cid, ref.path, "unknown", detail="imported file missing in workspace")
+                GateCheck(cid, ref.path, UNKNOWN, detail="imported file missing in workspace")
             )
             continue
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -384,7 +386,7 @@ def _import_checks(contract: UXContract, workspace: Path) -> list[GateCheck]:
             GateCheck(
                 cid,
                 ref.path,
-                "pass" if digest == ref.sha256 else "fail",
+                PASS if digest == ref.sha256 else FAIL,
                 detail=f"sha256 {digest[:12]}… vs declared {ref.sha256[:12]}…",
             )
         )
@@ -412,7 +414,7 @@ def _opportunity_checks(contract: UXContract) -> list[GateCheck]:
         GateCheck(
             "opportunity.coverage",
             "jobs",
-            "pass" if not uncovered else "fail",
+            PASS if not uncovered else FAIL,
             detail=(
                 f"uncovered underserved: {', '.join(uncovered)}"
                 if uncovered
@@ -427,12 +429,12 @@ def _opportunity_checks(contract: UXContract) -> list[GateCheck]:
             GateCheck(
                 "opportunity.stage_links",
                 "jobs",
-                "fail",
+                FAIL,
                 detail="no stage declares jobs — link stages to jobs",
             )
         )
     else:
-        checks.append(GateCheck("opportunity.stage_links", "jobs", "pass"))
+        checks.append(GateCheck("opportunity.stage_links", "jobs", PASS))
     return checks
 
 
@@ -448,7 +450,7 @@ def run_gates(contract: UXContract, workspace: Path | None = None) -> GateReport
     checks += _wrap("core_experience", _core_experience_checks, contract)
     if contract.imports:
         checks += _wrap("imports", _import_checks, contract, workspace or Path.cwd())
-    verdict: Literal["pass", "fail"] = "pass" if all(c.status == "pass" for c in checks) else "fail"
+    verdict: Verdict = PASS if all(c.status == PASS for c in checks) else FAIL
     return GateReport(checks=checks, verdict=verdict)
 
 
@@ -490,7 +492,7 @@ def _hig_checks(contract: UXContract) -> list[GateCheck]:
         GateCheck(
             "hig.target_size",
             "controls",
-            "fail" if too_small else "pass",
+            FAIL if too_small else PASS,
             measured=smallest,
             limit=MIN_TARGET_MM,
             detail=(
@@ -513,7 +515,7 @@ def _hig_checks(contract: UXContract) -> list[GateCheck]:
         GateCheck(
             "hig.contrast",
             "controls",
-            "fail" if failing else "pass",
+            FAIL if failing else PASS,
             measured=min(ratios.values(), default=None),
             limit=4.5,
             detail=(
