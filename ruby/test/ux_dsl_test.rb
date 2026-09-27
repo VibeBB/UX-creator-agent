@@ -47,8 +47,58 @@ class UxDslTest < Minitest::Test
     chart = design.to_h[:statecharts].first
     assert_equal 2, chart[:states].size
     assert chart[:states].first[:initial]
-    assert_equal({ "from" => "idle", :event => "press", :to => "heating" },
+    assert_equal({ "from" => "idle", :event => "press", :to => "heating",
+                   :guard => "", :actions => [] },
                  chart[:transitions].first)
+  end
+
+  def test_richer_statechart_fields
+    h = design.to_h
+    state = h[:statecharts].first[:states].first
+    assert_equal "", state[:surface]
+    assert_equal [], state[:entry]
+    assert_equal "use", h[:journeys].first[:stages].first[:kind]
+  end
+
+  def test_feedback_and_loops
+    d = UX.design("demo") do
+      surface :led, layer: :circuit
+      journey :j do
+        stage :s, touchpoints: %w[btn], emotion: 4
+      end
+      statechart :sc do
+        state :a, initial: true
+        state :b, final: true
+        on :a, :go, to: :b, guard: "ready", actions: %w[led_on]
+      end
+      feedback :fb, trigger: :go, surface: :led, modality: :visual, latency_ms: 50
+      experience_loop :l, steps: %w[go], reward: "done", cadence: :daily
+    end
+    h = d.to_h
+    fb = h[:feedback].first
+    assert_equal "visual", fb[:modality]
+    assert_equal 50, fb[:latency_ms]
+    assert_equal true, h[:transitions] if h[:transitions]
+    t = h[:statecharts].first[:transitions].first
+    assert_equal "ready", t[:guard]
+    assert_equal %w[led_on], t[:actions]
+    loop_h = h[:loops].first
+    assert_equal "daily", loop_h[:cadence]
+    assert_equal %w[go], loop_h[:steps]
+  end
+
+  def test_bad_loop_cadence_rejected
+    assert_raises(UX::DesignError) do
+      UX.design("x") { experience_loop :l, steps: %w[a], cadence: :hourly }
+    end
+  end
+
+  def test_bad_stage_kind_rejected
+    assert_raises(UX::DesignError) do
+      UX.design("x") do
+        journey(:j) { stage :s, kind: :sideways, emotion: 3 }
+      end
+    end
   end
 
   def test_bad_layer_rejected

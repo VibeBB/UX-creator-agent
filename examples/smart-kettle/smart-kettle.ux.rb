@@ -21,6 +21,8 @@ UX.design "smart-kettle" do
       importance: 6, satisfaction: 5
 
   journey :morning do
+    stage :pair_app, kind: :onboard, touchpoints: %w[app_pairing], emotion: 3,
+          pain_points: ["pairing needs account"], surfaces: %w[mobile_app]
     stage :fill, touchpoints: %w[lid handle spout], emotion: 3,
           pain_points: ["lid hinge pinches fingers"], surfaces: %w[kettle_body]
     stage :boil, touchpoints: %w[button led beep], emotion: 4,
@@ -37,12 +39,16 @@ UX.design "smart-kettle" do
                     support: %w[firmware_update_service]
 
   statechart :power do
-    state :idle, initial: true
-    state :heating
-    state :keep_warm
+    state :idle, initial: true, surface: :hardware_button,
+          description: "kettle idle, LED off"
+    state :heating, surface: :status_led, entry: %w[led_pulse],
+          description: "water heating, LED pulsing"
+    state :keep_warm, surface: :status_led,
+          description: "holding temperature, LED steady"
     state :done, final: true
     on :idle, :press, to: :heating
-    on :heating, :boiled, to: :done
+    on :heating, :boiled, to: :done, guard: "temp >= 100", actions: %w[beep]
+    on :heating, :boiled, to: :keep_warm, guard: "keep_warm_armed"
     on :heating, :keep_warm_selected, to: :keep_warm
     on :keep_warm, :timeout, to: :idle
     on :done, :lifted, to: :idle
@@ -52,7 +58,22 @@ UX.design "smart-kettle" do
   surface :hardware_button, layer: :hardware, name: "single boil button"
   surface :status_led, layer: :circuit, name: "ring status LED"
   surface :thermostat, layer: :firmware, name: "boil/keep-warm controller"
+  surface :buzzer, layer: :circuit, name: "piezo beeper"
   surface :mobile_app, layer: :smartphone_app, name: "companion app"
+
+  feedback :led_boiling, trigger: :press, surface: :status_led,
+           modality: :visual, latency_ms: 50,
+           description: "LED starts pulsing within one blink of the press"
+  feedback :beep_done, trigger: :boiled, surface: :buzzer,
+           modality: :audio, latency_ms: 100,
+           description: "two-tone done chime at boil detection"
+  feedback :app_reminder, trigger: :app_notification, surface: :mobile_app,
+           modality: :text, latency_ms: 3000, progress_indicator: true,
+           description: "push card counts down cooling time"
+
+  experience_loop :morning_brew,
+                  steps: %w[press boiled lifted],
+                  reward: "hot water without waiting", cadence: :daily
 
   core_experience "one press, walk away — hot water that waits for you"
   implementation_spec "plastic vs steel body", "beep vs chime", "app optional"
