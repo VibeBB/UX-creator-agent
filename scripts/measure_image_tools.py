@@ -24,7 +24,7 @@ def measure(image_ref: str) -> dict[str, str]:
         "python --version; "
         "git --version; "
         "ruby --version; "
-        "mrbc -v; "
+        "mruby --version; "
         "mmdc --version; "
         "java -version; "
         "dot -V; "

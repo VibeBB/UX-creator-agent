@@ -51,7 +51,7 @@ jobs:
         env:
           IMAGE_REF: ${{ steps.image.outputs.ref }}
         run: |
-          docker run --rm --user ux_creator "$IMAGE_REF" \
+          docker run --rm --user ux "$IMAGE_REF" \
             python /opt/ux/scripts/e2e_authoring.py \
               --contract /opt/ux/examples/smart-kettle/smart-kettle.ux.json \
               --out /tmp/ux-smoke/smart-kettle
