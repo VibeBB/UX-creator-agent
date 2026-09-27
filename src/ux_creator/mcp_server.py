@@ -24,6 +24,7 @@ from .doctor import run_doctor
 from .gates import run_gates
 from .imports import import_source
 from .projections import write_projections, write_provenance
+from .proposals import ProposalSet, triage, write_triage
 from .render import render_all
 from .report import write_report
 from .requests import build_request, write_request
@@ -84,6 +85,16 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
         "required": ["contract_path", "target_agent", "risk", "requested_changes", "out_dir"],
         "additionalProperties": False,
     },
+    "ux_propose": {
+        "type": "object",
+        "properties": {
+            "contract_path": {"type": "string"},
+            "proposals_path": {"type": "string"},
+            "out_dir": {"type": "string"},
+        },
+        "required": ["contract_path", "proposals_path", "out_dir"],
+        "additionalProperties": False,
+    },
     "ux_mruby_check": {
         "type": "object",
         "properties": {"source": {"type": "string"}},
@@ -98,7 +109,7 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
     },
 }
 
-_WRITE_TOOLS = {"ux_author", "ux_import", "ux_request", "ux_from_ruby"}
+_WRITE_TOOLS = {"ux_author", "ux_import", "ux_request", "ux_propose", "ux_from_ruby"}
 
 
 def _text(payload: Any) -> list[types.ContentBlock]:
@@ -186,6 +197,23 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         except Exception as exc:
             return {"verdict": "fail", "stage": "request", "detail": str(exc)}
         return {"verdict": "pass", "request": str(path)}
+    if name == "ux_propose":
+        try:
+            contract = load_contract(arguments["contract_path"])
+            proposals = ProposalSet.model_validate(
+                json.loads(Path(arguments["proposals_path"]).read_text(encoding="utf-8"))
+            )
+            name_stem = Path(arguments["proposals_path"]).stem.removesuffix(".ux-proposals")
+            paths = write_triage(contract, proposals, Path(arguments["out_dir"]), name_stem)
+            blocked = [t.id for t in triage(contract, proposals) if t.status != "auto_send"]
+        except Exception as exc:
+            return {"verdict": "fail", "stage": "propose", "detail": str(exc)}
+        return {
+            "verdict": "pass",
+            "stage": "propose",
+            "written": {k: str(p) for k, p in paths.items()},
+            "blocked": blocked,
+        }
     if name == "ux_mruby_check":
         result = mruby_check(Path(arguments["source"]))
         return {"verdict": "pass" if result.status == "ok" else "fail", "detail": result.detail}

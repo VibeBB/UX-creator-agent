@@ -1,7 +1,7 @@
 """python -m ux_creator — deterministic CLI entry points.
 
 Subcommands: doctor, gates, author, render, import, from-ruby, mruby-check,
-request, review-record.
+request, propose, review-record.
 
 Every subcommand prints a JSON verdict object and exits 0 only on
 "pass"/"ok"; fail-closed throughout.
@@ -22,6 +22,7 @@ from .doctor import run_doctor
 from .gates import run_gates
 from .imports import import_source
 from .projections import write_projections, write_provenance
+from .proposals import ProposalSet, triage, write_triage
 from .render import render_all
 from .report import write_report
 from .requests import build_request, write_request
@@ -157,6 +158,28 @@ def _cmd_request(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_propose(args: argparse.Namespace) -> int:
+    try:
+        contract = load_contract(args.contract)
+        proposals = ProposalSet.model_validate(
+            json.loads(Path(args.proposals).read_text(encoding="utf-8"))
+        )
+        name = Path(args.proposals).stem.removesuffix(".ux-proposals")
+        paths = write_triage(contract, proposals, Path(args.out_dir), name)
+        blocked = [t.id for t in triage(contract, proposals) if t.status != "auto_send"]
+    except Exception as exc:
+        return _fail("propose", exc)
+    _print(
+        {
+            "verdict": "pass",
+            "stage": "propose",
+            "written": {k: str(p) for k, p in paths.items()},
+            "blocked": blocked,
+        }
+    )
+    return 0
+
+
 def _cmd_review_record(args: argparse.Namespace) -> int:
     try:
         path = write_visual_review(
@@ -224,6 +247,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out-dir", required=True)
     p.add_argument("--name", default="ux-request")
     p.set_defaults(func=_cmd_request)
+
+    p = sub.add_parser("propose", help="QCD-triage a ux-proposals.json into ux-requests")
+    p.add_argument("--contract", required=True)
+    p.add_argument("--proposals", required=True)
+    p.add_argument("--out-dir", required=True)
+    p.set_defaults(func=_cmd_propose)
 
     p = sub.add_parser("review-record", help="write a review-visual advisory record")
     p.add_argument("image")

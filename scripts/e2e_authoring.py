@@ -23,6 +23,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from ux_creator.contract import load_contract  # noqa: E402
 from ux_creator.gates import run_gates  # noqa: E402
 from ux_creator.projections import write_projections, write_provenance  # noqa: E402
+from ux_creator.proposals import ProposalSet, triage, write_triage  # noqa: E402
 from ux_creator.render import render_all  # noqa: E402
 from ux_creator.report import write_report  # noqa: E402
 
@@ -41,6 +42,19 @@ def main(argv: list[str] | None = None) -> int:
     renders = render_all(args.out) if args.render else []
     write_provenance(contract, paths, args.out)
     write_report(contract, report, args.out, renders)
+
+    proposals_path = args.contract.with_name(
+        args.contract.stem.removesuffix(".ux") + ".ux-proposals.json"
+    )
+    if proposals_path.exists():
+        proposals = ProposalSet.model_validate(
+            json.loads(proposals_path.read_text(encoding="utf-8"))
+        )
+        name = proposals_path.stem.removesuffix(".ux-proposals")
+        write_triage(contract, proposals, args.out, name)
+        blocked = [t.id for t in triage(contract, proposals) if t.status != "auto_send"]
+        print(json.dumps({"stage": "propose", "blocked": blocked}))
+
     print(json.dumps({"verdict": report.verdict, "out": str(args.out)}))
     return 0 if report.verdict == "pass" else 1
 

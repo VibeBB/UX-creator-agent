@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "system": "ux-creator",
+  "proposals": [
+    {
+      "id": "app_onboard_tour",
+      "surface": "mobile_app",
+      "summary": "add a first-run pairing tour to the companion app",
+      "jobs": ["boil"],
+      "rationale": "",
+      "cost": "medium",
+      "delivery": "normal"
+    },
+    {
+      "id": "led_brightness",
+      "surface": "status_led",
+      "summary": "drive the status LED at 60% duty during keep_warm",
+      "jobs": ["keep_warm"],
+      "rationale": "keep_warm users need ambient feedback they can read across the kitchen",
+      "cost": "low",
+      "delivery": "fast"
+    },
+    {
+      "id": "capacitive_button",
+      "surface": "hardware_button",
+      "summary": "replace the dome switch with a capacitive touch pad",
+      "jobs": ["boil"],
+      "rationale": "",
+      "cost": "high",
+      "delivery": "slow"
+    }
+  ]
+}
