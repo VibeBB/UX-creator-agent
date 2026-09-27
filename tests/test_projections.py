@@ -114,3 +114,44 @@ def test_manifest_contains_new_files(example_contract: UXContract, tmp_path: Pat
     assert "x.blueprint.puml" in names
     assert "x.morning.emotion.mmd" in names
     assert "x.morning.emotion.json" in names
+
+
+def test_mindmap_mmd(example_contract: UXContract, tmp_path: Path) -> None:
+    paths = write_projections(example_contract, "x", tmp_path)
+    text = paths["x.mindmap.mmd"].read_text(encoding="utf-8")
+    assert text.startswith("mindmap")
+    assert "root((smart-kettle))" in text
+    assert "    Personas" in text and "    Jobs" in text
+    assert "    Surfaces" in text and "    Journeys" in text
+    assert "      boil -appropriate-" in text
+
+
+def test_sequence_puml(example_contract: UXContract, tmp_path: Path) -> None:
+    paths = write_projections(example_contract, "x", tmp_path)
+    text = paths["x.morning.sequence.puml"].read_text(encoding="utf-8")
+    assert text.startswith("@startuml")
+    assert 'actor "user" as U' in text or "actor" in text
+    assert "== boil (use) ==" in text
+    assert "U -> S_" in text
+    assert "note right of U : emotion 4/5" in text
+    assert text.rstrip().endswith("@enduml")
+
+
+def test_wbs_puml(example_contract: UXContract, tmp_path: Path) -> None:
+    paths = write_projections(example_contract, "x", tmp_path)
+    text = paths["x.wbs.puml"].read_text(encoding="utf-8")
+    assert text.startswith("@startwbs")
+    assert "* smart-kettle" in text
+    assert "** hardware_button (hardware)" in text
+    assert "*** control: boil_button" in text
+    assert "** Implementation spec" in text
+    assert text.rstrip().endswith("@endwbs")
+
+
+def test_manifest_phase11_files(example_contract: UXContract, tmp_path: Path) -> None:
+    paths = write_projections(example_contract, "x", tmp_path)
+    manifest = json.loads(paths["manifest.json"].read_text(encoding="utf-8"))
+    names = {a["path"] for a in manifest["artifacts"]}
+    assert "x.mindmap.mmd" in names
+    assert "x.morning.sequence.puml" in names
+    assert "x.wbs.puml" in names
