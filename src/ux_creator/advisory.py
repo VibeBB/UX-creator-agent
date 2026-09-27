@@ -66,7 +66,7 @@ class AdvisoryResult(BaseModel):
     status: Literal["ok", "error", "not_applicable"]
     summary: str = ""
     artifacts: list[str] = Field(default_factory=list[str])
-    detail: VisualReviewDetail | dict[str, Any] | None = None
+    detail: VisualReviewDetail | IntakeDetail | dict[str, Any] | None = None
 
 
 def _sentence_count(text: str) -> int:
@@ -246,3 +246,159 @@ def reconcile_findings(
             )
     findings.sort(key=lambda r: (r.record, r.category, r.where))
     return findings
+
+
+INTAKE_TOOL = "ux.intake_touchpoints"
+
+
+class TouchpointCandidate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    surface: str = ""
+    evidence: str = Field(min_length=1)
+    confidence: Literal["low", "medium", "high"] = "medium"
+
+
+class IntakeDetail(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    image_path: str
+    image_sha256: str
+    model: str = ""
+    candidates: list[TouchpointCandidate]
+
+
+class IntakeReconciliation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    declared: list[str]
+    undeclared: list[str]
+    unobserved: list[str]
+    surface_mismatch: list[str]
+    malformed: list[str]
+
+
+def normalize_touchpoint(text: str) -> str:
+    """lowercase, [^a-z0-9]+ -> _, stripped — the canonical touchpoint id."""
+    return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")
+
+
+def parse_intake_record(payload: dict[str, Any]) -> AdvisoryResult | None:
+    """Validate an intake-touchpoints record; None when malformed."""
+    try:
+        record = AdvisoryResult.model_validate(payload)
+    except ValidationError:
+        return None
+    if record.tool != INTAKE_TOOL or record.stage != "intake":
+        return None
+    if record.status == "ok":
+        if not isinstance(record.detail, IntakeDetail):
+            # detail may arrive as dict on re-parse; coerce once
+            try:
+                detail = IntakeDetail.model_validate(record.detail)
+            except ValidationError:
+                return None
+            record.detail = detail
+        if not record.detail.candidates:
+            return None
+        for candidate in record.detail.candidates:
+            if not normalize_touchpoint(candidate.id):
+                return None
+    return record
+
+
+def write_intake_record(
+    image: Path,
+    candidates: list[TouchpointCandidate],
+    model: str = "",
+) -> Path:
+    """Compute the image sha256 and write the sibling intake record."""
+    slug = re.sub(r"[^a-z0-9]+", "-", image.stem.lower()).strip("-") or "image"
+    detail = IntakeDetail(
+        image_path=str(image),
+        image_sha256=f"sha256:{hashlib.sha256(image.read_bytes()).hexdigest()}",
+        model=model,
+        candidates=candidates,
+    )
+    record = AdvisoryResult(
+        tool=INTAKE_TOOL,
+        stage="intake",
+        status="ok",
+        summary="intake touchpoint candidates",
+        artifacts=[str(image)],
+        detail=detail,
+    )
+    path = image.parent / f"intake-touchpoints-{slug}.advisory.json"
+    path.write_text(
+        json.dumps(record.model_dump(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return path
+
+
+def load_intake_records(
+    out_dir: Path,
+) -> tuple[list[tuple[Path, AdvisoryResult]], list[Path]]:
+    """Parse every intake-touchpoints-*.advisory.json; malformed listed, never raised."""
+    ok: list[tuple[Path, AdvisoryResult]] = []
+    malformed: list[Path] = []
+    for path in sorted(out_dir.glob("intake-touchpoints-*.advisory.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            malformed.append(path)
+            continue
+        record = parse_intake_record(payload)
+        if record is None:
+            malformed.append(path)
+        else:
+            ok.append((path, record))
+    return ok, malformed
+
+
+def reconcile_intake(
+    contract: UXContract,
+    records: list[tuple[Path, AdvisoryResult]],
+) -> IntakeReconciliation:
+    """Compare observed intake touchpoints with declared stage touchpoints."""
+    declared = {
+        normalize_touchpoint(tp)
+        for journey in contract.journeys
+        for stage in journey.stages
+        for tp in stage.touchpoints
+    }
+    # candidate id -> surfaces claimed by images (deduped, sorted)
+    seen: dict[str, set[str]] = {}
+    for _path, record in records:
+        if record.status != "ok" or not isinstance(record.detail, IntakeDetail):
+            continue
+        for cand in record.detail.candidates:
+            cid = normalize_touchpoint(cand.id)
+            if not cid:
+                continue
+            seen.setdefault(cid, set())
+            if cand.surface:
+                seen[cid].add(cand.surface)
+    observed = set(seen)
+    # stage surfaces per declared touchpoint id
+    tp_surfaces: dict[str, set[str]] = {}
+    for journey in contract.journeys:
+        for stage in journey.stages:
+            for tp in stage.touchpoints:
+                tp_surfaces.setdefault(normalize_touchpoint(tp), set()).update(stage.surfaces)
+    surface_mismatch: list[str] = []
+    for cid in sorted(observed & declared):
+        for surf in sorted(seen[cid]):
+            contract_surfaces = sorted(tp_surfaces.get(cid, set()))
+            if contract_surfaces and surf not in contract_surfaces:
+                surface_mismatch.append(
+                    f"{cid}: image says {surf}, contract stage.surfaces has "
+                    f"[{', '.join(contract_surfaces)}]"
+                )
+    return IntakeReconciliation(
+        declared=sorted(observed & declared),
+        undeclared=sorted(observed - declared),
+        unobserved=sorted(declared - observed),
+        surface_mismatch=sorted(surface_mismatch),
+        malformed=[],
+    )

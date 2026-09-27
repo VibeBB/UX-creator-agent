@@ -7,7 +7,12 @@ import re
 from pathlib import Path
 from typing import Any, cast
 
-from .advisory import load_visual_reviews, reconcile_findings
+from .advisory import (
+    load_intake_records,
+    load_visual_reviews,
+    reconcile_findings,
+    reconcile_intake,
+)
 from .contract import UXContract
 from .gates import GateReport, stage_job_coverage
 from .render import RenderResult
@@ -42,6 +47,8 @@ def review_lens(contract: UXContract, gate_report: GateReport, out_dir: Path) ->
         and not (out_dir / f"review-visual-{_review_slug(image.stem)}.advisory.json").exists()
         and _review_slug(image.stem) not in reviewed
     )
+    intake_records, intake_malformed = load_intake_records(out_dir)
+    intake = reconcile_intake(contract, intake_records)
     return {
         "records": sum(1 for _p, r in records if r.status == "ok"),
         "malformed": [str(p) for p in malformed],
@@ -53,6 +60,14 @@ def review_lens(contract: UXContract, gate_report: GateReport, out_dir: Path) ->
             if f.reconciliation == "contradicted"
         ],
         "images_without_record": images_without,
+        "intake": {
+            "records": sum(1 for _p, r in intake_records if r.status == "ok"),
+            "declared_count": len(intake.declared),
+            "undeclared": intake.undeclared,
+            "unobserved": intake.unobserved,
+            "surface_mismatch": intake.surface_mismatch,
+            "malformed": [str(p) for p in intake_malformed],
+        },
     }
 
 
@@ -252,6 +267,20 @@ def render_markdown(report: dict[str, Any]) -> str:
             f"unverifiable={recon['unverifiable']}",
             f"- images without a review record: {len(review['images_without_record'])}",
         ]
+        intake = review.get("intake", {})
+        if intake:
+            lines.append(
+                f"- intake records: {intake['records']} "
+                f"(declared {intake['declared_count']}, "
+                f"unobserved {len(intake['unobserved'])})"
+            )
+            if intake["undeclared"]:
+                lines.append(
+                    "  - candidate touchpoints — consider a proposal: "
+                    + ", ".join(intake["undeclared"])
+                )
+            if intake["unobserved"]:
+                lines.append("  - declared but never observed: " + ", ".join(intake["unobserved"]))
         for c in review["contradicted"]:
             lines.append(f"  - contradicted: `{c['category']}` at {c['where']} ({c['record']})")
     liaison = report.get("lenses", {}).get("liaison", {})

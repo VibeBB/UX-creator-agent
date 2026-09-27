@@ -1,7 +1,8 @@
 """python -m ux_creator — deterministic CLI entry points.
 
 Subcommands: doctor, gates, author, render, import, from-ruby, mruby-check,
-request, propose, review-record, review-reconcile, liaison.
+request, propose, review-record, review-reconcile, liaison,
+intake-record, intake-reconcile.
 
 Every subcommand prints a JSON verdict object and exits 0 only on
 "pass"/"ok"; fail-closed throughout.
@@ -13,10 +14,18 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from . import __version__
-from .advisory import load_visual_reviews, reconcile_findings, write_visual_review
+from .advisory import (
+    TouchpointCandidate,
+    load_intake_records,
+    load_visual_reviews,
+    reconcile_findings,
+    reconcile_intake,
+    write_intake_record,
+    write_visual_review,
+)
 from .contract import load_contract
 from .doctor import run_doctor
 from .gates import run_gates
@@ -181,6 +190,44 @@ def _cmd_propose(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_intake_record(args: argparse.Namespace) -> int:
+    try:
+        candidates: list[TouchpointCandidate] = []
+        for spec in cast("list[str]", args.touchpoint):
+            head, _, evidence = spec.partition("=")
+            cid, _, surface = head.partition("@")
+            if not cid or not evidence:
+                raise ValueError(f"--touchpoint expects ID[@SURFACE]=EVIDENCE, got {spec!r}")
+            candidates.append(
+                TouchpointCandidate(
+                    id=cid,
+                    surface=surface,
+                    evidence=evidence,
+                    confidence=args.confidence,
+                )
+            )
+        path = write_intake_record(Path(args.image), candidates, model=args.model)
+    except Exception as exc:
+        return _fail("intake-record", exc)
+    _print({"verdict": "pass", "stage": "intake-record", "record": str(path)})
+    return 0
+
+
+def _cmd_intake_reconcile(args: argparse.Namespace) -> int:
+    try:
+        contract = load_contract(args.contract)
+        records, malformed = load_intake_records(Path(args.out_dir))
+        recon = reconcile_intake(contract, records)
+        recon.malformed = [str(p) for p in malformed]
+    except Exception as exc:
+        return _fail("intake-reconcile", exc)
+    payload = recon.model_dump()
+    payload["verdict"] = "pass"
+    payload["stage"] = "intake-reconcile"
+    _print(payload)
+    return 0
+
+
 def _cmd_liaison(args: argparse.Namespace) -> int:
     try:
         status = liaison_status(Path(args.out_dir), Path(args.out_dir))
@@ -308,6 +355,23 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("liaison", help="report ux-request/ux-response liaison status")
     p.add_argument("--out-dir", required=True)
     p.set_defaults(func=_cmd_liaison)
+
+    p = sub.add_parser("intake-record", help="write an intake-touchpoints advisory record")
+    p.add_argument("image")
+    p.add_argument(
+        "--touchpoint",
+        action="append",
+        required=True,
+        help="ID[@SURFACE]=EVIDENCE (repeatable)",
+    )
+    p.add_argument("--confidence", default="medium", choices=["low", "medium", "high"])
+    p.add_argument("--model", default="")
+    p.set_defaults(func=_cmd_intake_record)
+
+    p = sub.add_parser("intake-reconcile", help="reconcile intake records against the contract")
+    p.add_argument("--contract", required=True)
+    p.add_argument("--out-dir", required=True)
+    p.set_defaults(func=_cmd_intake_reconcile)
 
     args = parser.parse_args(argv)
     if args.command == "doctor" and getattr(args, "warn", False):

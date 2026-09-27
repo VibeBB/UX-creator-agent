@@ -19,7 +19,12 @@ from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
 
 from . import __version__
-from .advisory import load_visual_reviews, reconcile_findings
+from .advisory import (
+    load_intake_records,
+    load_visual_reviews,
+    reconcile_findings,
+    reconcile_intake,
+)
 from .contract import UXContract, load_contract
 from .doctor import run_doctor
 from .gates import run_gates
@@ -117,6 +122,15 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
         "type": "object",
         "properties": {"out_dir": {"type": "string"}},
         "required": ["out_dir"],
+        "additionalProperties": False,
+    },
+    "ux_intake_reconcile": {
+        "type": "object",
+        "properties": {
+            "contract_path": {"type": "string"},
+            "out_dir": {"type": "string"},
+        },
+        "required": ["contract_path", "out_dir"],
         "additionalProperties": False,
     },
     "ux_render": {
@@ -257,6 +271,18 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         payload = status.model_dump()
         payload["verdict"] = "pass"
         payload["stage"] = "liaison"
+        return payload
+    if name == "ux_intake_reconcile":
+        try:
+            contract = load_contract(arguments["contract_path"])
+            records, malformed = load_intake_records(Path(arguments["out_dir"]))
+            recon = reconcile_intake(contract, records)
+            recon.malformed = [str(p) for p in malformed]
+        except Exception as exc:
+            return {"verdict": "fail", "stage": "intake-reconcile", "detail": str(exc)}
+        payload = recon.model_dump()
+        payload["verdict"] = "pass"
+        payload["stage"] = "intake-reconcile"
         return payload
     if name == "ux_render":
         results = render_all(Path(arguments["dir"]))
