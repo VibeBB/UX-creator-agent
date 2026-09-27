@@ -173,9 +173,9 @@ def test_innovation_lens_no_triage(contract_dict: dict[str, Any], tmp_path: Path
 def test_odi_csv_served_column(example_contract: UXContract, tmp_path: Path) -> None:
     paths = write_projections(example_contract, "x", tmp_path)
     rows = paths["x.odi.csv"].read_text(encoding="utf-8").splitlines()
-    assert rows[0].endswith(",served")
-    assert any(r.startswith("boil,") and r.endswith("appropriate") for r in rows)
-    assert any(r.startswith("keep_warm,") and r.endswith("overserved") for r in rows)
+    assert rows[0].endswith(",served,covered_by")
+    assert any(r.startswith("boil,") and ",appropriate," in r for r in rows)
+    assert any(r.startswith("keep_warm,") and ",overserved," in r for r in rows)
 
 
 def test_example_bold_proposal_blocked(example_contract: UXContract) -> None:

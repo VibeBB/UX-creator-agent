@@ -58,6 +58,17 @@ class UxDslTest < Minitest::Test
     assert_equal "", state[:surface]
     assert_equal [], state[:entry]
     assert_equal "use", h[:journeys].first[:stages].first[:kind]
+    assert_equal [], h[:journeys].first[:stages].first[:jobs]
+  end
+
+  def test_stage_jobs_emitted
+    d = UX.design("demo") do
+      journey :j do
+        stage :s, emotion: 4, jobs: %i[boil keep_warm]
+      end
+    end
+    stage = d.to_h[:journeys].first[:stages].first
+    assert_equal %w[boil keep_warm], stage[:jobs]
   end
 
   def test_feedback_and_loops
