@@ -31,6 +31,36 @@ def build_report(
         ],
     }
     report["imports"] = [ref.model_dump() for ref in contract.imports]
+    modalities: dict[str, int] = {}
+    for f in contract.feedback:
+        modalities[f.modality] = modalities.get(f.modality, 0) + 1
+    fed = {f.surface for f in contract.feedback}
+    report["lenses"] = {
+        "game_design": {
+            "loops": len(contract.loops),
+            "feedback_count": len(contract.feedback),
+            "feedback_by_modality": dict(sorted(modalities.items())),
+            "surfaces_without_feedback": sorted(
+                s.id for s in contract.product.surfaces if s.id not in fed
+            ),
+            "avg_loop_length": round(
+                sum(len(loop.steps) for loop in contract.loops) / max(len(contract.loops), 1),
+                2,
+            ),
+            "onboard_stages": sum(
+                1
+                for journey in contract.journeys
+                for stage in journey.stages
+                if stage.kind == "onboard"
+            ),
+            "recover_stages": sum(
+                1
+                for journey in contract.journeys
+                for stage in journey.stages
+                if stage.kind == "recover"
+            ),
+        }
+    }
     if renders is not None:
         report["renders"] = [
             {
@@ -79,6 +109,19 @@ def render_markdown(report: dict[str, Any]) -> str:
     ]
     for opp in elements["top_opportunities"]:
         lines.append(f"- `{opp['id']}` — opportunity {opp['opportunity']}")
+    lens = report.get("lenses", {}).get("game_design", {})
+    if lens:
+        lines += [
+            "",
+            "## Game-design lens",
+            "",
+            f"- experience loops: {lens['loops']} (avg length {lens['avg_loop_length']})",
+            f"- feedback: {lens['feedback_count']} "
+            f"({', '.join(f'{k}={v}' for k, v in lens['feedback_by_modality'].items()) or 'none'})",
+            f"- surfaces without feedback: "
+            f"{', '.join(lens['surfaces_without_feedback']) or 'none'}",
+            f"- onboard stages: {lens['onboard_stages']}, recover stages: {lens['recover_stages']}",
+        ]
     lines += ["", "## Checks", ""]
     for check in report["checks"]:
         detail = f" — {check['detail']}" if check.get("detail") else ""
