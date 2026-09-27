@@ -62,6 +62,12 @@ UX.design "smart-kettle" do
   surface :buzzer, layer: :circuit, name: "piezo beeper"
   surface :mobile_app, layer: :smartphone_app, name: "companion app"
 
+  control :boil_button, surface: :hardware_button, kind: :button,
+          size_mm: [14, 14], touchpoint: "button"
+  control :app_boil_tap, surface: :mobile_app, kind: :touch,
+          size_mm: [9, 9], touchpoint: "app_pairing",
+          fg: "#FFFFFF", bg: "#0057D9"
+
   feedback :led_boiling, trigger: :press, surface: :status_led,
            modality: :visual, latency_ms: 50,
            description: "LED starts pulsing within one blink of the press"

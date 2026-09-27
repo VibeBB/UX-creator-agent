@@ -285,6 +285,30 @@
       ]
     }
   ],
+  "controls": [
+    {
+      "id": "boil_button",
+      "surface": "hardware_button",
+      "kind": "button",
+      "touchpoint": "button",
+      "width_mm": 14,
+      "height_mm": 14,
+      "fg": "",
+      "bg": "",
+      "large_text": false
+    },
+    {
+      "id": "app_boil_tap",
+      "surface": "mobile_app",
+      "kind": "touch",
+      "touchpoint": "app_pairing",
+      "width_mm": 9,
+      "height_mm": 9,
+      "fg": "#FFFFFF",
+      "bg": "#0057D9",
+      "large_text": false
+    }
+  ],
   "feedback": [
     {
       "id": "led_boiling",

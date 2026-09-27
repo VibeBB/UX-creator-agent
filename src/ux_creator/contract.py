@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Literal
 
@@ -211,6 +212,26 @@ class ImportRef(BaseModel):
     extracted: list[str] = Field(default_factory=list[str])
 
 
+ControlKind = Literal["button", "touch", "dial", "switch", "link", "gesture"]
+
+
+class Control(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    surface: str = Field(min_length=1)
+    kind: ControlKind = "touch"
+    touchpoint: str = ""
+    width_mm: float | None = Field(default=None, gt=0)
+    height_mm: float | None = Field(default=None, gt=0)
+    fg: str = ""
+    bg: str = ""
+    large_text: bool = False
+
+
+_HEX6 = re.compile(r"^#[0-9A-Fa-f]{6}$")
+
+
 class UXContract(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -226,6 +247,7 @@ class UXContract(BaseModel):
     service_blueprint: ServiceBlueprint | None = None
     statecharts: list[Statechart] = Field(default_factory=list[Statechart])
     feedback: list[Feedback] = Field(default_factory=list[Feedback])
+    controls: list[Control] = Field(default_factory=list[Control])
     loops: list[ExperienceLoop] = Field(default_factory=list[ExperienceLoop])
     imports: list[ImportRef] = Field(default_factory=list[ImportRef])
 
@@ -241,6 +263,24 @@ class UXContract(BaseModel):
         return self
 
     @model_validator(mode="after")
+    def _controls_known(self) -> UXContract:
+        surface_ids = {s.id for s in self.product.surfaces}
+        touchpoints = {
+            tp for journey in self.journeys for stage in journey.stages for tp in stage.touchpoints
+        }
+        for control in self.controls:
+            if control.surface not in surface_ids:
+                raise ValueError(f"control {control.id}: unknown surface {control.surface!r}")
+            if control.touchpoint and control.touchpoint not in touchpoints:
+                raise ValueError(f"control {control.id}: unknown touchpoint {control.touchpoint!r}")
+            if bool(control.fg) != bool(control.bg):
+                raise ValueError(f"control {control.id}: fg and bg must both be set or both empty")
+            for name, color in (("fg", control.fg), ("bg", control.bg)):
+                if color and not _HEX6.match(color):
+                    raise ValueError(f"control {control.id}: {name} {color!r} is not #RRGGBB")
+        return self
+
+    @model_validator(mode="after")
     def _unique_ids(self) -> UXContract:
         for label, items in (
             ("persona", self.personas),
@@ -250,6 +290,7 @@ class UXContract(BaseModel):
             ("surface", self.product.surfaces),
             ("feedback", self.feedback),
             ("loop", self.loops),
+            ("control", self.controls),
         ):
             ids = [item.id for item in items]
             if len(ids) != len(set(ids)):
