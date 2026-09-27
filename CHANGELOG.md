@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added (phase 6)
+
+- Sister response contract: `responses.py` + `liaison` CLI +
+  `ux_liaison_status` MCP read tool reconcile `*.ux-request.json` with
+  `*.ux-response.json` (open/answered/mismatched, orphans, malformed);
+  `lenses.liaison` section in ux-report (requests, by_status,
+  rejected_high_risk). Example response for smart-kettle; e2e copies
+  sibling responses into out_dir before the report. ADR-0008,
+  ADR-0009 (mmdr evaluation — not adopted).
+
 ### Added (phase 5)
 
 - Advisory reconciliation: `reconcile_findings` checks review-visual

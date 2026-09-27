@@ -40,4 +40,9 @@ Import via `python -m ux_creator import <contract.ux.json> --from
 provenance in `imports[]` and extracts touchpoint candidates only.
 Write requests with `python -m ux_creator request`: risk=low may be sent
 directly; risk=high must carry a rationale citing at least one declared
-job id.
+job id. Sisters answer by writing `<request-stem>.ux-response.json`
+beside the request. At session start run `python -m ux_creator liaison
+--out-dir out/<name>` and report open requests and any
+rejected/deferred high-risk answers — a rejected high-risk request is a
+design signal: re-open the proposal with a new rationale or reframe the
+job; never bypass the sister.

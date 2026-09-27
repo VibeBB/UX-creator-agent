@@ -44,12 +44,14 @@ src/ux_creator/      # deterministic UX core
 ├── imports.py       # sister contract import adapters (copy-in + sha256)
 ├── requests.py      # ux-request.json writers (low/high risk)
 ├── proposals.py     # QCD triage: .ux-proposals.json → triage + auto ux-requests
+├── responses.py     # sister ux-response.json reconciliation (liaison)
 ├── advisory.py      # typed L2 visual-review records (never verdicts)
 ├── report.py        # ux-report.json/.md
 ├── doctor.py        # environment probe
 ├── ruby_bridge.py   # ruby/mrbc subprocess adapters
 ├── cli.py           # python -m ux_creator {doctor,gates,author,render,
-│                    #   import,from-ruby,mruby-check,request,propose,review-record}
+│                    #   import,from-ruby,mruby-check,request,propose,review-record,review-reconcile,
+│                    #   liaison}
 └── mcp_server.py    # stdio MCP boundary (deterministic tools only)
 plugins/ux/          # OpenHands plugin (agents/commands/skills/hooks/launcher)
 ruby/                # ux-dsl library, bin/ux-dsl, .rubocop.yml, minitest

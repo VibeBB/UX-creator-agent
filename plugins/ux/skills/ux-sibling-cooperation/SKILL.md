@@ -65,3 +65,21 @@ auto-sends the safe ones as ux-requests.
 - Only `auto_send` proposals produce `*.ux-request.json`; high-risk ones
   still need a job-cited rationale. Proposals may override
   `target_agent` (must be a known sibling).
+
+## Inbound: `<request-stem>.ux-response.json`
+
+Sisters close the loop by writing a response beside the request:
+
+```
+{schema_version: 1, system: "ux-creator",
+ request: "<request-stem>", responder: "circuit",
+ status: "accepted|rejected|deferred|needs_info",
+ reason: "...", artifacts: [...]}
+```
+
+`python -m ux_creator liaison --out-dir <dir>` reconciles requests and
+responses (open / answered / mismatched responder, orphans, malformed —
+listed, never fatal). A `rejected` or `deferred` **high-risk** request
+is a design signal: re-open the proposal with a new rationale or reframe
+the job itself — never bypass the sister by hand-editing her artifact.
+Responses are informational only; they never touch the gate verdict.
