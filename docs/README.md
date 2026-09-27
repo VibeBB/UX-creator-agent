@@ -24,3 +24,4 @@ specifications and design decisions.
 - [ADR-0007](adr/0007-advisory-reconciliation.md) — reconcile advisory findings with gates
 - [ADR-0008](adr/0008-sister-response-contract.md) — sister-agent ux-response contract
 - [ADR-0009](adr/0009-rust-mermaid-renderer-evaluation.md) — mmdr evaluation (not adopted)
+- [ADR-0010](adr/0010-bold-proposals-and-opportunity-coverage.md) — bold proposals and ODI served classes

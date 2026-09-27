@@ -49,6 +49,26 @@ People hire products to make progress. Opportunity score =
 importance + max(importance − satisfaction, 0); score ≥ 15 is underserved,
 ≤ 10 overserved.
 
+## Breaking theory on purpose
+
+A `bold: true` proposal deliberately breaks an established guideline —
+in the spirit of "Think Different": the rules exist because they usually
+work, not because they always do. It is allowed only when all three
+hold:
+
+1. The proposal serves at least one **underserved** job — bold bets aim
+   at unmet need, not novelty for its own sake.
+2. `theory_break` names the theory/guideline being broken (e.g.
+   "HIG/affordance: primary action must have a visible control") and why
+   users will not miss the rule.
+3. A job-cited rationale — bold proposals are always triaged as high
+   risk.
+
+Missing either → `needs_theory_break` or `bold_without_opportunity`
+(both blocked, deterministic). Passing → `auto_send` with the rationale
+prefixed `[bold] breaks: <theory_break> — ` so the sister agent sees the
+intent.
+
 ## CJM / service blueprint
 
 Frontstage actions the user sees, backstage processes they don't,

@@ -29,5 +29,12 @@ in ux-report.json) — never score by hand.
 
 - score ≥ 15: underserved — attack here
 - score ≤ 10: overserved — simplify or drop investment
+- else: appropriate
+
+The classification is computed: `job.served` in the contract model, the
+`served` column in `*.odi.csv`, and `lenses.innovation.by_served` in
+ux-report.json. Bold (`bold: true`) proposals are only allowed against
+underserved jobs — anything else is blocked as
+`bold_without_opportunity`.
 
 Gate: every job must carry all three dimensions (`jobs.three_dimensions`).
