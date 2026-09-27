@@ -59,3 +59,58 @@ def test_provenance_and_report(example_contract: UXContract, tmp_path: Path) -> 
     assert data["verdict"] == "pass"
     assert data["gate"] == "ux-creator"
     assert (tmp_path / "ux-report.md").is_file()
+
+
+def test_blueprint_puml_written(example_contract: UXContract, tmp_path: Path) -> None:
+    paths = write_projections(example_contract, "x", tmp_path)
+    text = paths["x.blueprint.puml"].read_text(encoding="utf-8")
+    assert text.startswith("@startuml")
+    assert "|Customer|" in text and "|Frontstage|" in text and "|Backstage|" in text
+    assert "|Support|" in text and text.rstrip().endswith("@enduml")
+    assert ":morning/boil — touchpoints" in text
+
+
+def test_blueprint_puml_absent_without_service_blueprint(
+    example_contract: UXContract, tmp_path: Path
+) -> None:
+    contract = UXContract.model_validate(
+        {**example_contract.model_dump(by_alias=True), "service_blueprint": None}
+    )
+    paths = write_projections(contract, "x", tmp_path)
+    assert not any(fn.endswith(".blueprint.puml") for fn in paths)
+
+
+def test_blueprint_escapes_semicolons(example_contract: UXContract, tmp_path: Path) -> None:
+    contract = UXContract.model_validate(
+        {
+            **example_contract.model_dump(by_alias=True),
+            "service_blueprint": {
+                "frontstage": ["press; brew\nnow"],
+                "backstage": [],
+                "support_processes": [],
+            },
+        }
+    )
+    paths = write_projections(contract, "x", tmp_path)
+    text = paths["x.blueprint.puml"].read_text(encoding="utf-8")
+    assert ":press, brew now;" in text
+    assert "; brew" not in text
+
+
+def test_emotion_mmd_and_json(example_contract: UXContract, tmp_path: Path) -> None:
+    paths = write_projections(example_contract, "x", tmp_path)
+    mmd = paths["x.morning.emotion.mmd"].read_text(encoding="utf-8")
+    assert mmd.startswith("xychart-beta")
+    assert 'x-axis ["pair_app", "fill", "boil", "pour", "forgot"]' in mmd
+    data = json.loads(paths["x.morning.emotion.json"].read_text(encoding="utf-8"))
+    assert [r["stage"] for r in data] == ["pair_app", "fill", "boil", "pour", "forgot"]
+    assert all(set(r) == {"stage", "emotion", "pain_points", "jobs"} for r in data)
+
+
+def test_manifest_contains_new_files(example_contract: UXContract, tmp_path: Path) -> None:
+    paths = write_projections(example_contract, "x", tmp_path)
+    manifest = json.loads(paths["manifest.json"].read_text(encoding="utf-8"))
+    names = {a["path"] for a in manifest["artifacts"]}
+    assert "x.blueprint.puml" in names
+    assert "x.morning.emotion.mmd" in names
+    assert "x.morning.emotion.json" in names
