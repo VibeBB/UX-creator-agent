@@ -24,14 +24,15 @@ UX.design "smart-kettle" do
     stage :pair_app, kind: :onboard, touchpoints: %w[app_pairing], emotion: 3,
           pain_points: ["pairing needs account"], surfaces: %w[mobile_app]
     stage :fill, touchpoints: %w[lid handle spout], emotion: 3,
-          pain_points: ["lid hinge pinches fingers"], surfaces: %w[kettle_body]
+          pain_points: ["lid hinge pinches fingers"], surfaces: %w[kettle_body],
+          jobs: %i[boil]
     stage :boil, touchpoints: %w[button led beep], emotion: 4,
-          surfaces: %w[hardware_button status_led]
+          surfaces: %w[hardware_button status_led], jobs: %i[boil]
     stage :pour, touchpoints: %w[handle spout], emotion: 5,
-          surfaces: %w[kettle_body]
+          surfaces: %w[kettle_body], jobs: %i[boil]
     stage :forgot, touchpoints: %w[app_notification], emotion: 2,
           pain_points: ["no reminder when water cools"],
-          surfaces: %w[mobile_app]
+          surfaces: %w[mobile_app], jobs: %i[keep_warm]
   end
 
   service_blueprint frontstage: %w[button_press led_feedback beep],

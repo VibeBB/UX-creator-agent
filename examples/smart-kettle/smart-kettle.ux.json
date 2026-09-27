@@ -104,7 +104,8 @@
           ],
           "surfaces": [
             "mobile_app"
-          ]
+          ],
+          "jobs": []
         },
         {
           "id": "fill",
@@ -120,6 +121,9 @@
           ],
           "surfaces": [
             "kettle_body"
+          ],
+          "jobs": [
+            "boil"
           ]
         },
         {
@@ -135,6 +139,9 @@
           "surfaces": [
             "hardware_button",
             "status_led"
+          ],
+          "jobs": [
+            "boil"
           ]
         },
         {
@@ -148,6 +155,9 @@
           "pain_points": [],
           "surfaces": [
             "kettle_body"
+          ],
+          "jobs": [
+            "boil"
           ]
         },
         {
@@ -162,6 +172,9 @@
           ],
           "surfaces": [
             "mobile_app"
+          ],
+          "jobs": [
+            "keep_warm"
           ]
         }
       ]

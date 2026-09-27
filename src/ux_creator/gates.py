@@ -391,11 +391,57 @@ def _import_checks(contract: UXContract, workspace: Path) -> list[GateCheck]:
     return checks
 
 
+def stage_job_coverage(contract: UXContract) -> dict[str, list[str]]:
+    """job id -> sorted "journey.stage" ids that declare it in stage.jobs."""
+    coverage: dict[str, set[str]] = {}
+    for journey in contract.journeys:
+        for stage in journey.stages:
+            for job in stage.jobs:
+                coverage.setdefault(job, set()).add(f"{journey.id}.{stage.id}")
+    return {job: sorted(refs) for job, refs in sorted(coverage.items())}
+
+
+def _opportunity_checks(contract: UXContract) -> list[GateCheck]:
+    """Underserved-job coverage via stage.jobs linkage."""
+    coverage = stage_job_coverage(contract)
+    linked = set(coverage)
+    linked_any = any(stage.jobs for j in contract.journeys for stage in j.stages)
+    underserved = sorted(j.id for j in contract.jobs if j.served == "underserved")
+    uncovered = [j for j in underserved if j not in linked]
+    checks = [
+        GateCheck(
+            "opportunity.coverage",
+            "jobs",
+            "pass" if not uncovered else "fail",
+            detail=(
+                f"uncovered underserved: {', '.join(uncovered)}"
+                if uncovered
+                else "no underserved jobs"
+                if not underserved
+                else ""
+            ),
+        )
+    ]
+    if contract.jobs and not linked_any:
+        checks.append(
+            GateCheck(
+                "opportunity.stage_links",
+                "jobs",
+                "fail",
+                detail="no stage declares jobs — link stages to jobs",
+            )
+        )
+    else:
+        checks.append(GateCheck("opportunity.stage_links", "jobs", "pass"))
+    return checks
+
+
 def run_gates(contract: UXContract, workspace: Path | None = None) -> GateReport:
     checks: list[GateCheck] = []
     checks += _wrap("statechart", _statechart_checks, contract)
     checks += _wrap("journey", _journey_checks, contract)
     checks += _wrap("jobs", _job_checks, contract)
+    checks += _wrap("opportunity", _opportunity_checks, contract)
     checks += _wrap("feedback", _feedback_checks, contract)
     checks += _wrap("loops", _loop_checks, contract)
     checks += _wrap("core_experience", _core_experience_checks, contract)

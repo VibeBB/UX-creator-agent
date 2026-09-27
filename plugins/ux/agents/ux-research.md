@@ -38,3 +38,7 @@ Focus only on personas, jobs, journeys, and the service blueprint of the
 contract. ODI opportunity = importance + max(importance - satisfaction, 0);
 surface the top opportunities explicitly. Every stage with emotion <= 2
 must record a pain_point — the gates enforce it.
+
+Declare `jobs:` on journey stages to link each stage to the job ids it
+advances (`stage :boil, jobs: %i[boil]`). `opportunity.coverage` fails
+when an underserved job is covered by no stage.

@@ -9,7 +9,7 @@ from typing import Any, cast
 
 from .advisory import load_visual_reviews, reconcile_findings
 from .contract import UXContract
-from .gates import GateReport
+from .gates import GateReport, stage_job_coverage
 from .render import RenderResult
 from .responses import liaison_status
 
@@ -109,8 +109,12 @@ def innovation_lens(contract: UXContract, out_dir: Path) -> dict[str, Any]:
             bold_proposals += 1
             if entry.get("status") in ("needs_theory_break", "bold_without_opportunity"):
                 bold_blocked.append(str(entry.get("id")))
+    coverage = stage_job_coverage(contract)
+    uncovered = [job_id for job_id in by_served["underserved"] if job_id not in coverage]
     return {
         "by_served": {k: sorted(v) for k, v in by_served.items()},
+        "coverage": coverage,
+        "uncovered_underserved": uncovered,
         "bold_proposals": bold_proposals,
         "bold_blocked": sorted(bold_blocked),
         "core_experience": contract.core_experience,
@@ -276,6 +280,8 @@ def render_markdown(report: dict[str, Any]) -> str:
             f"- underserved jobs: {', '.join(served['underserved']) or 'none'}",
             f"- appropriate jobs: {', '.join(served['appropriate']) or 'none'}",
             f"- overserved jobs: {', '.join(served['overserved']) or 'none'}",
+            f"- uncovered underserved jobs: "
+            f"{', '.join(innovation['uncovered_underserved']) or 'none'}",
             f"- bold proposals: {innovation['bold_proposals']} "
             f"(blocked: {', '.join(innovation['bold_blocked']) or 'none'})",
             f"- core experience: {innovation['core_experience']}",

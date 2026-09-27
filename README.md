@@ -18,7 +18,8 @@ It is the UX design member of the VibeBB sister-plugin family
 - **Target**: OpenHands Software Agent SDK **v1.49.6**, Python 3.12+
 - **Contract**: `{product}.ux.json` (`schema_version: 1`,
   `system: "ux-creator"`) — personas, jobs (ODI), journeys (typed
-  stages), service blueprint, statecharts (guards/actions/entry/exit),
+  stages with job links), service blueprint, statecharts
+  (guards/actions/entry/exit),
   `feedback[]` (Nielsen-budgeted trigger→response), `loops[]`
   (action→reward cadence), QCD, imports — see
   `src/ux_creator/contract.py`

@@ -7,7 +7,7 @@
 #       job :boil, functional: "...", emotional: "...", social: "...",
 #           importance: 9, satisfaction: 4
 #       journey :morning do
-#         stage :fill, touchpoints: %w[lid handle], emotion: 3
+#         stage :fill, touchpoints: %w[lid handle], emotion: 3, jobs: %i[boil]
 #       end
 #       statechart :power do
 #         state :idle, initial: true
@@ -39,7 +39,7 @@ module UX
   Surface = Struct.new(:id, :layer, :name, :notes)
   Persona = Struct.new(:id, :name, :goals, :context, :pains)
   Job = Struct.new(:id, :functional, :emotional, :social, :importance, :satisfaction)
-  Stage = Struct.new(:id, :kind, :touchpoints, :emotion, :pain_points, :surfaces)
+  Stage = Struct.new(:id, :kind, :touchpoints, :emotion, :pain_points, :surfaces, :jobs)
   Journey = Struct.new(:id, :persona, :stages)
   StateDef = Struct.new(:id, :initial, :final, :description, :surface, :entry, :exit)
   Transition = Struct.new(:from_state, :event, :to, :guard, :actions)
@@ -169,7 +169,7 @@ module UX
           { id: j.id, persona: j.persona,
             stages: j.stages.map do |s|
               { id: s.id, kind: s.kind, touchpoints: s.touchpoints, emotion: s.emotion,
-                pain_points: s.pain_points, surfaces: s.surfaces }
+                pain_points: s.pain_points, surfaces: s.surfaces, jobs: s.jobs }
             end }
         end,
         service_blueprint: @blueprint && {
@@ -209,13 +209,13 @@ module UX
       @stages = []
     end
 
-    def stage(id, kind: :use, touchpoints: [], emotion:, pain_points: [], surfaces: [])
+    def stage(id, kind: :use, touchpoints: [], emotion:, pain_points: [], surfaces: [], jobs: [])
       unless STAGE_KINDS.include?(kind)
         raise DesignError, "unknown stage kind #{kind.inspect}; expected #{STAGE_KINDS.inspect}"
       end
 
       @stages << Stage.new(id.to_s, kind.to_s, touchpoints.map(&:to_s), Integer(emotion),
-                           pain_points.map(&:to_s), surfaces.map(&:to_s))
+                           pain_points.map(&:to_s), surfaces.map(&:to_s), jobs.map(&:to_s))
     end
   end
 

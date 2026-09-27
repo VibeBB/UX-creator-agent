@@ -109,6 +109,7 @@ class Stage(BaseModel):
     emotion: int = Field(ge=1, le=5)
     pain_points: list[str] = Field(default_factory=list[str])
     surfaces: list[str] = Field(default_factory=list[str])
+    jobs: list[str] = Field(default_factory=list[str])
 
 
 class Journey(BaseModel):
@@ -227,6 +228,17 @@ class UXContract(BaseModel):
     feedback: list[Feedback] = Field(default_factory=list[Feedback])
     loops: list[ExperienceLoop] = Field(default_factory=list[ExperienceLoop])
     imports: list[ImportRef] = Field(default_factory=list[ImportRef])
+
+    @model_validator(mode="after")
+    def _stage_jobs_known(self) -> UXContract:
+        job_ids = {j.id for j in self.jobs}
+        unknown = sorted(
+            {job for journey in self.journeys for stage in journey.stages for job in stage.jobs}
+            - job_ids
+        )
+        if unknown:
+            raise ValueError(f"stage jobs reference unknown job ids: {unknown}")
+        return self
 
     @model_validator(mode="after")
     def _unique_ids(self) -> UXContract:

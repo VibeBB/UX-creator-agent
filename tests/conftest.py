@@ -48,6 +48,7 @@ def contract_dict() -> dict[str, Any]:
                         "touchpoints": ["btn"],
                         "emotion": 4,
                         "surfaces": ["btn"],
+                        "jobs": ["j1"],
                     }
                 ],
             }
