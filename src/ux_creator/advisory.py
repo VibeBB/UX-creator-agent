@@ -9,6 +9,7 @@ Same contract shape as wire's `src/wire/advisory.py`.
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from pathlib import Path
 from typing import Any, Literal
@@ -107,7 +108,6 @@ def write_visual_review(
     )
     record = AdvisoryResult(status="ok", summary=summary, artifacts=[str(image)], detail=detail)
     path = image.parent / f"review-visual-{slug}.advisory.json"
-    import json
 
     path.write_text(
         json.dumps(record.model_dump(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -138,7 +138,6 @@ def load_visual_reviews(
     Returns (valid records, malformed paths). Malformed files are listed,
     never raised — a broken advisory file must not break the report.
     """
-    import json
 
     ok: list[tuple[Path, AdvisoryResult]] = []
     malformed: list[Path] = []
