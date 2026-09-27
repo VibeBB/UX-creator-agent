@@ -22,3 +22,5 @@ specifications and design decisions.
 - [ADR-0005](adr/0005-experience-loops-and-feedback-lens.md) — experience loops, feedback records, game-design lens
 - [ADR-0006](adr/0006-qcd-triage-of-proposals.md) — QCD triage of change proposals
 - [ADR-0007](adr/0007-advisory-reconciliation.md) — reconcile advisory findings with gates
+- [ADR-0008](adr/0008-sister-response-contract.md) — sister-agent ux-response contract
+- [ADR-0009](adr/0009-rust-mermaid-renderer-evaluation.md) — mmdr evaluation (not adopted)

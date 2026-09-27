@@ -1,7 +1,7 @@
 """python -m ux_creator — deterministic CLI entry points.
 
 Subcommands: doctor, gates, author, render, import, from-ruby, mruby-check,
-request, propose, review-record, review-reconcile.
+request, propose, review-record, review-reconcile, liaison.
 
 Every subcommand prints a JSON verdict object and exits 0 only on
 "pass"/"ok"; fail-closed throughout.
@@ -26,6 +26,7 @@ from .proposals import ProposalSet, triage, write_triage
 from .render import render_all
 from .report import write_report
 from .requests import build_request, write_request
+from .responses import liaison_status
 from .ruby_bridge import contract_from_ruby, mruby_check
 
 
@@ -180,6 +181,18 @@ def _cmd_propose(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_liaison(args: argparse.Namespace) -> int:
+    try:
+        status = liaison_status(Path(args.out_dir), Path(args.out_dir))
+    except Exception as exc:
+        return _fail("liaison", exc)
+    payload = status.model_dump()
+    payload["verdict"] = "pass"
+    payload["stage"] = "liaison"
+    _print(payload)
+    return 0
+
+
 def _cmd_review_reconcile(args: argparse.Namespace) -> int:
     try:
         contract = load_contract(args.contract)
@@ -291,6 +304,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out-dir", required=True)
     p.add_argument("--workspace")
     p.set_defaults(func=_cmd_review_reconcile)
+
+    p = sub.add_parser("liaison", help="report ux-request/ux-response liaison status")
+    p.add_argument("--out-dir", required=True)
+    p.set_defaults(func=_cmd_liaison)
 
     args = parser.parse_args(argv)
     if args.command == "doctor" and getattr(args, "warn", False):

@@ -29,6 +29,7 @@ from .proposals import ProposalSet, triage, write_triage
 from .render import render_all
 from .report import write_report
 from .requests import build_request, write_request
+from .responses import liaison_status
 from .ruby_bridge import contract_from_ruby, mruby_check
 
 server: Server = Server(f"ux-mcp/{__version__}")
@@ -110,6 +111,12 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
             "workspace": {"type": "string"},
         },
         "required": ["contract_path", "out_dir"],
+        "additionalProperties": False,
+    },
+    "ux_liaison_status": {
+        "type": "object",
+        "properties": {"out_dir": {"type": "string"}},
+        "required": ["out_dir"],
         "additionalProperties": False,
     },
     "ux_render": {
@@ -242,6 +249,15 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             "findings": [f.model_dump() for f in findings],
             "malformed": [str(p) for p in malformed],
         }
+    if name == "ux_liaison_status":
+        try:
+            status = liaison_status(Path(arguments["out_dir"]), Path(arguments["out_dir"]))
+        except Exception as exc:
+            return {"verdict": "fail", "stage": "liaison", "detail": str(exc)}
+        payload = status.model_dump()
+        payload["verdict"] = "pass"
+        payload["stage"] = "liaison"
+        return payload
     if name == "ux_render":
         results = render_all(Path(arguments["dir"]))
         return {
