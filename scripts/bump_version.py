@@ -1,9 +1,8 @@
-"""Bump the ux_creator plugin version across every version-bearing file.
+"""Bump the ux plugin version across every version-bearing file.
 
-Updates plugins/ux/.plugin/plugin.json, pyproject.toml, both SKILL.md
-frontmatter lines of every plugins/ux/skills/*/SKILL.md and the
-ux-creator-agent package entry in uv.lock. Fails closed
-if the four source files disagree on the current version.
+Updates plugins/ux/.plugin/plugin.json, pyproject.toml, the SKILL.md
+frontmatter lines and the ux-creator-agent package entry in uv.lock.
+Fails closed if the source files disagree on the current version.
 """
 
 from __future__ import annotations
@@ -18,11 +17,25 @@ SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 VERSION_FILES = [
     "plugins/ux/.plugin/plugin.json",
     "pyproject.toml",
+    "plugins/ux/skills/ux-diagrams/SKILL.md",
+    "plugins/ux/skills/ux-jtbd/SKILL.md",
+    "plugins/ux/skills/ux-persona/SKILL.md",
+    "plugins/ux/skills/ux-ruby-style/SKILL.md",
+    "plugins/ux/skills/ux-sibling-cooperation/SKILL.md",
+    "plugins/ux/skills/ux-theory-lenses/SKILL.md",
+    "plugins/ux/skills/ux-workflow/SKILL.md",
 ]
 
 _PATTERNS = {
     "plugins/ux/.plugin/plugin.json": re.compile(r'"version":\s*"([^"]+)"'),
     "pyproject.toml": re.compile(r'(?m)^version = "([^"]+)"'),
+    "plugins/ux/skills/ux-diagrams/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
+    "plugins/ux/skills/ux-jtbd/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
+    "plugins/ux/skills/ux-persona/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
+    "plugins/ux/skills/ux-ruby-style/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
+    "plugins/ux/skills/ux-sibling-cooperation/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
+    "plugins/ux/skills/ux-theory-lenses/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
+    "plugins/ux/skills/ux-workflow/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
 }
 
 UV_LOCK = "uv.lock"
@@ -57,8 +70,15 @@ def _check_consistent(versions: dict[str, str]) -> str:
     return current
 
 
+def _parse(version: str) -> tuple[int, int, int]:
+    m = SEMVER_RE.match(version)
+    if m is None:
+        raise BumpError(f"version '{version}' is not X.Y.Z")
+    return int(m.group(1)), int(m.group(2)), int(m.group(3))
+
+
 def _bumped(current: str, kind: str) -> str:
-    major, minor, patch = (int(x) for x in SEMVER_RE.match(current).groups())  # type: ignore[union-attr]
+    major, minor, patch = _parse(current)
     if kind == "major":
         return f"{major + 1}.0.0"
     if kind == "minor":
@@ -67,9 +87,7 @@ def _bumped(current: str, kind: str) -> str:
 
 
 def _gt(a: str, b: str) -> bool:
-    pa = tuple(int(x) for x in SEMVER_RE.match(a).groups())  # type: ignore[union-attr]
-    pb = tuple(int(x) for x in SEMVER_RE.match(b).groups())  # type: ignore[union-attr]
-    return pa > pb
+    return _parse(a) > _parse(b)
 
 
 def _apply(root: Path, old: str, new: str) -> None:
