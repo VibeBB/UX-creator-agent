@@ -28,7 +28,7 @@ from .advisory import (
 )
 from .contract import load_contract
 from .doctor import run_doctor
-from .gates import run_gates
+from .gates import FAIL, PASS, run_gates
 from .imports import import_source
 from .projections import write_projections, write_provenance
 from .proposals import ProposalSet, triage, write_triage
@@ -44,14 +44,14 @@ def _print(payload: dict[str, Any]) -> None:
 
 
 def _fail(stage: str, exc: Exception) -> int:
-    _print({"verdict": "fail", "stage": stage, "detail": str(exc)})
+    _print({"verdict": FAIL, "stage": stage, "detail": str(exc)})
     return 1
 
 
 def _cmd_doctor(_args: argparse.Namespace) -> int:
     report = run_doctor()
     _print(report)
-    return 0 if report["verdict"] == "pass" else 1
+    return 0 if report["verdict"] == PASS else 1
 
 
 def _cmd_gates(args: argparse.Namespace) -> int:
@@ -65,7 +65,7 @@ def _cmd_gates(args: argparse.Namespace) -> int:
 
         _write(contract, report, Path(args.out))
     _print(report.to_dict(contract))
-    return 0 if report.verdict == "pass" else 1
+    return 0 if report.verdict == PASS else 1
 
 
 def _cmd_author(args: argparse.Namespace) -> int:
@@ -82,14 +82,14 @@ def _cmd_author(args: argparse.Namespace) -> int:
     write_provenance(contract, paths, out_dir)
     write_report(contract, report, out_dir, renders)
     _print(report.to_dict(contract))
-    return 0 if report.verdict == "pass" else 1
+    return 0 if report.verdict == PASS else 1
 
 
 def _cmd_render(args: argparse.Namespace) -> int:
     results = render_all(Path(args.dir))
     _print(
         {
-            "verdict": "pass",
+            "verdict": PASS,
             "renders": [
                 {
                     "source": str(r.source),
@@ -116,7 +116,7 @@ def _cmd_import(args: argparse.Namespace) -> int:
     )
     _print(
         {
-            "verdict": "pass",
+            "verdict": PASS,
             "stage": "import",
             "imports": [r.model_dump(by_alias=True) for r in contract.imports],
         }
@@ -127,7 +127,7 @@ def _cmd_import(args: argparse.Namespace) -> int:
 def _cmd_from_ruby(args: argparse.Namespace) -> int:
     result = contract_from_ruby(Path(args.source))
     if result.contract is None:
-        _print({"verdict": "fail", "stage": "from-ruby", "detail": result.detail})
+        _print({"verdict": FAIL, "stage": "from-ruby", "detail": result.detail})
         return 1
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -135,7 +135,7 @@ def _cmd_from_ruby(args: argparse.Namespace) -> int:
         json.dumps(result.contract.model_dump(by_alias=True), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    _print({"verdict": "pass", "stage": "from-ruby", "contract": str(out)})
+    _print({"verdict": PASS, "stage": "from-ruby", "contract": str(out)})
     return 0
 
 
@@ -143,7 +143,7 @@ def _cmd_mruby_check(args: argparse.Namespace) -> int:
     result = mruby_check(Path(args.source))
     _print(
         {
-            "verdict": "pass" if result.status == "ok" else "fail",
+            "verdict": PASS if result.status == "ok" else FAIL,
             "stage": "mruby-check",
             "detail": result.detail,
         }
@@ -164,7 +164,7 @@ def _cmd_request(args: argparse.Namespace) -> int:
         path = write_request(request, Path(args.out_dir), args.name)
     except Exception as exc:
         return _fail("request", exc)
-    _print({"verdict": "pass", "stage": "request", "request": str(path)})
+    _print({"verdict": PASS, "stage": "request", "request": str(path)})
     return 0
 
 
@@ -181,7 +181,7 @@ def _cmd_propose(args: argparse.Namespace) -> int:
         return _fail("propose", exc)
     _print(
         {
-            "verdict": "pass",
+            "verdict": PASS,
             "stage": "propose",
             "written": {k: str(p) for k, p in paths.items()},
             "blocked": blocked,
@@ -209,7 +209,7 @@ def _cmd_intake_record(args: argparse.Namespace) -> int:
         path = write_intake_record(Path(args.image), candidates, model=args.model)
     except Exception as exc:
         return _fail("intake-record", exc)
-    _print({"verdict": "pass", "stage": "intake-record", "record": str(path)})
+    _print({"verdict": PASS, "stage": "intake-record", "record": str(path)})
     return 0
 
 
@@ -222,7 +222,7 @@ def _cmd_intake_reconcile(args: argparse.Namespace) -> int:
     except Exception as exc:
         return _fail("intake-reconcile", exc)
     payload = recon.model_dump()
-    payload["verdict"] = "pass"
+    payload["verdict"] = PASS
     payload["stage"] = "intake-reconcile"
     _print(payload)
     return 0
@@ -234,7 +234,7 @@ def _cmd_liaison(args: argparse.Namespace) -> int:
     except Exception as exc:
         return _fail("liaison", exc)
     payload = status.model_dump()
-    payload["verdict"] = "pass"
+    payload["verdict"] = PASS
     payload["stage"] = "liaison"
     _print(payload)
     return 0
@@ -250,7 +250,7 @@ def _cmd_review_reconcile(args: argparse.Namespace) -> int:
         return _fail("review-reconcile", exc)
     _print(
         {
-            "verdict": "pass",
+            "verdict": PASS,
             "stage": "review-reconcile",
             "findings": [f.model_dump() for f in findings],
             "malformed": [str(p) for p in malformed],
@@ -270,7 +270,7 @@ def _cmd_review_record(args: argparse.Namespace) -> int:
         )
     except Exception as exc:
         return _fail("review-record", exc)
-    _print({"verdict": "pass", "stage": "review-record", "record": str(path)})
+    _print({"verdict": PASS, "stage": "review-record", "record": str(path)})
     return 0
 
 
