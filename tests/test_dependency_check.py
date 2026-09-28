@@ -23,6 +23,14 @@ def test_github_latest_tag_treats_timeout_as_fetch_failure():
     assert _github_latest_tag("actions/checkout", timed_out) == ""
 
 
+def test_github_latest_tag_matches_prefixed_multi_segment_tags():
+    def tags(url: str) -> list[str]:
+        return ["jdk-27.0-m1", "jdk-27.0.0.0", "jdk-27.0.0.0-m1a", "jdk-27.0.1.0-m1"]
+
+    latest = _github_latest_tag("ibmruntimes/semeru27-binaries", tags, prefix="jdk-")
+    assert latest == "jdk-27.0.0.0"
+
+
 def test_docker_args_report_fetch_failed_on_timeout():
     def timed_out(url: str) -> list[str]:
         raise subprocess.TimeoutExpired(["git", "ls-remote", "--tags", url], 1)
@@ -32,6 +40,7 @@ def test_docker_args_report_fetch_failed_on_timeout():
     assert uv_status.latest == "?"
     assert uv_status.note == "fetch failed"
     assert uv_status.outdated is False
+    assert uv_status.fetch_failed is True
 
 
 def test_subprocess_timeout_is_bounded():

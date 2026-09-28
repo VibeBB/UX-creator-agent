@@ -28,6 +28,34 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  changes:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    outputs:
+      docker: ${{ steps.scope.outputs.docker }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+      - id: scope
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE_SHA:-}" ] || [ "${BASE_SHA}" = "0000000000000000000000000000000000000000" ]; then
+            echo "docker=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git diff --name-only "$(git merge-base "$BASE_SHA" "$HEAD_SHA")" "$HEAD_SHA" > "$RUNNER_TEMP/changed-files"
+          if grep -Eq '^(docker/|\.dockerignore$)' "$RUNNER_TEMP/changed-files"; then
+            echo "docker=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "docker=false" >> "$GITHUB_OUTPUT"
+          fi
+
   verify:
     runs-on: ubuntu-26.04
     timeout-minutes: 15
@@ -52,6 +80,7 @@ jobs:
         run: uv run python scripts/verify_all.py --stage fast
 
   e2e:
+    needs: changes
     runs-on: ubuntu-26.04
     timeout-minutes: 45
     steps:
@@ -66,10 +95,25 @@ jobs:
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Sync dependencies
         run: uv sync --locked
-      # First-publish chicken-and-egg: no docker/image-digests.json exists yet,
-      # so CI builds the image itself (same pattern as circuit-agent's
-      # docker-smoke job) and selects it via UX_TOOLS_IMAGE.
+      # The e2e needs the image under test: rebuild it when docker/ changed
+      # or when no lock entry exists yet (first-publish chicken-and-egg);
+      # otherwise run_in_locked_image.py pulls the published digest-locked
+      # image — a ~3 minute saving on non-docker changes.
+      - name: Resolve e2e image source
+        id: image
+        env:
+          DOCKER_CHANGED: ${{ needs.changes.outputs.docker }}
+        run: |
+          set -euo pipefail
+          build=false
+          if [ "$DOCKER_CHANGED" = "true" ]; then
+            build=true
+          elif ! python3 -c "import json; json.load(open('docker/image-digests.json', encoding='utf-8'))['ux_tools']" 2>/dev/null; then
+            build=true
+          fi
+          echo "build=$build" >> "$GITHUB_OUTPUT"
       - name: Build ux-tools image for e2e
+        if: steps.image.outputs.build == 'true'
         run: >-
           docker buildx build --load
           -f docker/ux-tools.Dockerfile -t ux-tools:ci
@@ -77,14 +121,18 @@ jobs:
           --cache-to type=gha,mode=max,scope=ux-tools,ignore-error=true
           .
       - name: Author example contract end to end (inside image)
+        env:
+          UX_TOOLS_IMAGE: ${{ steps.image.outputs.build == 'true' && 'ux-tools:ci' || '' }}
         run: |
-          UX_TOOLS_IMAGE=ux-tools:ci uv run python scripts/run_in_locked_image.py -- \
+          uv run python scripts/run_in_locked_image.py -- \
             python scripts/e2e_authoring.py \
             --contract examples/smart-kettle/smart-kettle.ux.json \
             --out out/ci/smart-kettle --render
       - name: Ruby DSL parity + lint (inside image)
+        env:
+          UX_TOOLS_IMAGE: ${{ steps.image.outputs.build == 'true' && 'ux-tools:ci' || '' }}
         run: |
-          UX_TOOLS_IMAGE=ux-tools:ci uv run python scripts/run_in_locked_image.py -- \
+          uv run python scripts/run_in_locked_image.py -- \
             python scripts/check_ruby_dsl.py
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
