@@ -18,6 +18,10 @@ Style/KeywordParametersOrder:
 Naming/BlockForwarding:
   Enabled: false
 
+Naming/MethodParameterName:
+  # rubocop defaults plus the colour-pair kwargs used by `control`.
+  AllowedNames: [as, at, by, cc, db, id, if, in, io, ip, of, on, os, pp, to, fg, bg]
+
 Style/ArgumentsForwarding:
   Enabled: false
 
