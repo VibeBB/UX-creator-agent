@@ -1,10 +1,10 @@
 {
   "ux_tools": {
-    "digest": "sha256:50f6a2b5cfdd85d3a4e75cb6edb42312e4f064d2e555051b809535af5c29ada5",
+    "digest": "sha256:4e287431d3605cfa743c2865bcee71a6585fc4b4e0b7bd3545b87a7cc184bd27",
     "dockerfile": "docker/ux-tools.Dockerfile",
     "image": "ghcr.io/vibebb/ux-tools",
-    "published_at": "2026-09-28T13:40:48Z",
-    "tag": "72a22af9519f30df597ee6ebca6e8a70084e40ec-tools",
+    "published_at": "2026-09-28T15:03:47Z",
+    "tag": "2b6c34315900a31455e072130d8c1194c44f8a84-tools",
     "tools": {
       "git": "2.47.3",
       "pydantic": "2.13.5",
@@ -12,6 +12,6 @@
       "uv": "0.12.19 (x86_64-unknown-linux-musl)",
       "ux_creator": "0.1.0"
     },
-    "workflow_run": "https://github.com/VibeBB/UX-creator-agent/actions/runs/36429379405"
+    "workflow_run": "https://github.com/VibeBB/UX-creator-agent/actions/runs/36439934055"
   }
 }
