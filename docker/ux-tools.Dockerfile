@@ -90,7 +90,7 @@ RUN mkdir -p /opt/plantuml \
     && curl --fail --location --silent --show-error \
         --retry 5 --retry-delay 10 --retry-all-errors \
         --output /usr/share/doc/plantuml/LICENSE \
-        "https://raw.githubusercontent.com/plantuml/plantuml/v${PLANTUML_VERSION}/license-mit.txt" || true \
+        "https://raw.githubusercontent.com/plantuml/plantuml/v${PLANTUML_VERSION}/LICENSE" \
     && printf '%s\n' \
         "source=https://github.com/plantuml/plantuml (mit jar)" \
         "version=v${PLANTUML_VERSION}" \
