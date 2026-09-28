@@ -29,6 +29,7 @@ from .contract import UXContract, load_contract
 from .doctor import run_doctor
 from .gates import FAIL, PASS, run_gates
 from .imports import import_source
+from .production import load_plan, plan_sha256, run_production_gates, write_production
 from .projections import write_projections, write_provenance
 from .proposals import ProposalSet, triage, write_triage
 from .render import render_all
@@ -118,6 +119,17 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
         "required": ["contract_path", "out_dir"],
         "additionalProperties": False,
     },
+    "ux_produce": {
+        "type": "object",
+        "properties": {
+            "plan_path": {"type": "string"},
+            "out_dir": {"type": "string"},
+            "workspace": {"type": "string"},
+            "liaison_dir": {"type": "string"},
+        },
+        "required": ["plan_path", "out_dir"],
+        "additionalProperties": False,
+    },
     "ux_liaison_status": {
         "type": "object",
         "properties": {"out_dir": {"type": "string"}},
@@ -141,7 +153,14 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
     },
 }
 
-_WRITE_TOOLS = {"ux_author", "ux_import", "ux_request", "ux_propose", "ux_from_ruby"}
+_WRITE_TOOLS = {
+    "ux_author",
+    "ux_import",
+    "ux_request",
+    "ux_propose",
+    "ux_from_ruby",
+    "ux_produce",
+}
 
 
 def _text(payload: Any) -> list[types.ContentBlock]:
@@ -263,6 +282,28 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             "findings": [f.model_dump() for f in findings],
             "malformed": [str(p) for p in malformed],
         }
+    if name == "ux_produce":
+        try:
+            plan_path = Path(arguments["plan_path"])
+            plan = load_plan(plan_path)
+            liaison = arguments.get("liaison_dir")
+            report = run_production_gates(
+                plan,
+                Path(arguments.get("workspace") or "."),
+                Path(liaison) if liaison else None,
+            )
+            paths = write_production(
+                plan,
+                report,
+                plan_path.name.removesuffix(".production.json"),
+                Path(arguments["out_dir"]),
+                plan_path,
+            )
+        except Exception as exc:
+            return {"verdict": FAIL, "stage": "produce", "detail": str(exc)}
+        payload = report.to_dict(plan, plan_sha256(plan_path))
+        payload["written"] = {k: str(p) for k, p in sorted(paths.items())}
+        return payload
     if name == "ux_liaison_status":
         try:
             status = liaison_status(Path(arguments["out_dir"]), Path(arguments["out_dir"]))

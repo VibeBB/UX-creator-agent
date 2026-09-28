@@ -449,6 +449,10 @@ def run_gates(contract: UXContract, workspace: Path | None = None) -> GateReport
     checks += _wrap("hig", _hig_checks, contract)
     checks += _wrap("loops", _loop_checks, contract)
     checks += _wrap("core_experience", _core_experience_checks, contract)
+    if contract.cmf is not None:
+        checks += _wrap("cmf", _cmf_checks, contract)
+    if contract.content:
+        checks += _wrap("content", _content_checks, contract)
     if contract.imports:
         checks += _wrap("imports", _import_checks, contract, workspace or Path.cwd())
     verdict: Verdict = PASS if all(c.status == PASS for c in checks) else FAIL
@@ -525,6 +529,140 @@ def _hig_checks(contract: UXContract) -> list[GateCheck]:
                 else "no low-contrast controls"
                 if colored
                 else "no colored controls"
+            ),
+        )
+    )
+    return checks
+
+
+CMF_SURFACE_LAYERS = frozenset({"hardware", "mechanism", "industrial_design"})
+MIN_MARKING_CONTRAST = 3.0  # WCAG 1.4.11 non-text / large-text contrast
+
+
+def _cmf_checks(contract: UXContract) -> list[GateCheck]:
+    cmf = contract.cmf
+    if cmf is None:
+        return []
+    covered = {p.surface for p in cmf.parts}
+    physical = sorted(s.id for s in contract.product.surfaces if s.layer in CMF_SURFACE_LAYERS)
+    missing = [sid for sid in physical if sid not in covered]
+    checks = [
+        GateCheck(
+            "cmf.part_coverage",
+            "cmf",
+            FAIL if missing else PASS,
+            measured=float(len(physical) - len(missing)),
+            limit=float(len(physical)),
+            detail=(
+                f"physical surfaces without a CMF part: {', '.join(missing)}"
+                if missing
+                else f"{len(physical)} physical surfaces covered"
+            ),
+        )
+    ]
+    primaries = [c.id for c in cmf.palette if c.role == "primary"]
+    checks.append(
+        GateCheck(
+            "cmf.primary_color",
+            "cmf",
+            PASS if primaries else FAIL,
+            measured=float(len(primaries)),
+            limit=1.0,
+            detail="" if primaries else "palette has no primary color",
+        )
+    )
+    hexes = {c.id: c.hex for c in cmf.palette}
+    part_colors: dict[str, list[str]] = {}
+    for part in cmf.parts:
+        part_colors.setdefault(part.surface, []).append(hexes[part.color])
+    ratios: dict[str, float] = {}
+    unknown: list[str] = []
+    for marking in cmf.markings:
+        if not marking.color:
+            continue
+        backgrounds = part_colors.get(marking.surface, [])
+        if not backgrounds:
+            unknown.append(marking.id)
+            continue
+        ratios[marking.id] = round(
+            min(contrast_ratio(hexes[marking.color], bg) for bg in backgrounds), 2
+        )
+    low = [f"{mid}:{r}" for mid, r in sorted(ratios.items()) if r < MIN_MARKING_CONTRAST]
+    if low:
+        status: CheckStatus = FAIL
+        detail = f"low-contrast markings: {', '.join(low)}"
+    elif unknown:
+        status = UNKNOWN
+        detail = f"markings on surfaces without a CMF part: {', '.join(sorted(unknown))}"
+    else:
+        status = PASS
+        detail = f"{len(ratios)} colored markings checked"
+    checks.append(
+        GateCheck(
+            "cmf.marking_contrast",
+            "cmf",
+            status,
+            measured=min(ratios.values(), default=None),
+            limit=MIN_MARKING_CONTRAST,
+            detail=detail,
+        )
+    )
+    return checks
+
+
+def _content_checks(contract: UXContract) -> list[GateCheck]:
+    feedback = {f.id: f for f in contract.feedback}
+    covered = {a.feedback for a in contract.content if a.modality == feedback[a.feedback].modality}
+    uncovered = sorted(set(feedback) - covered)
+    checks = [
+        GateCheck(
+            "content.feedback_coverage",
+            "content",
+            FAIL if uncovered else PASS,
+            measured=float(len(covered)),
+            limit=float(len(feedback)),
+            detail=(
+                f"feedback without a content asset: {', '.join(uncovered)}"
+                if uncovered
+                else f"{len(feedback)} feedback records realized"
+            ),
+        )
+    ]
+    mismatched = sorted(
+        f"{a.id}:{a.modality}!={feedback[a.feedback].modality}"
+        for a in contract.content
+        if a.modality != feedback[a.feedback].modality
+    )
+    checks.append(
+        GateCheck(
+            "content.modality_match",
+            "content",
+            FAIL if mismatched else PASS,
+            detail=f"asset/feedback modality mismatch: {', '.join(mismatched)}"
+            if mismatched
+            else "",
+        )
+    )
+    imported = {ref.path: set(ref.extracted) for ref in contract.imports if ref.system == "bard"}
+    unlinked = sorted(
+        f"{a.id}:{a.source.ref}#{a.source.cue}"
+        for a in contract.content
+        if a.source.kind == "bard_cue"
+        and f"cue:{a.source.cue}" not in imported.get(a.source.ref, set())
+    )
+    bard_assets = [a for a in contract.content if a.source.kind == "bard_cue"]
+    checks.append(
+        GateCheck(
+            "content.bard_cue_imported",
+            "content",
+            FAIL if unlinked else PASS,
+            measured=float(len(bard_assets) - len(unlinked)),
+            limit=float(len(bard_assets)),
+            detail=(
+                "bard cues not in an imported cue manifest (run `ux import --from bard`): "
+                + ", ".join(unlinked)
+                if unlinked
+                else f"{len(bard_assets)} bard cues linked"
             ),
         )
     )

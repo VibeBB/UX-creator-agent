@@ -26,7 +26,7 @@ contract's `imports[]`, and extracts **touchpoint candidates only**:
 | `circuit` | `*.connectivity.json` (circuit-agent) | connector `ref`s, housings |
 | `mech` | `*.envelope.json` (mech) | anchor `name`s (clips, grommets) |
 | `wire` | `*.contract.json` (wire-agent) | connector ids |
-| `bard` | provenance/artifact JSON | artifact path strings |
+| `bard` | provenance/artifact JSON, cue manifest `cues.json` | artifact path strings; `cue:<id>` per product sound cue |
 | `csv` | generic JSON tables | first `id`/`ref`/`name` per entry |
 
 The copy is the truth: re-import replaces the record; a missing file

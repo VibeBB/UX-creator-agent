@@ -1,0 +1,535 @@
+{
+  "cmf": {
+    "finishes": [
+      {
+        "gloss": "matte",
+        "id": "soft_matte",
+        "name": "soft matte",
+        "texture": "MT-11010"
+      },
+      {
+        "gloss": "satin",
+        "id": "satin",
+        "name": "satin",
+        "texture": ""
+      }
+    ],
+    "form_language": "soft cylinder with a single warm-white light ring; calm kitchen appliance, no chrome",
+    "keywords": [
+      "calm",
+      "warm",
+      "tactile"
+    ],
+    "markings": [
+      {
+        "color": "charcoal",
+        "content": "VibeBB",
+        "id": "wordmark",
+        "kind": "wordmark",
+        "method": "pad_print",
+        "surface": "kettle_body"
+      },
+      {
+        "color": "porcelain",
+        "content": "boil (wave) icon",
+        "id": "boil_icon",
+        "kind": "icon",
+        "method": "laser",
+        "surface": "hardware_button"
+      }
+    ],
+    "materials": [
+      {
+        "id": "pp",
+        "name": "PP (food contact)",
+        "notes": "body shell",
+        "process": "injection molding"
+      },
+      {
+        "id": "tpe",
+        "name": "TPE",
+        "notes": "handle grip",
+        "process": "overmold"
+      }
+    ],
+    "palette": [
+      {
+        "hex": "#F4F1EA",
+        "id": "porcelain",
+        "name": "porcelain white",
+        "role": "primary"
+      },
+      {
+        "hex": "#2B2B2B",
+        "id": "charcoal",
+        "name": "charcoal",
+        "role": "secondary"
+      },
+      {
+        "hex": "#E0632A",
+        "id": "ember",
+        "name": "ember orange",
+        "role": "signal"
+      }
+    ],
+    "parts": [
+      {
+        "color": "porcelain",
+        "finish": "soft_matte",
+        "id": "body_shell",
+        "material": "pp",
+        "notes": "",
+        "surface": "kettle_body"
+      },
+      {
+        "color": "charcoal",
+        "finish": "satin",
+        "id": "boil_key",
+        "material": "tpe",
+        "notes": "",
+        "surface": "hardware_button"
+      }
+    ],
+    "references": []
+  },
+  "content": [
+    {
+      "duration_ms": null,
+      "feedback": "led_boiling",
+      "id": "led_boil_breathe",
+      "loop": true,
+      "modality": "visual",
+      "notes": "",
+      "source": {
+        "cue": "",
+        "kind": "inline",
+        "ref": "",
+        "spec": "ring #E0632A breathe 1 Hz, 20-100% duty, until boiled"
+      }
+    },
+    {
+      "duration_ms": 600,
+      "feedback": "beep_done",
+      "id": "cue_done",
+      "loop": false,
+      "modality": "audio",
+      "notes": "",
+      "source": {
+        "cue": "done",
+        "kind": "bard_cue",
+        "ref": "cues/smart-kettle/cues.json",
+        "spec": ""
+      }
+    },
+    {
+      "duration_ms": null,
+      "feedback": "beep_press",
+      "id": "cue_press",
+      "loop": false,
+      "modality": "audio",
+      "notes": "",
+      "source": {
+        "cue": "press",
+        "kind": "bard_cue",
+        "ref": "cues/smart-kettle/cues.json",
+        "spec": ""
+      }
+    },
+    {
+      "duration_ms": null,
+      "feedback": "app_reminder",
+      "id": "app_cooling_card",
+      "loop": false,
+      "modality": "text",
+      "notes": "",
+      "source": {
+        "cue": "",
+        "kind": "inline",
+        "ref": "",
+        "spec": "push card: 'Boiled - ready to pour' + cooling countdown"
+      }
+    }
+  ],
+  "controls": [
+    {
+      "bg": "",
+      "fg": "",
+      "height_mm": 14.0,
+      "id": "boil_button",
+      "kind": "button",
+      "large_text": false,
+      "surface": "hardware_button",
+      "touchpoint": "button",
+      "width_mm": 14.0
+    },
+    {
+      "bg": "#0057D9",
+      "fg": "#FFFFFF",
+      "height_mm": 9.0,
+      "id": "app_boil_tap",
+      "kind": "touch",
+      "large_text": false,
+      "surface": "mobile_app",
+      "touchpoint": "app_pairing",
+      "width_mm": 9.0
+    }
+  ],
+  "core_experience": "one press, walk away \u2014 hot water that waits for you",
+  "feedback": [
+    {
+      "description": "LED starts pulsing within one blink of the press",
+      "id": "led_boiling",
+      "latency_ms": 50,
+      "modality": "visual",
+      "progress_indicator": false,
+      "surface": "status_led",
+      "trigger": "press"
+    },
+    {
+      "description": "two-tone done chime at boil detection",
+      "id": "beep_done",
+      "latency_ms": 100,
+      "modality": "audio",
+      "progress_indicator": false,
+      "surface": "buzzer",
+      "trigger": "boiled"
+    },
+    {
+      "description": "push card counts down cooling time",
+      "id": "app_reminder",
+      "latency_ms": 3000,
+      "modality": "text",
+      "progress_indicator": true,
+      "surface": "mobile_app",
+      "trigger": "app_notification"
+    },
+    {
+      "description": "short confirm blip on the boil button",
+      "id": "beep_press",
+      "latency_ms": 30,
+      "modality": "audio",
+      "progress_indicator": false,
+      "surface": "buzzer",
+      "trigger": "press"
+    }
+  ],
+  "implementation_spec": [
+    "plastic vs steel body",
+    "beep vs chime",
+    "app optional"
+  ],
+  "imports": [
+    {
+      "extracted": [
+        "cue-boot.mid",
+        "cue-boot.mml",
+        "cue-done.mid",
+        "cue-done.mml",
+        "cue-overheat.mid",
+        "cue-overheat.mml",
+        "cue-press.mid",
+        "cue-press.mml",
+        "cue:boot",
+        "cue:done",
+        "cue:overheat",
+        "cue:press"
+      ],
+      "path": "cues/smart-kettle/cues.json",
+      "sha256": "095f957d4d3c49cceacd2d12d647d1498387c3db7cd068605e678075268f6d04",
+      "system": "bard"
+    }
+  ],
+  "jobs": [
+    {
+      "emotional": "confidence it will not overflow or be forgotten",
+      "functional": "boil 500 ml of water in under 3 minutes",
+      "id": "boil",
+      "importance": 9,
+      "satisfaction": 4,
+      "social": "a tidy, quiet kitchen while guests arrive"
+    },
+    {
+      "emotional": "trust that a second cup is ready",
+      "functional": "hold water at 80\u00b0C for 30 minutes",
+      "id": "keep_warm",
+      "importance": 6,
+      "satisfaction": 5,
+      "social": "hospitality without re-boiling in front of guests"
+    }
+  ],
+  "journeys": [
+    {
+      "id": "morning",
+      "persona": "",
+      "stages": [
+        {
+          "emotion": 3,
+          "id": "pair_app",
+          "jobs": [],
+          "kind": "onboard",
+          "pain_points": [
+            "pairing needs account"
+          ],
+          "surfaces": [
+            "mobile_app"
+          ],
+          "touchpoints": [
+            "app_pairing"
+          ]
+        },
+        {
+          "emotion": 3,
+          "id": "fill",
+          "jobs": [
+            "boil"
+          ],
+          "kind": "use",
+          "pain_points": [
+            "lid hinge pinches fingers"
+          ],
+          "surfaces": [
+            "kettle_body"
+          ],
+          "touchpoints": [
+            "lid",
+            "handle",
+            "spout"
+          ]
+        },
+        {
+          "emotion": 4,
+          "id": "boil",
+          "jobs": [
+            "boil"
+          ],
+          "kind": "use",
+          "pain_points": [],
+          "surfaces": [
+            "hardware_button",
+            "status_led"
+          ],
+          "touchpoints": [
+            "button",
+            "led",
+            "beep"
+          ]
+        },
+        {
+          "emotion": 5,
+          "id": "pour",
+          "jobs": [
+            "boil"
+          ],
+          "kind": "use",
+          "pain_points": [],
+          "surfaces": [
+            "kettle_body"
+          ],
+          "touchpoints": [
+            "handle",
+            "spout"
+          ]
+        },
+        {
+          "emotion": 2,
+          "id": "forgot",
+          "jobs": [
+            "keep_warm"
+          ],
+          "kind": "use",
+          "pain_points": [
+            "no reminder when water cools"
+          ],
+          "surfaces": [
+            "mobile_app"
+          ],
+          "touchpoints": [
+            "app_notification"
+          ]
+        }
+      ]
+    }
+  ],
+  "loops": [
+    {
+      "cadence": "daily",
+      "id": "morning_brew",
+      "reward": "hot water without waiting",
+      "steps": [
+        "press",
+        "boiled",
+        "lifted"
+      ]
+    }
+  ],
+  "personas": [
+    {
+      "context": "morning rush with kids",
+      "goals": [
+        "hot water fast",
+        "no watching the kettle"
+      ],
+      "id": "busy_parent",
+      "name": "",
+      "pains": [
+        "forgot boiling water",
+        "scald worry"
+      ]
+    }
+  ],
+  "product": {
+    "description": "",
+    "name": "smart-kettle",
+    "surfaces": [
+      {
+        "id": "kettle_body",
+        "layer": "industrial_design",
+        "name": "kettle body & handle",
+        "notes": ""
+      },
+      {
+        "id": "hardware_button",
+        "layer": "hardware",
+        "name": "single boil button",
+        "notes": ""
+      },
+      {
+        "id": "status_led",
+        "layer": "circuit",
+        "name": "ring status LED",
+        "notes": ""
+      },
+      {
+        "id": "thermostat",
+        "layer": "firmware",
+        "name": "boil/keep-warm controller",
+        "notes": ""
+      },
+      {
+        "id": "buzzer",
+        "layer": "circuit",
+        "name": "piezo beeper",
+        "notes": ""
+      },
+      {
+        "id": "mobile_app",
+        "layer": "smartphone_app",
+        "name": "companion app",
+        "notes": ""
+      }
+    ]
+  },
+  "qcd": {
+    "cost": "medium",
+    "delivery": "fast",
+    "quality": "high",
+    "rationale": "core_experience is the boil job; app features stay optional"
+  },
+  "schema_version": 1,
+  "service_blueprint": {
+    "backstage": [
+      "thermostat_control",
+      "boil_detection"
+    ],
+    "frontstage": [
+      "button_press",
+      "led_feedback",
+      "beep"
+    ],
+    "support_processes": [
+      "firmware_update_service"
+    ]
+  },
+  "statecharts": [
+    {
+      "id": "power",
+      "states": [
+        {
+          "description": "kettle idle, LED off",
+          "entry": [],
+          "exit": [],
+          "final": false,
+          "id": "idle",
+          "initial": true,
+          "surface": "hardware_button"
+        },
+        {
+          "description": "water heating, LED pulsing",
+          "entry": [
+            "led_pulse"
+          ],
+          "exit": [],
+          "final": false,
+          "id": "heating",
+          "initial": false,
+          "surface": "status_led"
+        },
+        {
+          "description": "holding temperature, LED steady",
+          "entry": [],
+          "exit": [],
+          "final": false,
+          "id": "keep_warm",
+          "initial": false,
+          "surface": "status_led"
+        },
+        {
+          "description": "",
+          "entry": [],
+          "exit": [],
+          "final": true,
+          "id": "done",
+          "initial": false,
+          "surface": ""
+        }
+      ],
+      "transitions": [
+        {
+          "actions": [],
+          "event": "press",
+          "from": "idle",
+          "guard": "",
+          "to": "heating"
+        },
+        {
+          "actions": [
+            "beep"
+          ],
+          "event": "boiled",
+          "from": "heating",
+          "guard": "temp >= 100",
+          "to": "done"
+        },
+        {
+          "actions": [],
+          "event": "boiled",
+          "from": "heating",
+          "guard": "keep_warm_armed",
+          "to": "keep_warm"
+        },
+        {
+          "actions": [],
+          "event": "keep_warm_selected",
+          "from": "heating",
+          "guard": "",
+          "to": "keep_warm"
+        },
+        {
+          "actions": [],
+          "event": "timeout",
+          "from": "keep_warm",
+          "guard": "",
+          "to": "idle"
+        },
+        {
+          "actions": [],
+          "event": "lifted",
+          "from": "done",
+          "guard": "",
+          "to": "idle"
+        }
+      ]
+    }
+  ],
+  "system": "ux-creator"
+}

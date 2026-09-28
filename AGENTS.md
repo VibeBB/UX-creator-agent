@@ -65,13 +65,16 @@ service blueprints, statecharts, QCD — and projects them into diagrams
 
 ```
 src/ux_creator/         Python core: contract, gates, projections, imports,
-                        requests, proposals, responses, advisory, report,
+                        requests, proposals, responses, production,
+                        advisory, report,
                         render, doctor, ruby_bridge, cli, mcp_server
 plugins/ux/             OpenHands plugin (agents, commands, skills, hooks,
                         launcher, .mcp.json)
 ruby/                   ux-dsl library, runner, rubocop config, minitest
 docker/                 ux-tools Dockerfile, puppeteer-config.json
-examples/               smart-kettle (.ux.rb + generated .ux.json)
+examples/               smart-kettle (.ux.rb + generated .ux.json),
+                        smart-kettle-product (CMF, content, bard cues,
+                        production plan)
 scripts/                verify_all, check_plugin_load, run_in_locked_image,
                         e2e_authoring, check_ruby_dsl, publish/release helpers
 tests/                  pytest suite (contract, gates, projections, imports,

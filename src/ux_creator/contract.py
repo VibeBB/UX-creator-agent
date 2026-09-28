@@ -231,6 +231,107 @@ class Control(BaseModel):
 
 _HEX6 = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
+ColorRole = Literal["primary", "secondary", "accent", "signal", "neutral"]
+Gloss = Literal["matte", "satin", "gloss"]
+MarkingKind = Literal["logo", "wordmark", "label", "icon", "regulatory", "instruction"]
+MarkingMethod = Literal[
+    "print", "pad_print", "screen_print", "laser", "emboss", "deboss", "mold_in", "sticker"
+]
+
+
+class CMFColor(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    name: str = ""
+    hex: str = Field(pattern=r"^#[0-9A-Fa-f]{6}$")
+    role: ColorRole = "primary"
+
+
+class CMFMaterial(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    process: str = ""
+    notes: str = ""
+
+
+class CMFFinish(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    gloss: Gloss = "matte"
+    texture: str = ""
+
+
+class CMFPart(BaseModel):
+    """One surface's color, material, and finish."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    surface: str = Field(min_length=1)
+    color: str = Field(min_length=1)
+    material: str = Field(min_length=1)
+    finish: str = ""
+    notes: str = ""
+
+
+class CMFMarking(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    surface: str = Field(min_length=1)
+    kind: MarkingKind
+    content: str = Field(min_length=1)
+    method: MarkingMethod = "print"
+    color: str = ""
+
+
+class CMF(BaseModel):
+    """Industrial design / CMF: form language plus color, material, finish, marking."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    form_language: str = Field(min_length=1)
+    keywords: list[str] = Field(default_factory=list[str], max_length=5)
+    references: list[str] = Field(default_factory=list[str])
+    palette: list[CMFColor] = Field(min_length=1)
+    materials: list[CMFMaterial] = Field(min_length=1)
+    finishes: list[CMFFinish] = Field(default_factory=list[CMFFinish])
+    parts: list[CMFPart] = Field(min_length=1)
+    markings: list[CMFMarking] = Field(default_factory=list[CMFMarking])
+
+
+ContentSourceKind = Literal["bard_cue", "file", "inline"]
+
+
+class ContentSource(BaseModel):
+    """Where a content asset comes from: a bard cue, a workspace file, or an inline spec."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kind: ContentSourceKind
+    ref: str = ""  # workspace path (bard cues.json or asset file)
+    cue: str = ""  # bard cue id when kind == "bard_cue"
+    spec: str = ""  # inline pattern (LED, haptic, motion) when kind == "inline"
+
+
+class ContentAsset(BaseModel):
+    """Interaction content that realizes one feedback record."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    feedback: str = Field(min_length=1)
+    modality: FeedbackModality
+    source: ContentSource
+    duration_ms: int | None = Field(default=None, ge=1, le=60000)
+    loop: bool = False
+    notes: str = ""
+
 
 class UXContract(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -250,6 +351,8 @@ class UXContract(BaseModel):
     controls: list[Control] = Field(default_factory=list[Control])
     loops: list[ExperienceLoop] = Field(default_factory=list[ExperienceLoop])
     imports: list[ImportRef] = Field(default_factory=list[ImportRef])
+    cmf: CMF | None = None
+    content: list[ContentAsset] = Field(default_factory=list[ContentAsset])
 
     @model_validator(mode="after")
     def _stage_jobs_known(self) -> UXContract:
@@ -291,11 +394,62 @@ class UXContract(BaseModel):
             ("feedback", self.feedback),
             ("loop", self.loops),
             ("control", self.controls),
+            ("content", self.content),
+            ("cmf color", self.cmf.palette if self.cmf else []),
+            ("cmf material", self.cmf.materials if self.cmf else []),
+            ("cmf finish", self.cmf.finishes if self.cmf else []),
+            ("cmf part", self.cmf.parts if self.cmf else []),
+            ("cmf marking", self.cmf.markings if self.cmf else []),
         ):
             ids = [item.id for item in items]
             if len(ids) != len(set(ids)):
                 dupes = sorted(i for i in ids if ids.count(i) > 1)
                 raise ValueError(f"duplicate {label} ids: {dupes}")
+        return self
+
+    @model_validator(mode="after")
+    def _cmf_refs_known(self) -> UXContract:
+        if self.cmf is None:
+            return self
+        surface_ids = {s.id for s in self.product.surfaces}
+        colors = {c.id for c in self.cmf.palette}
+        materials = {m.id for m in self.cmf.materials}
+        finishes = {f.id for f in self.cmf.finishes}
+        for part in self.cmf.parts:
+            if part.surface not in surface_ids:
+                raise ValueError(f"cmf part {part.id}: unknown surface {part.surface!r}")
+            if part.color not in colors:
+                raise ValueError(f"cmf part {part.id}: unknown color {part.color!r}")
+            if part.material not in materials:
+                raise ValueError(f"cmf part {part.id}: unknown material {part.material!r}")
+            if part.finish and part.finish not in finishes:
+                raise ValueError(f"cmf part {part.id}: unknown finish {part.finish!r}")
+        for marking in self.cmf.markings:
+            if marking.surface not in surface_ids:
+                raise ValueError(f"cmf marking {marking.id}: unknown surface {marking.surface!r}")
+            if marking.color and marking.color not in colors:
+                raise ValueError(f"cmf marking {marking.id}: unknown color {marking.color!r}")
+        return self
+
+    @model_validator(mode="after")
+    def _content_refs_known(self) -> UXContract:
+        feedback_ids = {f.id for f in self.feedback}
+        for asset in self.content:
+            if asset.feedback not in feedback_ids:
+                raise ValueError(f"content {asset.id}: unknown feedback {asset.feedback!r}")
+            src = asset.source
+            if src.kind == "bard_cue":
+                if asset.modality != "audio":
+                    raise ValueError(f"content {asset.id}: bard_cue sources are audio only")
+                if not src.ref or not src.cue:
+                    raise ValueError(f"content {asset.id}: bard_cue needs ref and cue")
+                if src.spec:
+                    raise ValueError(f"content {asset.id}: spec is only for inline sources")
+            elif src.kind == "file":
+                if not src.ref or src.cue or src.spec:
+                    raise ValueError(f"content {asset.id}: file sources need ref only")
+            elif not src.spec or src.ref or src.cue:
+                raise ValueError(f"content {asset.id}: inline sources need spec only")
         return self
 
     def surface_ids(self) -> set[str]:

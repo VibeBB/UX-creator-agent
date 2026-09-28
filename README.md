@@ -21,15 +21,24 @@ It is the UX design member of the VibeBB sister-plugin family
   stages with job links), service blueprint, statecharts
   (guards/actions/entry/exit),
   `feedback[]` (Nielsen-budgeted trigger→response), `loops[]`
-  (action→reward cadence), QCD, imports — see
+  (action→reward cadence), `cmf` (form language, color, material,
+  finish, marking), `content[]` (feedback → LED/sound/haptic/motion/text
+  assets, product sounds from bard cues), QCD, imports — see
   `src/ux_creator/contract.py`
 - **Design expression**: idiomatic Ruby via `ruby/lib/ux_dsl.rb` —
   `python -m ux_creator from-ruby design.rb`
+- **Production plan**: `{product}.production.json` — the producer /
+  orchestrator view across every sibling agent (requirements → design →
+  manufacturing handoff → build → evaluation → revision), with
+  dependency-aware workstreams, decisions, blockers, sibling request
+  tracking, and bench evidence fed back into the next revision —
+  `python -m ux_creator produce` (ADR-0015)
 - **Plugin**: `plugins/ux` — agents `ux-creator`, `ux-research`,
-  `ux-statechart`, `ux-review`, `ux-liaison`; commands `doctor`,
-  `discover`, `journey`, `statechart`, `review`, `propose`; skills for
-  workflow, persona, theory lenses, JTBD, diagrams, Ruby style, and
-  sister cooperation
+  `ux-statechart`, `ux-review`, `ux-liaison`, `ux-producer`; commands
+  `doctor`, `discover`, `journey`, `statechart`, `review`, `propose`,
+  `produce`, `cmf`, `content`; skills for workflow, persona, theory
+  lenses, JTBD, diagrams, Ruby style, sister cooperation, production,
+  CMF, and interaction content
 - **Tools image**: `ghcr.io/vibebb/ux-tools` — Ruby 4, Semeru OpenJ9 JRE,
   PlantUML MIT, mermaid-cli + Chromium, mruby, graphviz, rubocop/minitest
 - **Docs**: `docs/README.md` — operations guide, ADRs, research notes
@@ -47,18 +56,20 @@ src/ux_creator/      # deterministic UX core
 ├── requests.py      # ux-request.json writers (low/high risk)
 ├── proposals.py     # QCD triage: .ux-proposals.json → triage + auto ux-requests
 ├── responses.py     # sister ux-response.json reconciliation (liaison)
+├── production.py    # product-level plan, production gates, status projections
 ├── advisory.py      # typed L2 visual-review records (never verdicts)
 ├── report.py        # ux-report.json/.md
 ├── doctor.py        # environment probe
 ├── ruby_bridge.py   # ruby/mrbc subprocess adapters
 ├── cli.py           # python -m ux_creator {doctor,gates,author,render,
 │                    #   import,from-ruby,mruby-check,request,propose,review-record,review-reconcile,
-│                    #   liaison}
+│                    #   liaison,produce}
 └── mcp_server.py    # stdio MCP boundary (deterministic tools only)
 plugins/ux/          # OpenHands plugin (agents/commands/skills/hooks/launcher)
 ruby/                # ux-dsl library, bin/ux-dsl, .rubocop.yml, minitest
 docker/              # ux-tools.Dockerfile + puppeteer-config.json
-examples/            # smart-kettle (.ux.rb source + generated .ux.json)
+examples/            # smart-kettle (.ux.rb source + generated .ux.json),
+                     # smart-kettle-product (CMF + content + bard cues + plan)
 scripts/             # verify_all, check_plugin_load, locked-image helpers,
                      # e2e_authoring, check_ruby_dsl, release tooling
 tests/               # pytest suite incl. negative gate tests
@@ -95,6 +106,28 @@ sister agents via `<name>.ux-request.json`: low-risk requests are
 deliverable; high-risk requests must cite a job id in the rationale.
 `ux propose` triages a `*.ux-proposals.json` batch deterministically —
 layer-based risk decides auto-send vs hold. See ADR-0003 and ADR-0006.
+
+Product sounds (startup, completion, warning, confirm) are composed by
+bard, not here: request them from `bard`, let bard render
+`cues/<slug>/cues.json` (MIDI + MML), then
+`python -m ux_creator import <contract> --from bard cues/<slug>/cues.json`
+and reference each cue from a `content[]` asset (ADR-0015).
+
+## Producer / orchestrator
+
+```bash
+uv run python -m ux_creator produce \
+  examples/smart-kettle-product/smart-kettle.production.json \
+  --workspace examples/smart-kettle-product \
+  --liaison-dir examples/smart-kettle-product/requests --out out/production
+```
+
+`production.*` gates fail closed: no cycles or later-stage dependencies,
+no work started before its dependencies are done, `blocked` only with an
+open blocker or decision, `done` only with artifacts on disk and an
+accepted sibling response, and evaluation evidence must feed a design or
+revision workstream. `{product}.production-status.md` reports the current
+stage, next actions, open decisions, and blockers.
 
 ## Safety model
 
@@ -137,14 +170,23 @@ VibeBB 姉妹プラグインファミリー（`wire-agent`、`mechanical-agent`�
   `system: "ux-creator"`）— ペルソナ、ジョブ（ODI）、ジャーニー（種別付き
   ステージ）、サービスブループリント、ステートチャート
   （guard/actions/entry/exit）、`feedback[]`（Nielsen 予算付き
-  トリガー→応答）、`loops[]`（行動→報酬のケイデンス）、QCD、インポート —
+  トリガー→応答）、`loops[]`（行動→報酬のケイデンス）、`cmf`（形態言語・
+  色・素材・仕上げ・マーキング）、`content[]`（feedback → LED・音・振動・
+  モーション・テキストの演出アセット。製品音は bard のキュー）、QCD、
+  インポート —
   `src/ux_creator/contract.py` を参照
 - **デザイン記述**: イディオマティックな Ruby DSL `ruby/lib/ux_dsl.rb` —
   `python -m ux_creator from-ruby design.rb`
+- **製品計画**: `{product}.production.json` — 全姉妹エージェントを横断する
+  プロデューサー／統括の視点（要件 → 設計 → 製造引き渡し → 製作 → 評価 →
+  改訂）。依存関係付きワークストリーム、意思決定、ブロッカー、姉妹への依頼
+  追跡、実機エビデンスの次リビジョンへのフィードバック —
+  `python -m ux_creator produce`（ADR-0015）
 - **プラグイン**: `plugins/ux` — エージェント `ux-creator`、`ux-research`、
-  `ux-statechart`、`ux-review`、`ux-liaison`；コマンド `doctor`、
-  `discover`、`journey`、`statechart`、`review`、`propose`；ワークフロー、
-  ペルソナ、理論レンズ、JTBD、ダイアグラム、Ruby スタイル、姉妹連携の
+  `ux-statechart`、`ux-review`、`ux-liaison`、`ux-producer`；コマンド
+  `doctor`、`discover`、`journey`、`statechart`、`review`、`propose`、
+  `produce`、`cmf`、`content`；ワークフロー、ペルソナ、理論レンズ、JTBD、
+  ダイアグラム、Ruby スタイル、姉妹連携、製品計画、CMF、演出コンテンツの
   スキル
 - **ツールイメージ**: `ghcr.io/vibebb/ux-tools` — Ruby 4、Semeru OpenJ9
   JRE、PlantUML MIT、mermaid-cli + Chromium、mruby、graphviz、
@@ -189,6 +231,20 @@ ux-creator は回路の接続情報（`system:"circuit"`）、メカの外形
 高リスクの要求は根拠に job id の引用が必須です。`ux propose` は
 `*.ux-proposals.json` のバッチを決定論的にトリアージし、レイヤー由来の
 リスクで自動送付か保留かを決めます。ADR-0003 と ADR-0006 を参照。
+
+製品音（起動音・完了音・警告音・確認音）は bard が作ります。`bard` に依頼し、
+bard が `cues/<slug>/cues.json`（MIDI + MML）を生成したら
+`python -m ux_creator import <contract> --from bard cues/<slug>/cues.json`
+で取り込み、`content[]` のアセットから各キューを参照します（ADR-0015）。
+
+### プロデューサー／統括
+
+`python -m ux_creator produce <product>.production.json --workspace <dir>
+--liaison-dir <dir> --out <dir>` が `production.*` ゲートを実行します。
+循環や後工程への依存、依存先が未完了のままの着手、ブロッカー／未決事項の
+ない `blocked`、成果物や姉妹の accepted 応答のない `done`、設計・改訂に
+戻らない評価エビデンスはすべて fail です。`{product}.production-status.md`
+が現在のステージ、次のアクション、未決事項、ブロッカーを報告します。
 
 ### 安全モデル
 

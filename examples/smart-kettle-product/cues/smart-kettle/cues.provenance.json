@@ -1,0 +1,40 @@
+{
+  "artifact_kind": "bard_cue_provenance",
+  "schema_version": "0.1",
+  "authority": "none",
+  "generated_at": "2026-09-28T14:51:11.993515Z",
+  "cue_set": {
+    "path": "/home/ubuntu/repos/bard-agent/plugins/bard/skills/bard-render/examples/smart-kettle.cues.json",
+    "sha256": "7de2f9db2adf895e43b78cd8236c8b5de71c68ad34ce6eb6bccd0aee8a15ddef"
+  },
+  "outputs": {
+    "cue-boot.mid": "6d2dbe0ba3167e35d1a5826427e1856c7ef1320c9ee43421f17486e4859d42d0",
+    "cue-boot.mml": "d7d15af7223d4c1486454104f2d1b8e1c0e9c075bc8b63ef3992341cb58cffe6",
+    "cue-done.mid": "01e7e11feacec3a0ea89f06001f7ced0c25a1667beae7ca73c078f7bbd95ba91",
+    "cue-done.mml": "506fe8dee63c2bbb0b73953eb17c7501df1a2e112dc0326ecca37c66dfe6e7b7",
+    "cue-overheat.mid": "73394833bfbccf0f380338d602026e54520161f9bf3032a980974d463e2d0e52",
+    "cue-overheat.mml": "61b9f9bfb2b24d5b50c34dac6f2a33259f907e77566ed14bd1a7798043ab418c",
+    "cue-press.mid": "9acf864bdc526bbdf11948c30d29238e24ff61897242aa355f54bdf30acda544",
+    "cue-press.mml": "d0f2528a5b72cd0beb73fc491d12170da305388cfa765d6a27e8039a56ec4f92",
+    "cues.json": "095f957d4d3c49cceacd2d12d647d1498387c3db7cd068605e678075268f6d04",
+    "cues.md": "bed04085f99780ab0e5f77afafe71e8105421a8e3262b400a619240f7df5df1f"
+  },
+  "sources": [
+    {
+      "kind": "ux_request",
+      "ref": "ux/smart-kettle.ux-request.json"
+    },
+    {
+      "kind": "file",
+      "ref": "ux/smart-kettle.ux.json#feedback"
+    }
+  ],
+  "script_sha256": "60ebd37f9e715aba7bac0451a438b64a425ab9969b5f97b47085b85fabc9a47d",
+  "license": "BSD-3-Clause",
+  "originality": {
+    "original_melody": true,
+    "no_trademark_sound_imitation": true
+  },
+  "device": "piezo",
+  "cue_count": 4
+}

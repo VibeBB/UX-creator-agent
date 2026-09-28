@@ -1,7 +1,7 @@
 """python -m ux_creator — deterministic CLI entry points.
 
 Subcommands: doctor, gates, author, render, import, from-ruby, mruby-check,
-request, propose, review-record, review-reconcile, liaison,
+request, propose, review-record, review-reconcile, liaison, produce,
 intake-record, intake-reconcile.
 
 Every subcommand prints a JSON verdict object and exits 0 only on
@@ -30,6 +30,7 @@ from .contract import load_contract
 from .doctor import run_doctor
 from .gates import FAIL, PASS, run_gates
 from .imports import import_source
+from .production import load_plan, plan_sha256, run_production_gates, write_production
 from .projections import write_projections, write_provenance
 from .proposals import ProposalSet, triage, write_triage
 from .render import render_all
@@ -240,6 +241,24 @@ def _cmd_liaison(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_produce(args: argparse.Namespace) -> int:
+    """Product-level plan: production gates → status projections."""
+    try:
+        plan_path = Path(args.plan)
+        plan = load_plan(plan_path)
+        workspace = Path(args.workspace or ".")
+        liaison_dir = Path(args.liaison_dir) if args.liaison_dir else None
+        report = run_production_gates(plan, workspace, liaison_dir)
+        name = plan_path.name.removesuffix(".production.json")
+        paths = write_production(plan, report, name, Path(args.out), plan_path)
+    except Exception as exc:
+        return _fail("produce", exc)
+    payload = report.to_dict(plan, plan_sha256(plan_path))
+    payload["written"] = {k: str(p) for k, p in sorted(paths.items())}
+    _print(payload)
+    return 0 if report.verdict == PASS else 1
+
+
 def _cmd_review_reconcile(args: argparse.Namespace) -> int:
     try:
         contract = load_contract(args.contract)
@@ -355,6 +374,13 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("liaison", help="report ux-request/ux-response liaison status")
     p.add_argument("--out-dir", required=True)
     p.set_defaults(func=_cmd_liaison)
+
+    p = sub.add_parser("produce", help="product-level plan gates + production status")
+    p.add_argument("plan", help="<product>.production.json")
+    p.add_argument("--out", required=True)
+    p.add_argument("--workspace", default=None)
+    p.add_argument("--liaison-dir", default=None, help="dir holding ux-request/ux-response files")
+    p.set_defaults(func=_cmd_produce)
 
     p = sub.add_parser("intake-record", help="write an intake-touchpoints advisory record")
     p.add_argument("image")

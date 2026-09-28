@@ -6,7 +6,9 @@ provenance record `{system, path, sha256, extracted}` is appended to
 `contract.imports`. ux-creator never imports sibling code and never links
 back: the copy is the truth, re-import produces a new record.
 
-Supported `system` tags: circuit, mech, wire, bard, csv.
+Supported `system` tags: circuit, mech, wire, bard, csv. A bard cue manifest
+(`cues/<slug>/cues.json`) also yields `cue:<id>` entries that content
+assets reference.
 """
 
 from __future__ import annotations
@@ -70,6 +72,11 @@ def extract_touchpoints(system: str, data: dict[str, Any]) -> list[str]:
             raw = data.get(key, [])
             if isinstance(raw, list):
                 found.extend(i for i in cast(list[object], raw) if isinstance(i, str))
+        if data.get("artifact_kind") == "bard_cue_manifest":
+            for cue in _objects(data, "cues"):
+                cue_id = cue.get("id")
+                if isinstance(cue_id, str) and cue_id:
+                    found.append(f"cue:{cue_id}")
     else:  # csv and unknown systems: best-effort id/ref/name scan
         for value in data.values():
             if isinstance(value, list):

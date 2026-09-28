@@ -1,0 +1,11 @@
+{
+  "artifacts": [
+    "cues/smart-kettle/cues.json"
+  ],
+  "reason": "rendered boot/done/overheat/press cues for the piezo buzzer",
+  "request": "smart-kettle-cues",
+  "responder": "bard",
+  "schema_version": 1,
+  "status": "accepted",
+  "system": "ux-creator"
+}

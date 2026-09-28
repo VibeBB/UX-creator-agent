@@ -60,6 +60,13 @@ Workflow:
    `python -m ux_creator gates`).
 4. Author projections via `ux_author` and review renders (`ux-review`).
 5. Route sibling-facing change requests through `ux-liaison`.
+6. Industrial design / CMF lives in the contract's `cmf` block
+   (`ux-cmf` skill); interaction content in `content[]`
+   (`ux-interaction-content` skill) — product sounds are requested from
+   bard and imported from its `cues/<slug>/cues.json`, never composed
+   here.
+7. Product-level planning across every sibling (stages, owners,
+   decisions, blockers, evidence) belongs to the `ux-producer` agent.
 
 Pass/fail verdicts come only from the deterministic gates; your own and
 the review agents' observations are L2 advisory and never promoted.

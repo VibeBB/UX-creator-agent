@@ -8,8 +8,25 @@ from pathlib import Path
 PLUGIN_ROOT = Path(__file__).resolve().parents[1] / "plugins" / "ux"
 REQUIRED_FRONTMATTER = ("name:", "description:")
 
-EXPECTED_AGENTS = {"ux-creator", "ux-research", "ux-statechart", "ux-review", "ux-liaison"}
-EXPECTED_COMMANDS = {"doctor", "discover", "journey", "statechart", "review", "propose"}
+EXPECTED_AGENTS = {
+    "ux-creator",
+    "ux-research",
+    "ux-statechart",
+    "ux-review",
+    "ux-liaison",
+    "ux-producer",
+}
+EXPECTED_COMMANDS = {
+    "doctor",
+    "discover",
+    "journey",
+    "statechart",
+    "review",
+    "propose",
+    "produce",
+    "cmf",
+    "content",
+}
 EXPECTED_SKILLS = {
     "ux-workflow",
     "ux-persona",
@@ -18,6 +35,9 @@ EXPECTED_SKILLS = {
     "ux-diagrams",
     "ux-ruby-style",
     "ux-sibling-cooperation",
+    "ux-production",
+    "ux-cmf",
+    "ux-interaction-content",
 }
 
 

@@ -3,7 +3,8 @@
 
 Generated files (*.journey.mmd, *.statechart.mmd/.puml, *.wireframe.puml,
 *.xstate.json, *.scxml, *.stories.json, *.odi.csv, manifest.json,
-provenance.json, ux-report.*) are projections of the contract.
+provenance.json, ux-report.*, *.cmf.md, *.content.json,
+*.production-status.json/.md) are projections of the contract or plan.
 Editing them by hand breaks the input-files-are-truth invariant; they
 must be regenerated from the contract.
 
@@ -31,6 +32,10 @@ ARTIFACT_SUFFIXES = (
     ".stories.json",
     ".odi.csv",
     ".emotion.json",
+    ".cmf.md",
+    ".content.json",
+    ".production-status.json",
+    ".production-status.md",
 )
 ARTIFACT_NAMES = (
     "manifest.json",
