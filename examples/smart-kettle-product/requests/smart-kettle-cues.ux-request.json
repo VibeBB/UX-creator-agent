@@ -1,0 +1,10 @@
+{
+  "rationale": "done/press cues for job boil",
+  "requested_changes": [
+    "render startup/done/warning/confirm cues for the piezo buzzer"
+  ],
+  "risk": "low",
+  "schema_version": 1,
+  "system": "ux-creator",
+  "target_agent": "bard"
+}

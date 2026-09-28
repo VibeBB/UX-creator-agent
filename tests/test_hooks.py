@@ -49,6 +49,26 @@ def test_protect_blocks_report_write() -> None:
     assert _run_hook(PROTECT_SCRIPT, payload).returncode == 2
 
 
+def test_protect_blocks_producer_cmf_content_projections() -> None:
+    for path in (
+        "out/smart-kettle.cmf.md",
+        "out/smart-kettle.content.json",
+        "out/smart-kettle.production-status.json",
+        "out/smart-kettle.production-status.md",
+        "out/smart-kettle.production.mmd",
+    ):
+        payload = {"tool_name": "file_editor", "tool_input": {"command": "create", "path": path}}
+        assert _run_hook(PROTECT_SCRIPT, payload).returncode == 2, path
+
+
+def test_protect_allows_production_plan_edit() -> None:
+    payload = {
+        "tool_name": "file_editor",
+        "tool_input": {"command": "str_replace", "path": "smart-kettle.production.json"},
+    }
+    assert _run_hook(PROTECT_SCRIPT, payload).returncode == 0
+
+
 def test_protect_allows_contract_edit() -> None:
     payload = {
         "tool_name": "file_editor",

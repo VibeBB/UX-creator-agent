@@ -1,0 +1,10 @@
+; bard-mml 0.1
+; product=smart-kettle
+; cue=done
+; purpose=completion
+; device=piezo
+; bpm=150
+; loop=false
+; license=BSD-3-Clause
+@melody
+t150 o5 l4 o6 g8 o7 c4

@@ -410,6 +410,100 @@ def _odi_csv(contract: UXContract) -> str:
     return "\n".join(rows) + "\n"
 
 
+def _cmf_sheet(contract: UXContract) -> str:
+    cmf = contract.cmf
+    if cmf is None:
+        return ""
+    colors = {c.id: c for c in cmf.palette}
+    materials = {m.id: m for m in cmf.materials}
+    finishes = {f.id: f for f in cmf.finishes}
+    surfaces = {s.id: s for s in contract.product.surfaces}
+    lines = [
+        f"# {contract.product.name} — CMF sheet",
+        "",
+        f"Form language: {cmf.form_language}",
+    ]
+    if cmf.keywords:
+        lines.append(f"Keywords: {', '.join(cmf.keywords)}")
+    lines += ["", "## Palette", "", "| Color | Role | Hex |", "| --- | --- | --- |"]
+    lines += [f"| {c.name or c.id} (`{c.id}`) | {c.role} | `{c.hex}` |" for c in cmf.palette]
+    lines += [
+        "",
+        "## Parts",
+        "",
+        "| Part | Surface | Color | Material | Finish |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for part in cmf.parts:
+        surface = surfaces[part.surface]
+        color = colors[part.color]
+        material = materials[part.material]
+        process = f" ({material.process})" if material.process else ""
+        finish = finishes.get(part.finish)
+        finish_text = "—"
+        if finish is not None:
+            texture = f", {finish.texture}" if finish.texture else ""
+            finish_text = f"{finish.name} ({finish.gloss}{texture})"
+        lines.append(
+            f"| `{part.id}` | {surface.name or surface.id} ({surface.layer}) | "
+            f"{color.name or color.id} `{color.hex}` | {material.name}{process} | {finish_text} |"
+        )
+    if cmf.markings:
+        lines += [
+            "",
+            "## Markings",
+            "",
+            "| Marking | Surface | Kind | Content | Method | Color |",
+            "| --- | --- | --- | --- | --- | --- |",
+        ]
+        for m in cmf.markings:
+            color_text = f"`{colors[m.color].hex}`" if m.color else "—"
+            lines.append(
+                f"| `{m.id}` | {m.surface} | {m.kind} | {m.content} | {m.method} | {color_text} |"
+            )
+    if cmf.references:
+        lines += ["", "## References", ""]
+        lines += [f"- {ref}" for ref in cmf.references]
+    lines += [
+        "",
+        "Appearance review is advisory; only the `cmf.*` gates are verdicts.",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def _content_map(contract: UXContract) -> dict[str, object]:
+    """Feedback → content assets, ordered by feedback id, for firmware and app teams."""
+    by_feedback: dict[str, list[dict[str, object]]] = {}
+    for asset in sorted(contract.content, key=lambda a: a.id):
+        entry: dict[str, object] = {
+            "id": asset.id,
+            "modality": asset.modality,
+            "source": asset.source.model_dump(),
+            "duration_ms": asset.duration_ms,
+            "loop": asset.loop,
+        }
+        by_feedback.setdefault(asset.feedback, []).append(entry)
+    feedback = [
+        {
+            "id": f.id,
+            "trigger": f.trigger,
+            "surface": f.surface,
+            "modality": f.modality,
+            "latency_ms": f.latency_ms,
+            "assets": by_feedback.get(f.id, []),
+        }
+        for f in sorted(contract.feedback, key=lambda f: f.id)
+    ]
+    return {
+        "schema_version": 1,
+        "system": "ux-creator",
+        "artifact_kind": "ux_content_map",
+        "authority": "none",
+        "product": contract.product.name,
+        "feedback": feedback,
+    }
+
+
 def write_projections(contract: UXContract, name: str, out_dir: Path) -> dict[str, Path]:
     """Write every projection; returns {artifact_name: path}."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -439,6 +533,12 @@ def write_projections(contract: UXContract, name: str, out_dir: Path) -> dict[st
     artifacts[f"{name}.odi.csv"] = _odi_csv(contract)
     if contract.loops:
         artifacts[f"{name}.experience-loops.mmd"] = _mermaid_loops(contract)
+    if contract.cmf is not None:
+        artifacts[f"{name}.cmf.md"] = _cmf_sheet(contract)
+    if contract.content:
+        artifacts[f"{name}.content.json"] = (
+            json.dumps(_content_map(contract), indent=2, sort_keys=True) + "\n"
+        )
 
     paths: dict[str, Path] = {}
     for filename, text in artifacts.items():

@@ -1,0 +1,107 @@
+{
+  "artifact_kind": "ux_production_plan",
+  "contract": "smart-kettle.ux.json",
+  "decisions": [
+    {
+      "blocks": ["pcb_order"],
+      "decision": "",
+      "id": "pcb_vendor",
+      "options": ["local mill (same day)", "JLCPCB (5 days)"],
+      "question": "Mill the rev-a board locally or order fabricated boards?",
+      "rationale": "",
+      "status": "open"
+    }
+  ],
+  "blockers": [],
+  "evidence": [],
+  "goal": "A kettle whose boil state is readable from across the kitchen by light and sound",
+  "product": "smart-kettle",
+  "revision": "rev-a",
+  "schema_version": 1,
+  "system": "ux-creator",
+  "workstreams": [
+    {
+      "artifacts": ["smart-kettle.ux.json"],
+      "deliverable": "UX contract with CMF and interaction content passing ux gates",
+      "id": "ux_contract",
+      "owner": "ux",
+      "stage": "requirements",
+      "status": "done"
+    },
+    {
+      "artifacts": ["cues/smart-kettle/cues.json"],
+      "deliverable": "startup/done/warning/confirm cues as MIDI + MML",
+      "depends_on": ["ux_contract"],
+      "id": "sound_cues",
+      "owner": "bard",
+      "request": "smart-kettle-cues",
+      "stage": "design",
+      "status": "done"
+    },
+    {
+      "deliverable": "rev-a schematic and board with ring LED and piezo driver",
+      "depends_on": ["ux_contract"],
+      "id": "circuit_rev_a",
+      "owner": "circuit",
+      "stage": "design",
+      "status": "in_progress"
+    },
+    {
+      "deliverable": "enclosure with raised boil key (CMF part boil_key)",
+      "depends_on": ["ux_contract"],
+      "id": "mech_enclosure",
+      "owner": "mech",
+      "request": "smart-kettle-boil-key",
+      "stage": "design",
+      "status": "in_progress"
+    },
+    {
+      "deliverable": "firmware plays content map assets on statechart events",
+      "depends_on": ["sound_cues", "circuit_rev_a"],
+      "id": "firmware_feedback",
+      "owner": "firmware",
+      "stage": "design",
+      "status": "todo"
+    },
+    {
+      "deliverable": "rev-a board fabrication package",
+      "depends_on": ["circuit_rev_a"],
+      "id": "pcb_order",
+      "owner": "production-engineering",
+      "stage": "manufacturing_handoff",
+      "status": "blocked"
+    },
+    {
+      "deliverable": "quick-start user manual",
+      "depends_on": ["ux_contract"],
+      "id": "user_manual",
+      "owner": "doc",
+      "stage": "manufacturing_handoff",
+      "status": "todo"
+    },
+    {
+      "deliverable": "assembled rev-a prototype",
+      "depends_on": ["pcb_order", "mech_enclosure", "firmware_feedback"],
+      "id": "proto_build",
+      "owner": "user",
+      "stage": "build",
+      "status": "todo"
+    },
+    {
+      "deliverable": "boil-time and cue-audibility bench log",
+      "depends_on": ["proto_build"],
+      "id": "boil_bench",
+      "owner": "user",
+      "stage": "evaluation",
+      "status": "todo"
+    },
+    {
+      "deliverable": "rev-b change list from bench evidence",
+      "depends_on": ["boil_bench"],
+      "id": "rev_b_plan",
+      "owner": "ux",
+      "stage": "revision",
+      "status": "todo"
+    }
+  ]
+}

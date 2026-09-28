@@ -6,6 +6,28 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added (phase 12)
+
+- Producer / orchestrator: `{product}.production.json` plan
+  (`ux_production_plan`) with staged workstreams (requirements → design →
+  manufacturing_handoff → build → evaluation → revision), owners across
+  every sibling agent, decisions, blockers, and evidence records.
+  `python -m ux_creator produce` / MCP `ux_produce` run the fail-closed
+  `production.*` gates and write `{product}.production.mmd` and
+  `{product}.production-status.{json,md}`.
+- Industrial design / CMF: optional contract `cmf` block (form language,
+  palette roles, materials, finishes, parts, markings) with
+  `cmf.part_coverage`, `cmf.primary_color`, `cmf.marking_contrast`
+  gates and the `{name}.cmf.md` sheet projection.
+- Interaction content: optional contract `content[]` assets per feedback
+  record (`bard_cue` / `file` / `inline` sources) with
+  `content.feedback_coverage`, `content.modality_match`,
+  `content.bard_cue_imported` gates and the `{name}.content.json` map.
+  `ux import --from bard` on a bard cue manifest now records `cue:<id>`.
+- Plugin: `ux-producer` agent; `produce`, `cmf`, `content` commands;
+  `ux-production`, `ux-cmf`, `ux-interaction-content` skills. Example
+  `examples/smart-kettle-product/`. ADR-0015.
+
 ### Added (phase 11)
 
 - `controls:` contract list — physical/app controls with surface,

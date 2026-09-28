@@ -15,17 +15,37 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_DIR = REPO_ROOT / "plugins" / "ux"
 
-EXPECTED_AGENTS = {"ux-creator", "ux-liaison", "ux-research", "ux-review", "ux-statechart"}
+EXPECTED_AGENTS = {
+    "ux-creator",
+    "ux-liaison",
+    "ux-producer",
+    "ux-research",
+    "ux-review",
+    "ux-statechart",
+}
 EXPECTED_SKILLS = {
+    "ux-cmf",
     "ux-diagrams",
+    "ux-interaction-content",
     "ux-jtbd",
     "ux-persona",
+    "ux-production",
     "ux-ruby-style",
     "ux-sibling-cooperation",
     "ux-theory-lenses",
     "ux-workflow",
 }
-EXPECTED_COMMANDS = {"discover", "doctor", "journey", "propose", "review", "statechart"}
+EXPECTED_COMMANDS = {
+    "cmf",
+    "content",
+    "discover",
+    "doctor",
+    "journey",
+    "produce",
+    "propose",
+    "review",
+    "statechart",
+}
 EXPECTED_SESSION_START_HOOKS = {"ux-doctor", "intake-attachments", "ensure-llm-profiles"}
 EXPECTED_USER_PROMPT_SUBMIT_HOOKS = {"intake-attachments"}
 EXPECTED_PRE_TOOL_USE_HOOKS = {"protect-generated", "safety-rail"}

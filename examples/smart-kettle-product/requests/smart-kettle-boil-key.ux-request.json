@@ -1,0 +1,10 @@
+{
+  "rationale": "job boil: button must be findable by touch",
+  "requested_changes": [
+    "raise boil_key 1.5 mm above the shell with a satin TPE cap"
+  ],
+  "risk": "high",
+  "schema_version": 1,
+  "system": "ux-creator",
+  "target_agent": "mech"
+}

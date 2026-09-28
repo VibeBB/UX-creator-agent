@@ -1,0 +1,10 @@
+; bard-mml 0.1
+; product=smart-kettle
+; cue=boot
+; purpose=startup
+; device=piezo
+; bpm=180
+; loop=false
+; license=BSD-3-Clause
+@melody
+t180 o5 l4 o6 c16 e16 g8
