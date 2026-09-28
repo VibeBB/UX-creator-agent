@@ -61,6 +61,7 @@ class DependencyStatus:
     outdated: bool
     note: str = ""
     deferred: bool = False
+    fetch_failed: bool = False
 
 
 @dataclass(frozen=True)
@@ -212,6 +213,7 @@ def check_pypi(
                 "pyproject.toml",
                 latest not in ("?", current),
                 "" if latest != "?" else "fetch failed",
+                fetch_failed=latest == "?",
             )
         )
     return statuses
@@ -277,6 +279,7 @@ def check_uv_pin(
             "pyproject.toml [tool.uv] required-version",
             outdated,
             "" if latest != "?" else "fetch failed",
+            fetch_failed=latest == "?",
         )
     ]
 
@@ -290,14 +293,17 @@ _ACTION = re.compile(r"uses:\s*([\w.-]+/[\w.-]+)@([0-9a-f]{40})(?:\s*#\s*(v[\w.-
 _UVX = re.compile(r"uvx\s+([\w.-]+)@([\w.]+)")
 
 
-def _github_latest_tag(repo: str, list_remote_tags: ListRemoteTags) -> str:
+def _github_latest_tag(repo: str, list_remote_tags: ListRemoteTags, prefix: str = "") -> str:
     try:
         tags = list_remote_tags(f"https://github.com/{repo}")
     except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return ""
+    # The strip prefix is optional upstream-side: e.g. mermaid-cli tags are
+    # bare "9.4.0" while SEMERU tags carry their "jdk-" prefix.
+    pattern = r"(?:" + re.escape(prefix) + r")?v?\d+(?:\.\d+){2,}"
     versioned = sorted(
-        (t for t in tags if re.fullmatch(r"v?\d+\.\d+\.\d+", t)),
-        key=lambda t: tuple(int(p) for p in t.removeprefix("v").split(".")),
+        (t for t in tags if re.fullmatch(pattern, t)),
+        key=lambda t: tuple(int(p) for p in t.removeprefix(prefix).removeprefix("v").split(".")),
     )
     return versioned[-1] if versioned else ""
 
@@ -328,6 +334,7 @@ def check_github_actions(
                     ".github/workflows",
                     outdated,
                     note,
+                    fetch_failed=not latest,
                 )
             )
         for tool, pin in _UVX.findall(text):
@@ -344,6 +351,7 @@ def check_github_actions(
                     ".github/workflows",
                     bool(latest != "?") and latest != pin,
                     "" if latest != "?" else "fetch failed",
+                    fetch_failed=latest == "?",
                 )
             )
     return statuses + uvx_statuses
@@ -385,7 +393,7 @@ _DOCKER_ARG_UPSTREAMS = {
     # ARG name -> (github repo, current-tag prefix stripped before compare)
     "UV_VERSION": ("astral-sh/uv", ""),
     "MERMAID_CLI_VERSION": ("mermaid-js/mermaid-cli", "v"),
-    "SEMERU_JRE_VERSION": ("ibmruntimes/semeru27-binaries", "jdk-"),
+    "SEMERU_JRE_VERSION": ("ibmruntimes/semeru{major}-binaries", "jdk-"),
     "PLANTUML_VERSION": ("plantuml/plantuml", "v"),
     "MRUBY_VERSION": ("mruby/mruby", ""),
 }
@@ -403,7 +411,8 @@ def check_docker_args(
                 DependencyStatus("docker-arg", arg, "-", "?", _DOCKERFILES[0], False, "ARG missing")
             )
             continue
-        latest = _github_latest_tag(repo, list_remote_tags)
+        upstream_repo = repo.format(major=current.split(".")[0])
+        latest = _github_latest_tag(upstream_repo, list_remote_tags, prefix=strip)
         latest_cmp = latest.removeprefix(strip)
         current_cmp = current.removeprefix(strip)
         outdated = bool(latest_cmp) and latest_cmp != current_cmp
@@ -416,6 +425,7 @@ def check_docker_args(
                 _DOCKERFILES[0],
                 outdated,
                 "" if latest_cmp else "fetch failed",
+                fetch_failed=not latest_cmp,
             )
         )
     return statuses
@@ -498,6 +508,7 @@ def check_docker_base(
             _DOCKERFILES[0],
             outdated,
             "" if latest else "fetch failed",
+            fetch_failed=latest is None,
         )
     ]
 
@@ -699,12 +710,23 @@ def render_markdown(statuses: list[DependencyStatus]) -> str:
         )
         ordered_statuses = [
             status
-            for state in ("outdated", "deferred", "current")
+            for state in ("outdated", "deferred", "unknown", "current")
             for status in surface_statuses
             if (
                 (state == "outdated" and status.outdated)
                 or (state == "deferred" and status.deferred)
-                or (state == "current" and not status.outdated and not status.deferred)
+                or (
+                    state == "unknown"
+                    and status.fetch_failed
+                    and not status.outdated
+                    and not status.deferred
+                )
+                or (
+                    state == "current"
+                    and not status.outdated
+                    and not status.deferred
+                    and not status.fetch_failed
+                )
             )
         ]
         for status in ordered_statuses:
@@ -715,6 +737,8 @@ def render_markdown(statuses: list[DependencyStatus]) -> str:
                 state = "update available"
             elif status.deferred:
                 state = "deferred"
+            elif status.fetch_failed:
+                state = "unknown"
             else:
                 state = "up to date"
             lines.append(
