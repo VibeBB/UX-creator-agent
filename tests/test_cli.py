@@ -7,6 +7,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+from ux_creator import cli, doctor
+
 CONTRACT = "examples/smart-kettle/smart-kettle.ux.json"
 
 
@@ -42,3 +46,27 @@ def test_from_ruby_missing_tool_or_ok(tmp_path: Path) -> None:
         assert out.is_file()
     else:
         assert payload["stage"] == "from-ruby"
+
+
+def test_cli_boundary_error_includes_exception_type(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def fail(_args: object) -> int:
+        raise RuntimeError("unexpected failure")
+
+    monkeypatch.setattr(cli, "_cmd_doctor", fail)
+    assert cli.main(["doctor"]) == 1
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["error_type"] == "RuntimeError"
+    assert payload["detail"] == "unexpected failure"
+
+
+def test_doctor_probe_does_not_hide_unexpected_import_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail(_name: str) -> object:
+        raise RuntimeError("module initialization failed")
+
+    monkeypatch.setattr(doctor.importlib, "import_module", fail)
+    with pytest.raises(RuntimeError, match="module initialization failed"):
+        doctor.run_doctor()

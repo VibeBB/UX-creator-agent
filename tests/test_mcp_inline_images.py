@@ -16,6 +16,10 @@ from ux_creator.render import RenderResult
 EXAMPLE = Path(__file__).resolve().parents[1] / "examples/smart-kettle/smart-kettle.ux.json"
 
 
+async def _call_tool(name: str, arguments: dict[str, Any]) -> object:
+    return await mcp_server.call_tool(name, arguments)
+
+
 def _content_payload(
     result: object,
 ) -> tuple[dict[str, Any], list[types.ContentBlock]]:
@@ -28,6 +32,7 @@ def _content_payload(
 def test_render_tool_attaches_pngs_with_caps_and_metadata(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
     oversized = tmp_path / "large.png"
     oversized.write_bytes(b"x" * (4 * 1024 * 1024 + 1))
     small_images = [tmp_path / f"image-{index}.png" for index in range(9)]
@@ -43,7 +48,7 @@ def test_render_tool_attaches_pngs_with_caps_and_metadata(
 
     monkeypatch.setattr(mcp_server, "render_all", fake_render_all)
 
-    result = asyncio.run(mcp_server.dispatch_tool("ux_render", {"dir": str(tmp_path)}))
+    result = asyncio.run(_call_tool("ux_render", {"dir": str(tmp_path)}))
 
     payload, content = _content_payload(result)
     metadata = payload["inline_images"]
@@ -65,6 +70,9 @@ def test_render_tool_attaches_pngs_with_caps_and_metadata(
 def test_author_render_returns_text_and_inline_png(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    contract_path = tmp_path / "smart-kettle.ux.json"
+    contract_path.write_bytes(EXAMPLE.read_bytes())
     image_bytes = b"author-render-png"
 
     def fake_render_all(out_dir: Path, **_kwargs: Any) -> list[RenderResult]:
@@ -76,10 +84,10 @@ def test_author_render_returns_text_and_inline_png(
     monkeypatch.setattr(mcp_server, "render_all", fake_render_all)
 
     result = asyncio.run(
-        mcp_server.dispatch_tool(
+        _call_tool(
             "ux_author",
             {
-                "contract_path": str(EXAMPLE),
+                "contract_path": str(contract_path),
                 "out_dir": str(tmp_path / "author"),
                 "render": True,
             },

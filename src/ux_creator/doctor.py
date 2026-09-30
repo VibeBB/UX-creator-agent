@@ -28,7 +28,7 @@ class DoctorCheck:
 def _probe_module(name: str) -> DoctorCheck:
     try:
         module = importlib.import_module(name)
-    except Exception as exc:
+    except (ImportError, OSError) as exc:
         return DoctorCheck(name, "fail", f"import failed: {exc}")
     version = getattr(module, "__version__", "unknown")
     return DoctorCheck(name, "pass", f"{name} {version}")

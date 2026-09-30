@@ -120,6 +120,12 @@ uv run --group sdk-check python scripts/check_plugin_load.py
 - `protect_generated` and `safety_rail` pre-tool hooks deny edits to
   generated projections and dangerous shell writes inside the workspace
   (exit 2 + stderr reason).
+- `ensure_llm_profiles.py` and `safety_rail.py` are canonical across the
+  family; `_provenance.py` is optional and absent in UX and Production
+  Engineering. Change canonical copies together and update `EXPECTED` in
+  `scripts/check_shared_hooks.py`.
+- `intake_attachments.py`, `protect_generated.py`, `report_ux_status.py`,
+  `record_*`, and `ux_doctor.py` hooks are intentionally repo-specific.
 - High-risk sibling requests (`ux-request.json`) must cite a job id —
   enforced in `requests.py` and the `ux-liaison` skill.
 - Vision observations are typed L2 advisory records only — never

@@ -19,6 +19,7 @@ from mcp.server import Server
 from mcp.server.lowlevel import NotificationOptions
 from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
+from pydantic import ValidationError
 
 from . import __version__
 from .advisory import (
@@ -39,6 +40,7 @@ from .report import write_report
 from .requests import build_request, write_request
 from .responses import liaison_status
 from .ruby_bridge import contract_from_ruby, mruby_check
+from .workspace import workspace_path
 
 server: Server = Server(f"ux-mcp/{__version__}")
 
@@ -173,6 +175,14 @@ def _text(payload: Any) -> list[types.ContentBlock]:
     return [types.TextContent(type="text", text=json.dumps(payload, indent=2, sort_keys=True))]
 
 
+def _path_arg(arguments: dict[str, Any], key: str) -> Path:
+    return workspace_path(arguments[key])
+
+
+def _workspace_arg(arguments: dict[str, Any]) -> Path:
+    return workspace_path(arguments.get("workspace") or ".")
+
+
 def _file_sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as image_file:
@@ -271,17 +281,18 @@ async def dispatch_tool(
     if name == "ux_validate_contract":
         try:
             UXContract.model_validate(arguments["contract"])
-        except Exception as exc:
+        except (ValidationError, ValueError) as exc:
             return {"verdict": FAIL, "stage": "validate", "detail": str(exc)}
         return {"verdict": PASS, "stage": "validate"}
     if name == "ux_gates":
-        contract = load_contract(arguments["contract_path"])
-        report = run_gates(contract, Path(arguments.get("workspace") or "."))
+        contract = load_contract(_path_arg(arguments, "contract_path"))
+        report = run_gates(contract, _workspace_arg(arguments))
         return report.to_dict(contract)
     if name == "ux_author":
-        contract = load_contract(arguments["contract_path"])
-        out_dir = Path(arguments["out_dir"])
-        name = Path(arguments["contract_path"]).stem.removesuffix(".ux")
+        contract_path = _path_arg(arguments, "contract_path")
+        out_dir = _path_arg(arguments, "out_dir")
+        contract = load_contract(contract_path)
+        name = contract_path.stem.removesuffix(".ux")
         report = run_gates(contract)
         paths = write_projections(contract, name, out_dir)
         renders = render_all(out_dir, fmts=("svg", "png")) if arguments.get("render") else []
@@ -290,10 +301,10 @@ async def dispatch_tool(
         payload = report.to_dict(contract)
         return _render_content(payload, renders) if arguments.get("render") else payload
     if name == "ux_from_ruby":
-        result = contract_from_ruby(Path(arguments["source"]))
+        result = contract_from_ruby(_path_arg(arguments, "source"))
         if result.contract is None:
             return {"verdict": FAIL, "stage": "from-ruby", "detail": result.detail}
-        out = Path(arguments["out"])
+        out = _path_arg(arguments, "out")
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(
             json.dumps(result.contract.model_dump(by_alias=True), indent=2, sort_keys=True) + "\n",
@@ -301,16 +312,20 @@ async def dispatch_tool(
         )
         return {"verdict": PASS, "stage": "from-ruby", "contract": str(out)}
     if name == "ux_import":
-        contract = load_contract(arguments["contract_path"])
-        contract = import_source(contract, arguments["system"], Path(arguments["file"]))
-        Path(arguments["contract_path"]).write_text(
+        contract_path = _path_arg(arguments, "contract_path")
+        source_path = _path_arg(arguments, "file")
+        contract = load_contract(contract_path)
+        contract = import_source(contract, arguments["system"], source_path)
+        contract_path.write_text(
             json.dumps(contract.model_dump(by_alias=True), indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
         return {"verdict": PASS, "imports": [r.model_dump() for r in contract.imports]}
     if name == "ux_request":
+        contract_path = _path_arg(arguments, "contract_path")
+        out_dir = _path_arg(arguments, "out_dir")
         try:
-            contract = load_contract(arguments["contract_path"])
+            contract = load_contract(contract_path)
             request = build_request(
                 contract,
                 target_agent=arguments["target_agent"],
@@ -318,20 +333,23 @@ async def dispatch_tool(
                 rationale=arguments.get("rationale", ""),
                 requested_changes=arguments["requested_changes"],
             )
-            path = write_request(request, Path(arguments["out_dir"]))
-        except Exception as exc:
+            path = write_request(request, out_dir)
+        except (OSError, ValueError, ValidationError) as exc:
             return {"verdict": FAIL, "stage": "request", "detail": str(exc)}
         return {"verdict": PASS, "request": str(path)}
     if name == "ux_propose":
+        contract_path = _path_arg(arguments, "contract_path")
+        proposals_path = _path_arg(arguments, "proposals_path")
+        out_dir = _path_arg(arguments, "out_dir")
         try:
-            contract = load_contract(arguments["contract_path"])
+            contract = load_contract(contract_path)
             proposals = ProposalSet.model_validate(
-                json.loads(Path(arguments["proposals_path"]).read_text(encoding="utf-8"))
+                json.loads(proposals_path.read_text(encoding="utf-8"))
             )
-            name_stem = Path(arguments["proposals_path"]).stem.removesuffix(".ux-proposals")
-            paths = write_triage(contract, proposals, Path(arguments["out_dir"]), name_stem)
+            name_stem = proposals_path.stem.removesuffix(".ux-proposals")
+            paths = write_triage(contract, proposals, out_dir, name_stem)
             blocked = [t.id for t in triage(contract, proposals) if t.status != "auto_send"]
-        except Exception as exc:
+        except (OSError, ValueError, ValidationError) as exc:
             return {"verdict": FAIL, "stage": "propose", "detail": str(exc)}
         return {
             "verdict": PASS,
@@ -340,15 +358,18 @@ async def dispatch_tool(
             "blocked": blocked,
         }
     if name == "ux_mruby_check":
-        result = mruby_check(Path(arguments["source"]))
+        result = mruby_check(_path_arg(arguments, "source"))
         return {"verdict": PASS if result.status == "ok" else FAIL, "detail": result.detail}
     if name == "ux_review_reconcile":
+        contract_path = _path_arg(arguments, "contract_path")
+        workspace = _workspace_arg(arguments)
+        out_dir = _path_arg(arguments, "out_dir")
         try:
-            contract = load_contract(arguments["contract_path"])
-            report = run_gates(contract, Path(arguments.get("workspace") or "."))
-            records, malformed = load_visual_reviews(Path(arguments["out_dir"]))
+            contract = load_contract(contract_path)
+            report = run_gates(contract, workspace)
+            records, malformed = load_visual_reviews(out_dir)
             findings = reconcile_findings(contract, report, records)
-        except Exception as exc:
+        except (OSError, ValueError, ValidationError) as exc:
             return {"verdict": FAIL, "stage": "review-reconcile", "detail": str(exc)}
         return {
             "verdict": PASS,
@@ -357,50 +378,55 @@ async def dispatch_tool(
             "malformed": [str(p) for p in malformed],
         }
     if name == "ux_produce":
+        plan_path = _path_arg(arguments, "plan_path")
+        workspace = _workspace_arg(arguments)
+        liaison = _path_arg(arguments, "liaison_dir") if arguments.get("liaison_dir") else None
+        out_dir = _path_arg(arguments, "out_dir")
         try:
-            plan_path = Path(arguments["plan_path"])
             plan = load_plan(plan_path)
-            liaison = arguments.get("liaison_dir")
             report = run_production_gates(
                 plan,
-                Path(arguments.get("workspace") or "."),
-                Path(liaison) if liaison else None,
+                workspace,
+                liaison,
             )
             paths = write_production(
                 plan,
                 report,
                 plan_path.name.removesuffix(".production.json"),
-                Path(arguments["out_dir"]),
+                out_dir,
                 plan_path,
             )
-        except Exception as exc:
+        except (OSError, ValueError, ValidationError) as exc:
             return {"verdict": FAIL, "stage": "produce", "detail": str(exc)}
         payload = report.to_dict(plan, plan_sha256(plan_path))
         payload["written"] = {k: str(p) for k, p in sorted(paths.items())}
         return payload
     if name == "ux_liaison_status":
+        out_dir = _path_arg(arguments, "out_dir")
         try:
-            status = liaison_status(Path(arguments["out_dir"]), Path(arguments["out_dir"]))
-        except Exception as exc:
+            status = liaison_status(out_dir, out_dir)
+        except (OSError, ValueError) as exc:
             return {"verdict": FAIL, "stage": "liaison", "detail": str(exc)}
         payload = status.model_dump()
         payload["verdict"] = PASS
         payload["stage"] = "liaison"
         return payload
     if name == "ux_intake_reconcile":
+        contract_path = _path_arg(arguments, "contract_path")
+        out_dir = _path_arg(arguments, "out_dir")
         try:
-            contract = load_contract(arguments["contract_path"])
-            records, malformed = load_intake_records(Path(arguments["out_dir"]))
+            contract = load_contract(contract_path)
+            records, malformed = load_intake_records(out_dir)
             recon = reconcile_intake(contract, records)
             recon.malformed = [str(p) for p in malformed]
-        except Exception as exc:
+        except (OSError, ValueError, ValidationError) as exc:
             return {"verdict": FAIL, "stage": "intake-reconcile", "detail": str(exc)}
         payload = recon.model_dump()
         payload["verdict"] = PASS
         payload["stage"] = "intake-reconcile"
         return payload
     if name == "ux_render":
-        results = render_all(Path(arguments["dir"]), fmts=("svg", "png"))
+        results = render_all(_path_arg(arguments, "dir"), fmts=("svg", "png"))
         return _render_content(
             {
                 "verdict": PASS,
@@ -420,11 +446,27 @@ async def dispatch_tool(
 
 
 @server.call_tool()
-async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.ContentBlock]:
+async def call_tool(
+    name: str, arguments: dict[str, Any]
+) -> types.CallToolResult | list[types.ContentBlock]:
+    if name not in _SCHEMAS:
+        return types.CallToolResult(
+            content=_text({"verdict": FAIL, "detail": f"unknown tool {name}"}),
+            isError=True,
+        )
     try:
         payload = await dispatch_tool(name, arguments or {})
-    except Exception as exc:  # fail-closed transport
-        payload = {"verdict": FAIL, "detail": f"{name} error: {exc}"}
+    except Exception as exc:
+        return types.CallToolResult(
+            content=_text(
+                {
+                    "verdict": FAIL,
+                    "detail": f"{name} error: {exc}",
+                    "error_type": type(exc).__name__,
+                }
+            ),
+            isError=True,
+        )
     return payload if isinstance(payload, list) else _text(payload)
 
 

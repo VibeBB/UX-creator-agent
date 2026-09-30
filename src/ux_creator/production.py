@@ -371,7 +371,7 @@ def _contract_check(plan: ProductionPlan, workspace: Path) -> GateCheck:
         )
     try:
         contract = load_contract(path)
-    except Exception as exc:
+    except (OSError, ValueError) as exc:
         return GateCheck("production.ux_contract", plan.contract, FAIL, detail=f"invalid: {exc}")
     report = run_gates(contract, workspace)
     failing = sorted(c.id for c in report.checks if c.status != PASS)

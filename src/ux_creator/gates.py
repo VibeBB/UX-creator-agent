@@ -69,7 +69,7 @@ class GateReport:
 def _wrap(check_id: str, fn: Callable[..., list[GateCheck]], *args: Any) -> list[GateCheck]:
     try:
         return fn(*args)
-    except Exception as exc:  # fail-closed: unexpected error → unknown
+    except (OSError, ValueError) as exc:
         return [GateCheck(check_id, check_id, UNKNOWN, detail=f"check error: {exc}")]
 
 

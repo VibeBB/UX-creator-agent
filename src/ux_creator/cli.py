@@ -16,6 +16,8 @@ import sys
 from pathlib import Path
 from typing import Any, cast
 
+from pydantic import ValidationError
+
 from . import __version__
 from .advisory import (
     TouchpointCandidate,
@@ -58,7 +60,7 @@ def _cmd_doctor(_args: argparse.Namespace) -> int:
 def _cmd_gates(args: argparse.Namespace) -> int:
     try:
         contract = load_contract(args.contract)
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
         return _fail("load", exc)
     report = run_gates(contract, Path(args.workspace or "."))
     if args.out:
@@ -73,7 +75,7 @@ def _cmd_author(args: argparse.Namespace) -> int:
     """Full projection pass: gates → projections → renders → report."""
     try:
         contract = load_contract(args.contract)
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
         return _fail("load", exc)
     out_dir = Path(args.out)
     name = Path(args.contract).stem.removesuffix(".ux")
@@ -109,7 +111,7 @@ def _cmd_import(args: argparse.Namespace) -> int:
     try:
         contract = load_contract(args.contract)
         contract = import_source(contract, args.system, Path(args.file))
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
         return _fail("import", exc)
     Path(args.contract).write_text(
         json.dumps(contract.model_dump(by_alias=True), indent=2, sort_keys=True) + "\n",
@@ -163,7 +165,7 @@ def _cmd_request(args: argparse.Namespace) -> int:
             requested_changes=args.change,
         )
         path = write_request(request, Path(args.out_dir), args.name)
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
         return _fail("request", exc)
     _print({"verdict": PASS, "stage": "request", "request": str(path)})
     return 0
@@ -178,7 +180,7 @@ def _cmd_propose(args: argparse.Namespace) -> int:
         name = Path(args.proposals).stem.removesuffix(".ux-proposals")
         paths = write_triage(contract, proposals, Path(args.out_dir), name)
         blocked = [t.id for t in triage(contract, proposals) if t.status != "auto_send"]
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
         return _fail("propose", exc)
     _print(
         {
@@ -208,7 +210,7 @@ def _cmd_intake_record(args: argparse.Namespace) -> int:
                 )
             )
         path = write_intake_record(Path(args.image), candidates, model=args.model)
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
         return _fail("intake-record", exc)
     _print({"verdict": PASS, "stage": "intake-record", "record": str(path)})
     return 0
@@ -220,7 +222,7 @@ def _cmd_intake_reconcile(args: argparse.Namespace) -> int:
         records, malformed = load_intake_records(Path(args.out_dir))
         recon = reconcile_intake(contract, records)
         recon.malformed = [str(p) for p in malformed]
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
         return _fail("intake-reconcile", exc)
     payload = recon.model_dump()
     payload["verdict"] = PASS
@@ -232,7 +234,7 @@ def _cmd_intake_reconcile(args: argparse.Namespace) -> int:
 def _cmd_liaison(args: argparse.Namespace) -> int:
     try:
         status = liaison_status(Path(args.out_dir), Path(args.out_dir))
-    except Exception as exc:
+    except (OSError, ValueError) as exc:
         return _fail("liaison", exc)
     payload = status.model_dump()
     payload["verdict"] = PASS
@@ -251,7 +253,7 @@ def _cmd_produce(args: argparse.Namespace) -> int:
         report = run_production_gates(plan, workspace, liaison_dir)
         name = plan_path.name.removesuffix(".production.json")
         paths = write_production(plan, report, name, Path(args.out), plan_path)
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
         return _fail("produce", exc)
     payload = report.to_dict(plan, plan_sha256(plan_path))
     payload["written"] = {k: str(p) for k, p in sorted(paths.items())}
@@ -265,7 +267,7 @@ def _cmd_review_reconcile(args: argparse.Namespace) -> int:
         report = run_gates(contract, Path(args.workspace or "."))
         records, malformed = load_visual_reviews(Path(args.out_dir))
         findings = reconcile_findings(contract, report, records)
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
         return _fail("review-reconcile", exc)
     _print(
         {
@@ -287,7 +289,7 @@ def _cmd_review_record(args: argparse.Namespace) -> int:
             [],
             model=args.model,
         )
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
         return _fail("review-record", exc)
     _print({"verdict": PASS, "stage": "review-record", "record": str(path)})
     return 0
@@ -400,11 +402,22 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=_cmd_intake_reconcile)
 
     args = parser.parse_args(argv)
-    if args.command == "doctor" and getattr(args, "warn", False):
-        report = run_doctor()
-        _print(report)
-        return 0
-    return int(args.func(args))
+    try:
+        if args.command == "doctor" and getattr(args, "warn", False):
+            report = run_doctor()
+            _print(report)
+            return 0
+        return int(args.func(args))
+    except Exception as exc:
+        _print(
+            {
+                "verdict": FAIL,
+                "stage": args.command,
+                "detail": str(exc),
+                "error_type": type(exc).__name__,
+            }
+        )
+        return 1
 
 
 if __name__ == "__main__":
