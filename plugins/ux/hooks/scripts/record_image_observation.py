@@ -2,7 +2,7 @@
 
 Companion to record_vision_tool_event.py: that hook logs delegated
 inspect_image_with_vision calls; this one logs direct image observations —
-`file_editor` `view` commands on image files and `ux_render`/`ux_export` tool results
+`file_editor` `view` commands on image files and `ux_render`/`ux_author` tool results
 mentioning rendered image paths. Each observation is appended to
 `observations/ux/image-observations.jsonl` as
 {sequence, event_id, tool_name, image_path, image_sha256, recorded_at,
@@ -25,7 +25,7 @@ from typing import Any, cast
 
 EVENTS_ENV = "UX_IMAGE_OBSERVATIONS"
 EVENTS_RELATIVE_PATH = Path("observations/ux/image-observations.jsonl")
-OBSERVED_TOOLS = {"ux_render", "ux_export", "file_editor"}
+OBSERVED_TOOLS = {"ux_render", "ux_author", "file_editor"}
 # Payload keys that identify which agent/tool call produced the event;
 # different SDK versions expose different ones.
 _ACTOR_KEYS = {

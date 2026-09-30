@@ -8,6 +8,8 @@ authority beyond what the wrapped function returns.
 from __future__ import annotations
 
 import asyncio
+import base64
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -32,7 +34,7 @@ from .imports import import_source
 from .production import load_plan, plan_sha256, run_production_gates, write_production
 from .projections import write_projections, write_provenance
 from .proposals import ProposalSet, triage, write_triage
-from .render import render_all
+from .render import RenderResult, render_all
 from .report import write_report
 from .requests import build_request, write_request
 from .responses import liaison_status
@@ -162,9 +164,78 @@ _WRITE_TOOLS = {
     "ux_produce",
 }
 
+_IMAGE_MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
+_MAX_INLINE_IMAGES = 8
+_MAX_INLINE_IMAGE_BYTES = 4 * 1024 * 1024
+
 
 def _text(payload: Any) -> list[types.ContentBlock]:
     return [types.TextContent(type="text", text=json.dumps(payload, indent=2, sort_keys=True))]
+
+
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as image_file:
+        for chunk in iter(lambda: image_file.read(64 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _render_content(
+    payload: dict[str, Any], renders: list[RenderResult]
+) -> list[types.ContentBlock]:
+    inline_images: list[dict[str, Any]] = []
+    images: list[types.ImageContent] = []
+    for render in renders:
+        path = render.output
+        if render.status != "ok" or path is None:
+            continue
+        mime = _IMAGE_MIME.get(path.suffix.lower())
+        if mime is None:
+            continue
+        entry: dict[str, Any] = {
+            "path": str(path),
+            "sha256": None,
+            "attached": False,
+        }
+        if len(images) >= _MAX_INLINE_IMAGES:
+            try:
+                entry["sha256"] = _file_sha256(path)
+            except OSError:
+                entry["reason"] = "unavailable"
+            else:
+                entry["reason"] = "image_limit_reached"
+        else:
+            try:
+                if path.stat().st_size > _MAX_INLINE_IMAGE_BYTES:
+                    entry["sha256"] = _file_sha256(path)
+                    entry["reason"] = "over_4_mib"
+                else:
+                    data = path.read_bytes()
+                    if len(data) > _MAX_INLINE_IMAGE_BYTES:
+                        entry["sha256"] = hashlib.sha256(data).hexdigest()
+                        entry["reason"] = "over_4_mib"
+                    else:
+                        entry["sha256"] = hashlib.sha256(data).hexdigest()
+                        entry["attached"] = True
+                        images.append(
+                            types.ImageContent(
+                                type="image",
+                                data=base64.b64encode(data).decode("ascii"),
+                                mimeType=mime,
+                            )
+                        )
+            except OSError:
+                entry["reason"] = "unavailable"
+        inline_images.append(entry)
+    payload["inline_images"] = inline_images
+    return [
+        types.TextContent(
+            type="text",
+            text=json.dumps(payload, indent=2, sort_keys=True),
+        ),
+        *images,
+    ]
 
 
 def tool_specs() -> list[types.Tool]:
@@ -192,7 +263,9 @@ async def list_tools() -> list[types.Tool]:
     return tool_specs()
 
 
-async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+async def dispatch_tool(
+    name: str, arguments: dict[str, Any]
+) -> dict[str, Any] | list[types.ContentBlock]:
     if name == "ux_doctor":
         return run_doctor()
     if name == "ux_validate_contract":
@@ -211,10 +284,11 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         name = Path(arguments["contract_path"]).stem.removesuffix(".ux")
         report = run_gates(contract)
         paths = write_projections(contract, name, out_dir)
-        renders = render_all(out_dir) if arguments.get("render") else []
+        renders = render_all(out_dir, fmts=("svg", "png")) if arguments.get("render") else []
         write_provenance(contract, paths, out_dir)
         write_report(contract, report, out_dir, renders)
-        return report.to_dict(contract)
+        payload = report.to_dict(contract)
+        return _render_content(payload, renders) if arguments.get("render") else payload
     if name == "ux_from_ruby":
         result = contract_from_ruby(Path(arguments["source"]))
         if result.contract is None:
@@ -326,19 +400,22 @@ async def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         payload["stage"] = "intake-reconcile"
         return payload
     if name == "ux_render":
-        results = render_all(Path(arguments["dir"]))
-        return {
-            "verdict": PASS,
-            "renders": [
-                {
-                    "source": str(r.source),
-                    "output": str(r.output) if r.output else None,
-                    "status": r.status,
-                    "detail": r.detail,
-                }
-                for r in results
-            ],
-        }
+        results = render_all(Path(arguments["dir"]), fmts=("svg", "png"))
+        return _render_content(
+            {
+                "verdict": PASS,
+                "renders": [
+                    {
+                        "source": str(r.source),
+                        "output": str(r.output) if r.output else None,
+                        "status": r.status,
+                        "detail": r.detail,
+                    }
+                    for r in results
+                ],
+            },
+            results,
+        )
     return {"verdict": FAIL, "detail": f"unknown tool {name}"}
 
 
@@ -348,7 +425,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.ContentB
         payload = await dispatch_tool(name, arguments or {})
     except Exception as exc:  # fail-closed transport
         payload = {"verdict": FAIL, "detail": f"{name} error: {exc}"}
-    return _text(payload)
+    return payload if isinstance(payload, list) else _text(payload)
 
 
 async def _run() -> None:
