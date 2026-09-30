@@ -29,7 +29,7 @@ def check_links() -> list[str]:
 
 def check_adr_index() -> list[str]:
     index = (ROOT / "docs/README.md").read_text(encoding="utf-8")
-    expected = sorted((ROOT / "docs/adr").glob("ADR-*.md"))
+    expected = sorted((ROOT / "docs/adr").glob("*.md"))
     errors: list[str] = []
     for adr in expected:
         relative = adr.relative_to(ROOT / "docs").as_posix()

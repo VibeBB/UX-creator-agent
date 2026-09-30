@@ -39,14 +39,19 @@ def review_lens(contract: UXContract, gate_report: GateReport, out_dir: Path) ->
         _review_slug(path.stem.removeprefix("review-visual-").removesuffix(".advisory"))
         for path, _r in records
     }
-    images_without = sorted(
-        str(image)
-        for image in out_dir.iterdir()
-        if image.is_file()
-        and image.suffix.lower() in _REVIEW_IMAGE_SUFFIXES
-        and not (out_dir / f"review-visual-{_review_slug(image.stem)}.advisory.json").exists()
-        and _review_slug(image.stem) not in reviewed
-    )
+    unreviewed_by_slug: dict[str, Path] = {}
+    for image in sorted(out_dir.iterdir()):
+        if not image.is_file() or image.suffix.lower() not in _REVIEW_IMAGE_SUFFIXES:
+            continue
+        slug = _review_slug(image.stem)
+        if slug in reviewed or (out_dir / f"review-visual-{slug}.advisory.json").exists():
+            continue
+        existing = unreviewed_by_slug.get(slug)
+        if existing is None or (
+            image.suffix.lower() == ".png" and existing.suffix.lower() != ".png"
+        ):
+            unreviewed_by_slug[slug] = image
+    images_without = sorted(str(image) for image in unreviewed_by_slug.values())
     intake_records, intake_malformed = load_intake_records(out_dir)
     intake = reconcile_intake(contract, intake_records)
     return {

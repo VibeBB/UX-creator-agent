@@ -117,8 +117,55 @@ def test_report_status_no_reports(tmp_path: Path) -> None:
     assert "no ux reports" in ctx or "no design reports" in ctx or "report" in ctx
 
 
+def test_report_status_treats_svg_and_png_siblings_as_one_record(
+    tmp_path: Path,
+) -> None:
+    report_dir = tmp_path / "out" / "example"
+    report_dir.mkdir(parents=True)
+    (report_dir / "statechart.svg").write_text("<svg/>", encoding="utf-8")
+    (report_dir / "statechart.png").write_bytes(b"png")
+    (report_dir / "ux-report.json").write_text(
+        json.dumps({"verdict": "pass", "checks": []}), encoding="utf-8"
+    )
+    (report_dir / "review-visual-statechart.advisory.json").write_text("{}", encoding="utf-8")
+
+    proc = _run_hook(STATUS_SCRIPT, {"working_dir": str(tmp_path)})
+
+    assert proc.returncode == 0
+    context = json.loads(proc.stdout)["additionalContext"]
+    assert "Rendered images without" not in context
+
+
 def test_profiles_hook_exits_zero() -> None:
     proc = _run_hook(PROFILES_SCRIPT, {})
     assert proc.returncode == 0
     payload = json.loads(proc.stdout)
     assert payload["hook"] == "ensure-llm-profiles"
+
+
+def test_record_image_observation_logs_ux_author_png_path(tmp_path: Path) -> None:
+    image = tmp_path / "out" / "example" / "statechart.png"
+    image.parent.mkdir(parents=True)
+    image.write_bytes(b"png")
+    payload = {
+        "working_dir": str(tmp_path),
+        "tool_name": "ux_author",
+        "tool_input": {"render": True},
+        "tool_response": {
+            "content": [
+                {
+                    "type": "text",
+                    "text": json.dumps({"inline_images": [{"path": str(image)}]}),
+                }
+            ]
+        },
+    }
+
+    proc = _run_hook(SCRIPTS / "record_image_observation.py", payload)
+
+    assert proc.returncode == 0
+    observations = tmp_path / "observations" / "ux" / "image-observations.jsonl"
+    records = [json.loads(line) for line in observations.read_text(encoding="utf-8").splitlines()]
+    assert len(records) == 1
+    assert records[0]["tool_name"] == "ux_author"
+    assert records[0]["image_path"] == str(image)

@@ -79,7 +79,7 @@ def _cmd_author(args: argparse.Namespace) -> int:
     name = Path(args.contract).stem.removesuffix(".ux")
     report = run_gates(contract, Path(args.workspace or "."))
     paths = write_projections(contract, name, out_dir)
-    renders = render_all(out_dir) if args.render else []
+    renders = render_all(out_dir, fmts=("svg", "png")) if args.render else []
     write_provenance(contract, paths, out_dir)
     write_report(contract, report, out_dir, renders)
     _print(report.to_dict(contract))
@@ -87,7 +87,7 @@ def _cmd_author(args: argparse.Namespace) -> int:
 
 
 def _cmd_render(args: argparse.Namespace) -> int:
-    results = render_all(Path(args.dir))
+    results = render_all(Path(args.dir), fmts=("svg", "png"))
     _print(
         {
             "verdict": PASS,

@@ -32,3 +32,4 @@ specifications and design decisions.
 - [ADR-0013](adr/0013-service-blueprint-and-emotion-curve-projections.md) — blueprint swimlane + CJM emotion projections
 - [ADR-0014](adr/0014-hig-numeric-gates-and-structural-projections.md) — HIG numeric gates + mindmap/sequence/WBS
 - [ADR-0015](adr/0015-producer-cmf-and-interaction-content.md) — producer plan, CMF, interaction content with bard cues
+- [ADR-0016](adr/0016-png-renders-and-inline-images.md) — PNG renders and inline image observations
