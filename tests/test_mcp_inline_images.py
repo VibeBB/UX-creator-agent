@@ -7,8 +7,8 @@ import json
 from pathlib import Path
 from typing import Any, cast
 
-from mcp import types
 import pytest
+from mcp import types
 
 from ux_creator import mcp_server
 from ux_creator.render import RenderResult
