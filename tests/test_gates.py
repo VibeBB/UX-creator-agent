@@ -7,12 +7,29 @@ import json
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from ux_creator.contract import UXContract
-from ux_creator.gates import run_gates
+from ux_creator.gates import UNKNOWN, GateCheck, run_gates
 
 
 def _contract(payload: dict[str, Any]) -> UXContract:
     return UXContract.model_validate(payload)
+
+
+def test_check_error_is_unknown_with_exception_type(
+    example_contract: UXContract, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail(_contract: UXContract) -> list[GateCheck]:
+        raise KeyError("missing")
+
+    monkeypatch.setattr("ux_creator.gates._statechart_checks", fail)
+    report = run_gates(example_contract, tmp_path)
+    checks = [check for check in report.checks if check.id == "statechart"]
+
+    assert len(checks) == 1
+    assert checks[0].status == UNKNOWN
+    assert "KeyError" in checks[0].detail
 
 
 def test_example_passes(example_contract: UXContract, tmp_path: Path) -> None:

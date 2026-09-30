@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- MCP transport errors now carry error status, workspace paths are contained,
+  and Docker image resolution is bounded by timeouts.
+- Fast verification checks shared-hook parity and enforces the 77% coverage
+  threshold.
+
 ### Added (phase 12)
 
 - Producer / orchestrator: `{product}.production.json` plan

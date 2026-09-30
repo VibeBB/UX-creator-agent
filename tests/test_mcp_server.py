@@ -1,0 +1,62 @@
+from __future__ import annotations
+
+import asyncio
+import json
+from pathlib import Path
+from typing import Any, cast
+
+import pytest
+from mcp import types
+
+from ux_creator import mcp_server
+
+
+async def _call_tool(name: str, arguments: dict[str, Any]) -> object:
+    return await mcp_server.call_tool(name, arguments)
+
+
+def _payload(result: types.CallToolResult) -> dict[str, Any]:
+    assert result.content and isinstance(result.content[0], types.TextContent)
+    return json.loads(result.content[0].text)
+
+
+def test_unknown_tool_is_a_transport_error() -> None:
+    result = asyncio.run(_call_tool("ux_unknown", {}))
+    assert isinstance(result, types.CallToolResult)
+    assert result.isError is True
+    assert _payload(result) == {"verdict": "fail", "detail": "unknown tool ux_unknown"}
+
+
+def test_handler_exception_is_a_typed_transport_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fail(_name: str, _arguments: dict[str, Any]) -> dict[str, Any]:
+        raise RuntimeError("handler failed")
+
+    monkeypatch.setattr(mcp_server, "dispatch_tool", fail)
+    result = asyncio.run(_call_tool("ux_doctor", {}))
+    assert isinstance(result, types.CallToolResult)
+    assert result.isError is True
+    payload = _payload(result)
+    assert payload["detail"] == "ux_doctor error: handler failed"
+    assert payload["error_type"] == "RuntimeError"
+
+
+def test_gate_validation_failure_is_not_a_transport_error() -> None:
+    result = asyncio.run(_call_tool("ux_validate_contract", {"contract": {}}))
+    assert isinstance(result, list)
+    content = cast(list[types.ContentBlock], result)
+    assert content and isinstance(content[0], types.TextContent)
+    payload = json.loads(content[0].text)
+    assert payload["verdict"] == "fail"
+    assert payload["stage"] == "validate"
+
+
+def test_path_escape_is_a_transport_error(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    result = asyncio.run(_call_tool("ux_render", {"dir": "../outside"}))
+    assert isinstance(result, types.CallToolResult)
+    assert result.isError is True
+    payload = _payload(result)
+    assert payload["error_type"] == "ValueError"
+    assert "outside the workspace" in payload["detail"]

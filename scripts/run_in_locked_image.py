@@ -41,6 +41,8 @@ except ImportError:
     from print_locked_image import locked_image
 
 ROOT = Path(__file__).resolve().parent.parent
+_INSPECT_TIMEOUT_S = 30
+_PULL_TIMEOUT_S = 900
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -70,21 +72,27 @@ def main(argv: list[str] | None = None) -> int:
             print(f"FAIL: {exc}")
             return 1
 
-    present = (
-        subprocess.run(
+    try:
+        inspect = subprocess.run(
             [docker, "image", "inspect", image],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             check=False,
-        ).returncode
-        == 0
-    )
+            timeout=_INSPECT_TIMEOUT_S,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(f"docker image inspect timed out after {_INSPECT_TIMEOUT_S}s") from exc
+    present = inspect.returncode == 0
     if not present:
         if args.no_pull:
             print(f"FAIL: image not present locally: {image}")
             return 1
         print(f"run_in_locked_image: pulling {image}", file=sys.stderr)
-        if subprocess.run([docker, "pull", image], check=False).returncode != 0:
+        try:
+            pull = subprocess.run([docker, "pull", image], check=False, timeout=_PULL_TIMEOUT_S)
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(f"docker pull timed out after {_PULL_TIMEOUT_S}s") from exc
+        if pull.returncode != 0:
             print(f"FAIL: docker pull failed for {image}")
             return 1
 
@@ -100,6 +108,8 @@ def main(argv: list[str] | None = None) -> int:
         "UV_PROJECT_ENVIRONMENT=/tmp/image-venv",
         "-e",
         f"PYTHONPATH={ROOT}/src",
+        "-e",
+        f"OPENHANDS_PROJECT_DIR={ROOT}",
         "-v",
         f"{ROOT}:{ROOT}",
         "-w",

@@ -29,7 +29,7 @@ def _probe_module(name: str) -> DoctorCheck:
     try:
         module = importlib.import_module(name)
     except Exception as exc:
-        return DoctorCheck(name, "fail", f"import failed: {exc}")
+        return DoctorCheck(name, "fail", f"import failed: {type(exc).__name__}: {exc}")
     version = getattr(module, "__version__", "unknown")
     return DoctorCheck(name, "pass", f"{name} {version}")
 
