@@ -61,12 +61,16 @@ def test_cli_boundary_error_includes_exception_type(
     assert payload["detail"] == "unexpected failure"
 
 
-def test_doctor_probe_does_not_hide_unexpected_import_failure(
+def test_doctor_probe_reports_unexpected_import_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     def fail(_name: str) -> object:
         raise RuntimeError("module initialization failed")
 
     monkeypatch.setattr(doctor.importlib, "import_module", fail)
-    with pytest.raises(RuntimeError, match="module initialization failed"):
-        doctor.run_doctor()
+    report = doctor.run_doctor()
+    checks = report["checks"]
+    check = next(item for item in checks if item["capability"] == "pydantic")
+
+    assert check["status"] == "fail"
+    assert "RuntimeError" in check["detail"]
