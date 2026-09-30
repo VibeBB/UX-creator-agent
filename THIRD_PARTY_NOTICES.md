@@ -10,7 +10,7 @@ import-linked into `ux_creator` (per ADR-0004).
 |---|---|---|---|
 | Ruby | `ruby:4.0.7-slim-trixie` (digest-pinned) | Ruby License / BSD-2-Clause | Base image; DSL runtime |
 | Debian 13 (trixie) packages | apt `graphviz`, `chromium`, `nodejs`, `npm`, `fonts-ipafont`, `fonts-noto-cjk`, `build-essential`, `bison`, `git`, `curl`, `ca-certificates`, `xz-utils` | various (GPL-family system tools, BSD, OFL, IPA Font License) | OS layer only |
-| uv | `ghcr.io/astral-sh/uv:0.12.19` | Apache-2.0 / MIT | Python + package manager |
+| uv | `ghcr.io/astral-sh/uv:0.12.21` | Apache-2.0 / MIT | Python + package manager |
 | CPython | 3.12.x via `uv python install` | PSF-2.0 | Agent runtime |
 | IBM Semeru OpenJ9 JRE | `27.0.0.0` sha256-pinned tarball → `/opt/jre` | GPLv2 + Classpath Exception, EPL-2.0, Apache-2.0 (per component; see `license/` inside the JRE) | PlantUML runtime only — no linking |
 | PlantUML MIT jar | `v1.2026.8` sha256-pinned → `/opt/plantuml/plantuml.jar` | MIT | Diagram renderer (subprocess) |
@@ -23,7 +23,7 @@ import-linked into `ux_creator` (per ADR-0004).
 | minitest | `gem minitest:6.0.6` | MIT | Ruby test framework |
 | pydantic | `>=2` via `uv.lock` | MIT | Contract models |
 | mcp | `>=1.29,<2` via `uv.lock` | MIT | MCP server SDK |
-| openhands-sdk / openhands-tools | `1.49.6` (sdk-check group) | MIT | CI plugin-load verification only |
+| openhands-sdk / openhands-tools | `1.50.0` (sdk-check group) | MIT | CI plugin-load verification only |
 | fonts-ipafont / fonts-noto-cjk | Debian packages | IPA Font License / SIL OFL-1.1 | CJK glyphs in rendered SVG/PNG |
 
 ## Sources recorded in the image

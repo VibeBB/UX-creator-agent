@@ -1,7 +1,7 @@
 # docker/
 
 - `ux-tools.Dockerfile` — the deterministic UX tool execution image:
-  ruby:4.0.7-slim-trixie base, uv 0.12.19 → CPython 3.12 venv at
+  ruby:4.0.7-slim-trixie base, uv 0.12.21 → CPython 3.12 venv at
   `/opt/ux/.venv`, IBM Semeru OpenJ9 JRE 27 (`/opt/jre`), PlantUML MIT jar
   (`/opt/plantuml/plantuml.jar`, `PLANTUML_JAR`), mruby 4.0.0
   (`/opt/mruby/bin`), Node.js + `@mermaid-js/mermaid-cli` + Debian
