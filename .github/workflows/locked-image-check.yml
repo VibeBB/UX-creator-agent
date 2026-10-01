@@ -168,7 +168,7 @@ jobs:
         run: |
           set -euo pipefail
           launcher=plugins/ux/scripts/ux_launcher.py
-          out=.round2-smoke/ux
+          out=.launcher-smoke/ux
           mkdir -p "$out"
           if python3 - <<'PY'
           import json
@@ -214,6 +214,6 @@ jobs:
         if: always()
         with:
           name: locked-image-smoke
-          path: ${{ github.workspace }}/.round2-smoke/ux
+          path: ${{ github.workspace }}/.launcher-smoke/ux
           if-no-files-found: ignore
           retention-days: 14

@@ -1,13 +1,14 @@
+# Operations — UX-creator-agent
+
+Release, dependency-update, and CI policy. Product documentation lives in
+the README and `docs/`; design decisions live in `docs/adr/`.
+
 ## SBOM attestations
 
 `publish-ux-images.yml` generates and attests an SPDX-2.3 SBOM for the
 published tools digest and uploads it for 30 days. The returned URL is stored
 as `sbom_attestation` and verified by `locked-image-check.yml` when present;
 an absent URL warns and continues.
-# Operations — UX-creator-agent
-
-Release, dependency-update, and CI policy. Product documentation lives in
-the README and `docs/`; design decisions live in `docs/adr/`.
 
 ## Verification stages
 
