@@ -52,3 +52,24 @@ def test_docker_run_user_is_ux() -> None:
                 if user != "ux":
                     offenders.append(f"{workflow.name}:{line_no}: --user {user}")
     assert not offenders, f"unexpected --user values: {offenders}"
+
+
+def test_publish_workflow_tracks_its_own_changes() -> None:
+    text = (REPO_ROOT / ".github" / "workflows" / "publish-ux-images.yml").read_text(
+        encoding="utf-8"
+    )
+    assert '".github/workflows/publish-ux-images.yml"' in text
+    assert '"scripts/update_image_digest_lock.py"' in text
+
+
+def test_image_workflows_record_provenance_and_upload_smoke() -> None:
+    publish = (REPO_ROOT / ".github" / "workflows" / "publish-ux-images.yml").read_text(
+        encoding="utf-8"
+    )
+    locked = (REPO_ROOT / ".github" / "workflows" / "locked-image-check.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "actions/attest-build-provenance@" in publish
+    assert "gh attestation verify" in locked
+    assert "if: always()" in publish
+    assert "if: always()" in locked

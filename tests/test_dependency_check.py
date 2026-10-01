@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 from pathlib import Path
 
@@ -56,3 +57,27 @@ def test_main_reports_timeout_as_failure(
     monkeypatch.setattr(check_dependency_updates_module, "check_dependency_updates", timed_out)
     assert main([]) == 1
     assert "dependency update check failed" in capsys.readouterr().err
+
+
+def test_main_reports_fetch_failures_as_unknown(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    def fetch_failed(_repo_root: Path) -> list[DependencyStatus]:
+        return [
+            DependencyStatus(
+                "github-actions",
+                "actions/checkout",
+                "sha-pinned",
+                "?",
+                ".github/workflows",
+                False,
+                "fetch failed",
+                fetch_failed=True,
+            )
+        ]
+
+    report_path = tmp_path / "report.json"
+    monkeypatch.setattr(check_dependency_updates_module, "check_dependency_updates", fetch_failed)
+    assert main(["--json", str(report_path)]) == 0
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report["unknown_count"] == 1

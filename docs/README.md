@@ -34,3 +34,4 @@ specifications and design decisions.
 - [ADR-0015](adr/0015-producer-cmf-and-interaction-content.md) — producer plan, CMF, interaction content with bard cues
 - [ADR-0016](adr/0016-png-renders-and-inline-images.md) — PNG renders and inline image observations
 - [ADR-0017](adr/0017-development-coverage-gate.md) — development-only coverage gate
+- [ADR-0018](adr/0018-attest-published-tools-images.md) — attest published tools images

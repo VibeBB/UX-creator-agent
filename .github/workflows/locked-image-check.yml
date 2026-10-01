@@ -18,20 +18,72 @@ jobs:
   check-lock:
     runs-on: ubuntu-26.04
     timeout-minutes: 10
+    permissions:
+      contents: read
     outputs:
       present: ${{ steps.lock.outputs.present }}
+      image: ${{ steps.lock.outputs.image }}
+      digest: ${{ steps.lock.outputs.digest }}
+      attestation: ${{ steps.lock.outputs.attestation }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - id: lock
         run: |
-          if [ -s docker/image-digests.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+          if [ ! -s docker/image-digests.json ]; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          import re
+          from pathlib import Path
+
+          lock_path = Path("docker/image-digests.json")
+          try:
+              data = json.loads(lock_path.read_text(encoding="utf-8"))
+          except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+              raise SystemExit(f"invalid image digest lock: {exc}") from exc
+          if not isinstance(data, dict):
+              raise SystemExit("image digest lock must be a JSON object")
+          entry = data.get("ux_tools")
+          if not isinstance(entry, dict) or entry.get("image") != "ghcr.io/vibebb/ux-tools":
+              raise SystemExit("invalid ux_tools digest lock entry")
+          if "digest" not in entry or "tag" not in entry:
+              raise SystemExit("ux_tools lock must contain digest and tag fields")
+          digest = entry.get("digest")
+          tag = entry.get("tag")
+          if digest is None and tag is None:
+              if entry.get("attestation") is not None:
+                  raise SystemExit("ux_tools attestation cannot exist without a pinned image")
+              print("present=false")
+              print("image=")
+              print("digest=")
+              print("attestation=")
+          else:
+              if not isinstance(digest, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", digest) is None:
+                  raise SystemExit("ux_tools digest must be null or a sha256 digest")
+              if not isinstance(tag, str) or re.fullmatch(r"[0-9a-f]{40}-tools", tag) is None:
+                  raise SystemExit("ux_tools tag must be null or a 40-character tools tag")
+              attestation = entry.get("attestation")
+              if attestation is None:
+                  attestation = ""
+              elif not isinstance(attestation, str) or not attestation.startswith("https://"):
+                  raise SystemExit("ux_tools attestation must be an HTTPS URL")
+              print("present=true")
+              print(f"image={entry['image']}")
+              print(f"digest={digest}")
+              print(f"attestation={attestation}")
+          PY
   check:
     needs: check-lock
     if: needs.check-lock.outputs.present == 'true'
     runs-on: ubuntu-26.04
     timeout-minutes: 30
+    permissions:
+      attestations: read
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -44,14 +96,35 @@ jobs:
       - run: uv run python scripts/pull_locked_image.py --entry ux_tools
       - id: image
         run: echo "ref=$(uv run python scripts/print_locked_image.py --entry ux_tools)" >> "$GITHUB_OUTPUT"
-      # e2e_authoring exits non-zero unless the gate verdict is "pass"
-      # (fail-closed), so the container exit code is the smoke check. The
-      # output dir stays inside the container's world-writable /tmp.
+      - name: Verify published image provenance
+        if: needs.check-lock.outputs.attestation != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.check-lock.outputs.image }}
+          DIGEST: ${{ needs.check-lock.outputs.digest }}
+        run: |
+          gh attestation verify "oci://${IMAGE}@${DIGEST}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-ux-images.yml"
+      - name: Warn when image provenance is absent
+        if: needs.check-lock.outputs.attestation == ''
+        run: echo "::warning::ux_tools image lock has no recorded build-provenance attestation"
       - name: Smoke locked image
         env:
           IMAGE_REF: ${{ steps.image.outputs.ref }}
         run: |
-          docker run --rm --user ux "$IMAGE_REF" \
+          set -euo pipefail
+          out="$RUNNER_TEMP/ux-smoke"
+          mkdir -p "$out"
+          chmod 777 "$out"
+          docker run --rm --user ux --volume "$out:/tmp/ux-smoke" "$IMAGE_REF" \
             python /opt/ux/scripts/e2e_authoring.py \
               --contract /opt/ux/examples/smart-kettle/smart-kettle.ux.json \
               --out /tmp/ux-smoke/smart-kettle
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: locked-image-smoke
+          path: ${{ runner.temp }}/ux-smoke
+          if-no-files-found: ignore
+          retention-days: 14

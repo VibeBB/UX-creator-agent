@@ -16,6 +16,7 @@ on:
       - "scripts/print_locked_image.py"
       - "scripts/pull_locked_image.py"
       - "scripts/update_image_digest_lock.py"
+      - ".github/workflows/publish-ux-images.yml"
       - "!docker/image-digests.json"
       # The plugin pin is written by this workflow itself; exclude it so a
       # merged pin PR does not trigger another publish.
@@ -41,6 +42,8 @@ jobs:
       contents: write
       # Pushes the ux-tools image to ghcr.io.
       packages: write
+      id-token: write # OIDC for build-provenance attestation
+      attestations: write # stores the attestation
       # Opens and auto-merges the digest-lock pull request.
       pull-requests: write
     steps:
@@ -76,6 +79,13 @@ jobs:
           # imports already degrade to a miss rather than an error, so
           # ignore-error applies to cache-to only.
           cache-to: type=gha,mode=max,ignore-error=true
+      - name: Attest tools image provenance
+        id: attest
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ghcr.io/vibebb/ux-tools
+          subject-digest: ${{ steps.tools.outputs.digest }}
+          push-to-registry: true
       - name: Resolve tools digest
         env:
           BUILT_DIGEST: ${{ steps.tools.outputs.digest }}
@@ -89,19 +99,27 @@ jobs:
         env:
           TOOLS_REF: ${{ env.TOOLS_REF }}
         run: uv run python scripts/measure_image_tools.py --image-ref "$TOOLS_REF" --out "$RUNNER_TEMP/ux-tools.json"
-      # e2e_authoring exits non-zero unless the gate verdict is "pass"
-      # (fail-closed), so the container exit code is the smoke check. The
-      # output dir stays inside the container's world-writable /tmp.
+      # e2e_authoring writes its gate report before returning a failing verdict.
       - name: Verify published tools smoke
         env:
           TOOLS_REF: ${{ env.TOOLS_REF }}
         run: |
           set -euo pipefail
+          out="$RUNNER_TEMP/ux-smoke"
+          mkdir -p "$out"
+          chmod 777 "$out"
           docker pull "$TOOLS_REF"
-          docker run --rm --user ux "$TOOLS_REF" \
+          docker run --rm --user ux --volume "$out:/tmp/ux-smoke" "$TOOLS_REF" \
             python /opt/ux/scripts/e2e_authoring.py \
               --contract /opt/ux/examples/smart-kettle/smart-kettle.ux.json \
               --out /tmp/ux-smoke/smart-kettle
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: published-tools-smoke
+          path: ${{ runner.temp }}/ux-smoke
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Record published image summary
         run: |
           {
@@ -115,6 +133,7 @@ jobs:
       - name: Update digest lock and merge PR
         env:
           GH_TOKEN: ${{ github.token }}
+          ATTESTATION_URL: ${{ steps.attest.outputs.attestation-url }}
         run: |
           set -euo pipefail
           retry() {
@@ -180,6 +199,7 @@ jobs:
             --entry ux_tools --image "ghcr.io/${IMAGE_OWNER}/ux-tools" \
             --tag "$TOOLS_TAG" --digest "$TOOLS_DIGEST" --published-at "$published_at" \
             --workflow-run "$workflow_run" --dockerfile docker/ux-tools.Dockerfile \
+            --attestation "$ATTESTATION_URL" \
             --tools-json "$RUNNER_TEMP/ux-tools.json"
           # Ship the same pin inside the plugin so an installed plugin can
           # resolve the tools image without the extension cache (the
