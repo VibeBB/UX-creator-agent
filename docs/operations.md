@@ -44,7 +44,9 @@ repo rules).
 
 `docker/image-digests.json` and the per-skill `tools-image.json` files
 are written **only** by `publish-ux-images.yml` after a successful build,
-smoke, and manifest record. Until the first publish, the lock is absent:
+provenance attestation, smoke, and tools record. Existing pins created
+before provenance support remain usable without attestation metadata until
+the next successful publish:
 
 - `ux_launcher.py` and `run_in_locked_image.py` resolve the image from
   `$UX_TOOLS_IMAGE` or the digest lock; with neither resolvable they exit
@@ -53,6 +55,11 @@ smoke, and manifest record. Until the first publish, the lock is absent:
 - `locked-image-check.yml` and `verify_all.py --stage standard`/`ruby`
   require the lock or `UX_TOOLS_IMAGE` and are skipped/fail loudly
   otherwise.
+- Published locks include the provenance attestation URL. The locked-image
+  check verifies it against the publisher workflow; existing pins without
+  provenance remain usable with a warning until the next successful publish.
+- Publish and locked-image smoke outputs are uploaded even when the smoke
+  fails, so the gate report remains available for diagnosis.
 - Doctor (`--warn` at session start) reports the missing lock as a
   warning and exits 0.
 
@@ -69,6 +76,9 @@ section by `scripts/bump_version.py`.
 - `workflow-lint.yml` runs actionlint + zizmor on every workflow change.
 - `locked-image-check.yml` fails PRs that drift the Dockerfile/lock.
 - `digest-lock-sweep.yml` re-verifies the locked digest weekly.
-- `check-dependency-updates.yml` opens issues for stale pins.
-- `main-ci-failure-issue.yml` and `pr-branch-cleanup.yml` keep the board
-  and branch list clean.
+- `check-dependency-updates.yml` reports stale or unknown pins; fetch
+  failures keep its tracking issue open.
+- `main-ci-failure-issue.yml` watches completed main runs of CI, Dependency
+  update check, Digest lock PR sweep, Locked image check, PR branch cleanup,
+  Publish ux images, Release, and Workflow lint; `pr-branch-cleanup.yml`
+  keeps the branch list clean.
