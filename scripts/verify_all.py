@@ -45,6 +45,7 @@ STAGES: dict[str, tuple[Command, ...]] = {
             )
         ),
         Command(("uv", "run", "python", "scripts/check_shared_hooks.py")),
+        Command(("uv", "run", "python", "scripts/check_shared_workflows.py")),
         Command(("uv", "run", "python", "scripts/verify_docs.py")),
         Command(("git", "diff", "--check")),
     ),
@@ -63,6 +64,7 @@ STAGES: dict[str, tuple[Command, ...]] = {
             )
         ),
         Command(("uv", "run", "python", "scripts/check_shared_hooks.py")),
+        Command(("uv", "run", "python", "scripts/check_shared_workflows.py")),
         Command(("uv", "run", "python", "scripts/check_plugin_load.py")),
         # e2e runs inside the digest-pinned ux-tools image (ruby, mermaid-cli, plantuml
         # live there); the checkout is bind-mounted so it exercises the

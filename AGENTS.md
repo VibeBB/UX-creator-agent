@@ -130,3 +130,5 @@ uv run --group sdk-check python scripts/check_plugin_load.py
   enforced in `requests.py` and the `ux-liaison` skill.
 - Vision observations are typed L2 advisory records only — never
   verdicts, never gate inputs.
+
+Shared workflows are canonical across the family; change all 11 copies together and update `EXPECTED` in `scripts/check_shared_workflows.py`.
