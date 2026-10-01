@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  attestations: read
 
 concurrency:
   group: locked-image-check
@@ -25,6 +26,7 @@ jobs:
       image: ${{ steps.lock.outputs.image }}
       digest: ${{ steps.lock.outputs.digest }}
       attestation: ${{ steps.lock.outputs.attestation }}
+      sbom_attestation: ${{ steps.sbom.outputs.sbom_attestation }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -76,6 +78,42 @@ jobs:
               print(f"digest={digest}")
               print(f"attestation={attestation}")
           PY
+      - id: sbom
+        env:
+          LOCK_PATH: docker/image-digests.json
+          LOCK_ENTRY: ux_tools
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          import os
+          from pathlib import Path
+          from urllib.parse import urlsplit
+
+          path = Path(os.environ["LOCK_PATH"])
+          entry = None
+          if path.is_file():
+              data = json.loads(path.read_text(encoding="utf-8"))
+              if not isinstance(data, dict):
+                  raise SystemExit("image digest lock must be a JSON object")
+              entry = data.get(os.environ["LOCK_ENTRY"])
+          if entry is not None and not isinstance(entry, dict):
+              raise SystemExit("image lock entry must be an object")
+          sbom_attestation = entry.get("sbom_attestation") if entry else None
+          if entry and entry.get("digest") is None and entry.get("tag") is None:
+              if sbom_attestation is not None:
+                  raise SystemExit("unpublished image entry cannot have an SBOM attestation")
+              sbom_attestation = ""
+          elif sbom_attestation is not None:
+              parsed = urlsplit(sbom_attestation) if isinstance(sbom_attestation, str) else None
+              if (
+                  parsed is None
+                  or parsed.scheme != "https"
+                  or not parsed.netloc
+                  or any(character.isspace() for character in sbom_attestation)
+              ):
+                  raise SystemExit("image lock SBOM attestation must be an HTTPS URL")
+          print(f"sbom_attestation={sbom_attestation or ''}")
+          PY
   check:
     needs: check-lock
     if: needs.check-lock.outputs.present == 'true'
@@ -106,25 +144,76 @@ jobs:
           gh attestation verify "oci://${IMAGE}@${DIGEST}" \
             --repo "$GITHUB_REPOSITORY" \
             --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-ux-images.yml"
+      - name: Warn when image SBOM attestation is absent
+        if: needs.check-lock.outputs.sbom_attestation == ''
+        run: echo "::warning::ux_tools image lock has no recorded SBOM attestation"
+      - name: Verify published image SBOM attestation
+        if: needs.check-lock.outputs.sbom_attestation != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.check-lock.outputs.image }}
+          DIGEST: ${{ needs.check-lock.outputs.digest }}
+        run: |
+          gh attestation verify "oci://${IMAGE}@${DIGEST}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-ux-images.yml" \
+            --predicate-type https://spdx.dev/Document/v2.3
       - name: Warn when image provenance is absent
         if: needs.check-lock.outputs.attestation == ''
         run: echo "::warning::ux_tools image lock has no recorded build-provenance attestation"
       - name: Smoke locked image
         env:
-          IMAGE_REF: ${{ steps.image.outputs.ref }}
+          GH_TOKEN: ${{ github.token }}
+          OPENHANDS_PROJECT_DIR: ${{ github.workspace }}
         run: |
           set -euo pipefail
-          out="$RUNNER_TEMP/ux-smoke"
+          launcher=plugins/ux/scripts/ux_launcher.py
+          out=.launcher-smoke/ux
           mkdir -p "$out"
-          chmod 777 "$out"
-          docker run --rm --user ux --volume "$out:/tmp/ux-smoke" "$IMAGE_REF" \
-            python /opt/ux/scripts/e2e_authoring.py \
-              --contract /opt/ux/examples/smart-kettle/smart-kettle.ux.json \
-              --out /tmp/ux-smoke/smart-kettle
+          if python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          entry = json.loads(Path("docker/image-digests.json").read_text(encoding="utf-8"))["ux_tools"]
+          raise SystemExit(0 if entry.get("attestation") else 1)
+          PY
+          then
+            export UX_VERIFY_ATTESTATION=require
+          else
+            export UX_VERIFY_ATTESTATION=auto
+          fi
+          python3 "$launcher" prewarm
+          python3 "$launcher" doctor > "$out/doctor.json"
+          set +e
+          python3 "$launcher" author examples/smart-kettle/smart-kettle.ux.json \
+            --out "$out" > "$out/author.stdout.json"
+          status=$?
+          set -e
+          python3 - "$out" "$status" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          output = Path(sys.argv[1])
+          status = int(sys.argv[2])
+          stdout = output / "author.stdout.json"
+          reports = sorted(output.rglob("*report.json"))
+          printed = False
+          for report_path in reports:
+              report = json.loads(report_path.read_text(encoding="utf-8"))
+              if isinstance(report, dict) and "checks" in report:
+                  print(json.dumps(report["checks"], ensure_ascii=False, indent=2))
+                  printed = True
+          if not printed:
+              print(stdout.read_text(encoding="utf-8"))
+          result = json.loads(stdout.read_text(encoding="utf-8"))
+          if status != 0 or result.get("verdict") != "pass":
+              raise SystemExit("ux launcher smoke did not pass")
+          PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: locked-image-smoke
-          path: ${{ runner.temp }}/ux-smoke
+          path: ${{ github.workspace }}/.launcher-smoke/ux
           if-no-files-found: ignore
           retention-days: 14
