@@ -30,6 +30,12 @@ case "$1 $2" in
     ;;
   "workflow run")
     ;;
+  "run list")
+    case "$GH_STUB_CASE" in
+      pr-runs-present) printf '2\\n' ;;
+      *) printf '0\\n' ;;
+    esac
+    ;;
   "pr checks")
     check_call=$(grep -c '^pr checks ' "$GH_STUB_CALLS")
     case "$GH_STUB_CASE" in
@@ -106,6 +112,8 @@ esac
             "PUBLISH_PIN_PR_MERGE_WAIT_SECONDS": "0",
             "PUBLISH_PIN_PR_RETRY_ATTEMPTS": "1",
             "PUBLISH_PIN_PR_RETRY_DELAY_SECONDS": "0",
+            "PUBLISH_PIN_PR_RUN_WAIT_ATTEMPTS": "1",
+            "PUBLISH_PIN_PR_RUN_WAIT_SECONDS": "0",
             "PUBLISH_PIN_PR_POST_MERGE_WORKFLOWS": "ci.yml locked-image-check.yml",
         }
     )
@@ -210,6 +218,22 @@ def test_no_required_checks_arms_auto_merge(
     assert "auto-merge armed; required checks still running" in summary
     assert call_log.count("pr checks ") == 1
     assert "--auto --squash --delete-branch" in call_log
+
+
+def test_dispatch_is_skipped_when_pull_request_runs_exist(
+    publish_pin_pr: tuple[Path, dict[str, str], Path],
+    tmp_path: Path,
+) -> None:
+    script, env, calls = publish_pin_pr
+    env["GH_STUB_CASE"] = "pr-runs-present"
+
+    result = run_helper(script, env)
+    summary = (tmp_path / "summary.md").read_text(encoding="utf-8")
+    call_log = calls.read_text(encoding="utf-8")
+
+    assert result.returncode == 0
+    assert "already has pull_request runs" in summary
+    assert f"--ref {BRANCH}" not in call_log
 
 
 def test_unexpected_required_check_error_fails_with_stderr(

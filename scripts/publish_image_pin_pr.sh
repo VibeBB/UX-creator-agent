@@ -16,6 +16,8 @@ MERGE_WAIT_ATTEMPTS=${PUBLISH_PIN_PR_MERGE_WAIT_ATTEMPTS:-36}
 MERGE_WAIT_SECONDS=${PUBLISH_PIN_PR_MERGE_WAIT_SECONDS:-10}
 RETRY_ATTEMPTS=${PUBLISH_PIN_PR_RETRY_ATTEMPTS:-3}
 RETRY_DELAY_SECONDS=${PUBLISH_PIN_PR_RETRY_DELAY_SECONDS:-10}
+PR_RUN_WAIT_ATTEMPTS=${PUBLISH_PIN_PR_RUN_WAIT_ATTEMPTS:-6}
+PR_RUN_WAIT_SECONDS=${PUBLISH_PIN_PR_RUN_WAIT_SECONDS:-30}
 REQUIRED_CHECKS_STDERR_FILE=$(mktemp)
 trap 'rm -f "$REQUIRED_CHECKS_STDERR_FILE"' EXIT
 
@@ -115,12 +117,33 @@ approve_gated_runs() {
   done <<< "$run_ids"
 }
 
+pr_event_runs_exist() {
+  local workflow=$1 count
+  count=$(retry gh run list --repo "$GITHUB_REPOSITORY" --workflow "$workflow" \
+    --branch "$BRANCH" --event pull_request --json databaseId --jq 'length' || true)
+  [ "${count:-0}" -gt 0 ]
+}
+
 dispatch_pin_workflow() {
   local workflow=$1
   local -a command=(gh workflow run "$workflow" --repo "$GITHUB_REPOSITORY" --ref "$BRANCH")
   if [ "$workflow" = ci.yml ] && [ -n "$BASE_SHA" ]; then
     command+=(-f "base_sha=$BASE_SHA")
   fi
+  check_pin_pr_state
+  # The pin PR's own pull_request runs are the authoritative exercise of
+  # the head SHA; give them a short window to register before spending a
+  # duplicate dispatched run.
+  local attempt
+  for ((attempt = 1; attempt <= PR_RUN_WAIT_ATTEMPTS; attempt++)); do
+    if pr_event_runs_exist "$workflow"; then
+      write_summary "${workflow} already has pull_request runs on ${BRANCH}; skipping dispatch."
+      return 0
+    fi
+    if [ "$attempt" -lt "$PR_RUN_WAIT_ATTEMPTS" ]; then
+      sleep "$PR_RUN_WAIT_SECONDS"
+    fi
+  done
   check_pin_pr_state
   if ! retry "${command[@]}"; then
     check_pin_pr_state
