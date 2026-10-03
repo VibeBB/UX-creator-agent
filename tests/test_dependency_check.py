@@ -13,6 +13,7 @@ from scripts.check_dependency_updates import (
     DependencyStatus,
     _github_latest_tag,  # pyright: ignore[reportPrivateUsage]
     check_docker_args,
+    check_docker_base,
     check_lynis_pin,
     main,
 )
@@ -43,6 +44,44 @@ def test_docker_args_report_fetch_failed_on_timeout():
     assert uv_status.note == "fetch failed"
     assert uv_status.outdated is False
     assert uv_status.fetch_failed is True
+
+
+def test_docker_base_resolves_ruby_slim_tags():
+    def fetch_json(url: str):
+        assert "repositories/library/ruby" in url
+        assert "name=-slim-trixie" in url
+        return {
+            "results": [
+                {"name": "4.1.0-slim-trixie"},
+                {"name": "4.0.9-slim-trixie"},
+                {"name": "4.0-slim-trixie"},
+                {"name": "slim-trixie"},
+            ],
+            "next": None,
+        }
+
+    statuses = check_docker_base(ROOT, fetch_json=fetch_json)
+    assert len(statuses) == 1
+    status = statuses[0]
+    assert status.surface == "docker-base"
+    assert status.name == "ruby"
+    assert status.current == "4.0.7-slim-trixie"
+    assert status.latest == "4.1.0-slim-trixie"
+    assert status.outdated is True
+    assert status.fetch_failed is False
+
+
+def test_docker_base_ruby_fetch_failure_reports_fetch_failed():
+    def fetch_json(url: str):
+        raise OSError("network down")
+
+    statuses = check_docker_base(ROOT, fetch_json=fetch_json)
+    assert len(statuses) == 1
+    status = statuses[0]
+    assert status.name == "ruby"
+    assert status.latest == "?"
+    assert status.outdated is False
+    assert status.fetch_failed is True
 
 
 def test_lynis_pin_reads_audit_clone_branch():

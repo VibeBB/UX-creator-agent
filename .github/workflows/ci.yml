@@ -11,9 +11,18 @@ on:
         type: string
         required: false
         default: ""
+      base_sha:
+        type: string
+        required: false
+        default: ""
   workflow_dispatch:
     inputs:
       ref:
+        type: string
+        required: false
+        default: ""
+      base_sha:
+        description: "Base SHA for the docker-scope diff (dispatch callers)"
         type: string
         required: false
         default: ""
@@ -44,7 +53,7 @@ jobs:
           persist-credentials: false
       - id: scope
         env:
-          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || (inputs.base_sha || github.event.before) }}
           HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
@@ -53,7 +62,10 @@ jobs:
             exit 0
           fi
           git diff --name-only "$(git merge-base "$BASE_SHA" "$HEAD_SHA")" "$HEAD_SHA" > "$RUNNER_TEMP/changed-files"
-          if grep -Eq '^(docker/|\.dockerignore$)' "$RUNNER_TEMP/changed-files"; then
+          # docker/image-digests.json is written by the publish workflow
+          # itself; a lock-only diff must not pay an image rebuild.
+          if grep -Ev '^docker/image-digests\.json$' "$RUNNER_TEMP/changed-files" \
+            | grep -Eq '^(docker/|\.dockerignore$)'; then
             echo "docker=true" >> "$GITHUB_OUTPUT"
           else
             echo "docker=false" >> "$GITHUB_OUTPUT"

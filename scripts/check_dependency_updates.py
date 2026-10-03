@@ -493,8 +493,10 @@ def _docker_tag_names(fetch_json: FetchJson, image: str, name: str = "") -> list
 
 
 def _supported_docker_base(image: str, tag: str) -> bool:
-    return (image == "ubuntu" and re.fullmatch(r"\d{2}\.\d{2}", tag) is not None) or (
-        image == "debian" and re.fullmatch(r"\d+-slim", tag) is not None
+    return (
+        (image == "ubuntu" and re.fullmatch(r"\d{2}\.\d{2}", tag) is not None)
+        or (image == "debian" and re.fullmatch(r"\d+-slim", tag) is not None)
+        or (image == "ruby" and re.fullmatch(r"\d+\.\d+\.\d+-slim-[a-z0-9]+", tag) is not None)
     )
 
 
@@ -517,6 +519,20 @@ def _latest_docker_base_tag(fetch_json: FetchJson, image: str, current: str) -> 
             if re.fullmatch(r"\d+-slim", t)
         ]
         return max(tags, key=lambda t: int(t.removesuffix("-slim")), default=None)
+    if image == "ruby":
+        # e.g. 4.0.7-slim-trixie -> newest full semver on the same
+        # slim-<codename> flavor.
+        codename = current.rsplit("-", 1)[-1]
+        tags = [
+            t
+            for t in _docker_tag_names(fetch_json, image, name=f"-slim-{codename}")
+            if re.fullmatch(rf"\d+\.\d+\.\d+-slim-{re.escape(codename)}", t)
+        ]
+        return max(
+            tags,
+            key=lambda t: tuple(int(p) for p in t.split("-", 1)[0].split(".")),
+            default=None,
+        )
     return None
 
 

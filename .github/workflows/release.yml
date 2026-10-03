@@ -13,6 +13,11 @@ on:
         description: "Explicit X.Y.Z override; leave empty to bump"
         required: false
         type: string
+      dry_run:
+        description: "Exercise the pipeline without pushing, merging, or releasing"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -39,6 +44,9 @@ jobs:
       tag: ${{ steps.bump.outputs.tag }}
       sha: ${{ steps.bump.outputs.sha }}
     steps:
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
       - name: Require main
         env:
           REF: ${{ github.ref }}
@@ -84,6 +92,10 @@ jobs:
           if git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}"; then
             echo "::error::tag v${VERSION} already exists" >&2
             exit 1
+          fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "dry_run: v${VERSION} computed; skipping commit/push/PR/merge" >> "$GITHUB_STEP_SUMMARY"
+            SKIP_COMMIT=true
           fi
           if [ "$SKIP_COMMIT" = true ]; then
             echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -216,6 +228,9 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.bump-version.outputs.sha }}
@@ -244,6 +259,9 @@ jobs:
       VERSION: ${{ needs.bump-version.outputs.version }}
       SHA: ${{ needs.bump-version.outputs.sha }}
     steps:
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.bump-version.outputs.sha }}
@@ -265,6 +283,7 @@ jobs:
           (cd plugins && zip -r "../dist/ux-plugin-v${VERSION}.zip" ux)
           zip -r "dist/ux-samples-v${VERSION}.zip" dist/samples
       - name: Create release and tag
+        if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -279,3 +298,8 @@ jobs:
           }
           retry gh release create "v${VERSION}" --target "$SHA" \
             --title "ux-creator-agent v${VERSION}" --generate-notes dist/*.zip
+      - name: Dry run — skip release creation
+        if: ${{ inputs.dry_run }}
+        run: >
+          echo "dry_run: release zips built; 'gh release create v${VERSION}' skipped"
+          >> "$GITHUB_STEP_SUMMARY"
