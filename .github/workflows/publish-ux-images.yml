@@ -115,13 +115,6 @@ jobs:
           output: trivy-image.sarif
           limit-severities-for-sarif: true
           skip-setup-trivy: true
-      - name: Promote :latest
-        # The failing image must never serve :latest — promote the scanned
-        # digest server-side only after the Trivy SARIF gate above passes.
-        run: |
-          docker buildx imagetools create \
-            "ghcr.io/${IMAGE_OWNER}/ux-tools:latest" \
-            "ghcr.io/${IMAGE_OWNER}/ux-tools@${{ steps.tools.outputs.digest }}"
       - name: Upload Trivy SARIF
         if: always() && hashFiles('trivy-image.sarif') != ''
         uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
@@ -317,3 +310,11 @@ jobs:
             --title "Update ux image digest lock" --body "$body")
           echo "pin PR: $pr_url" >> "$GITHUB_STEP_SUMMARY"
           bash scripts/publish_image_pin_pr.sh "$pr_url" "$branch" "$base_sha" "ci.yml locked-image-check.yml"
+      - name: Promote :latest
+        # The failing image must never serve :latest — promote the scanned
+        # digest server-side only after the Trivy gate, attestations, SBOM,
+        # smoke, and the digest-lock pin PR above have all passed.
+        run: |
+          docker buildx imagetools create \
+            "ghcr.io/${IMAGE_OWNER}/ux-tools:latest" \
+            "ghcr.io/${IMAGE_OWNER}/ux-tools@${{ steps.tools.outputs.digest }}"

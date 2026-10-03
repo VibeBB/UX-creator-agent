@@ -15,6 +15,8 @@ ARG PLANTUML_SHA256=3629c9cd017c7f73e6450396eea0040216c7e1eef8473ce33cc1aad469da
 ARG MRUBY_VERSION=4.0.0
 ARG MRUBY_SHA256=e2ea271dbed14e9f2b33df773ae447b747dbc242ce2675022c0a57efea85a7b4
 ARG MERMAID_CLI_VERSION=11.17.0
+# sha256 of https://registry.npmjs.org/@mermaid-js/mermaid-cli/-/mermaid-cli-11.17.0.tgz
+ARG MERMAID_CLI_SHA256=23f2c2722262d98347cf979da6d88bc8693eef2cd8798a38ac393a7f006938a0
 ARG RUBOCOP_VERSION=1.91.0
 ARG MINITEST_VERSION=6.0.6
 ARG JSON_VERSION=2.19.2
@@ -64,7 +66,15 @@ RUN apt-get -o Acquire::Retries=5 update \
         # Ships in the digest-pinned base image; listed so apt upgrades it to
         # the security build (CVE-2026-103111, fixed in 10.46-1~deb13u3).
         libpcre2-8-0 \
-    && npm install -g "@mermaid-js/mermaid-cli@${MERMAID_CLI_VERSION}" \
+    # Install mermaid-cli from the registry tarball so the fetch is
+    # sha256-verified like every other external download in this image.
+    && curl --fail --location --silent --show-error \
+        --retry 5 --retry-delay 10 --retry-all-errors \
+        --output /tmp/mermaid-cli.tgz \
+        "https://registry.npmjs.org/@mermaid-js/mermaid-cli/-/mermaid-cli-${MERMAID_CLI_VERSION}.tgz" \
+    && echo "${MERMAID_CLI_SHA256}  /tmp/mermaid-cli.tgz" | sha256sum --check \
+    && npm install -g /tmp/mermaid-cli.tgz \
+    && rm -f /tmp/mermaid-cli.tgz \
     && mmdc --version \
     && rm -rf /var/lib/apt/lists/*
 

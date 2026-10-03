@@ -80,7 +80,10 @@ the next successful publish:
 `pyproject.toml` versions match the tag, runs the standard stage, builds
 `dist/` artifacts (`ux-plugin-v*`, `ux-samples-v*`), and publishes the
 GitHub release. CHANGELOG `[Unreleased]` is folded into the versioned
-section by `scripts/bump_version.py`.
+section by `scripts/bump_version.py`. Dispatching with `dry_run: true`
+exercises the same version computation, CI verification, install smoke,
+and artifact build while skipping the push/merge and `gh release create`
+— the way to rehearse the pipeline without cutting a release.
 
 ## CI hygiene
 
@@ -88,13 +91,20 @@ section by `scripts/bump_version.py`.
 - `locked-image-check.yml` fails PRs that drift the Dockerfile/lock and
   prewarms the pinned image through `ux_launcher.py` before running the
   shipped authoring example.
-- `digest-lock-sweep.yml` re-verifies the locked digest weekly.
+- `digest-lock-sweep.yml` retries merging stalled digest-lock PRs every 6
+  hours and dispatches post-merge verification (CI + locked image check)
+  on main after a successful merge, since a `GITHUB_TOKEN` merge does not
+  trigger the push workflows itself.
 - `check-dependency-updates.yml` reports stale or unknown pins; fetch
   failures keep its tracking issue open.
-- `main-ci-failure-issue.yml` watches completed main runs of CI, Dependency
-  update check, Digest lock PR sweep, Locked image check, PR branch cleanup,
-  Publish ux images, Release, and Workflow lint; `pr-branch-cleanup.yml`
-  keeps the branch list clean.
+- `dependency-review.yml` requires the repository's **Dependency graph**
+  feature (Settings → Advanced Security); sibling repos copying this
+  workflow fail with "Dependency review is not supported on this
+  repository" until it is enabled.
+- `main-ci-failure-issue.yml` watches completed main runs of CI, Container
+  hardening audit, Dependency update check, Digest lock PR sweep, Locked
+  image check, PR branch cleanup, Publish ux images, Release, Scorecard,
+  and Workflow lint; `pr-branch-cleanup.yml` keeps the branch list clean.
 
 ## Launcher-side verification
 
