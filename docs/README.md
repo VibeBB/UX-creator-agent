@@ -7,6 +7,7 @@ specifications and design decisions.
 ## Guides
 
 - [Operations](operations.md) — release, dependency-update, and CI policy
+- [Dependency updates](dependency-updates.md) — pinned versions, sources, and adoption decisions
 
 ## Research
 
@@ -15,6 +16,7 @@ specifications and design decisions.
 - [SDK v1.50.0 feature evaluation](research/sdk-v1.50.0-feature-evaluation.md) —
   OpenHands SDK and uv update decisions
 - [SDK v1.50.1 feature evaluation](research/sdk-v1.50.1-feature-evaluation.md) — OpenHands SDK/tools adoption decisions
+- [SDK v1.51.0 feature evaluation](research/sdk-v1.51.0-feature-evaluation.md) — OpenHands SDK/tools and uv 0.12.22 adoption decisions
 
 ## Accepted ADR list
 
