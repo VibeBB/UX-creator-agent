@@ -45,6 +45,7 @@ re-check deadline) go in `scripts/dependency_update_deferrals.json`.
 | Node.js / Chromium / Graphviz | Debian trixie apt (rolling with the release) |
 | openhands-sdk/-tools `1.50.1` | `pyproject.toml` sdk-check group |
 | GitHub Action SHAs | `.github/workflows/*.yml` + `dependabot.yml` |
+| Lynis audit version | `container-audit.yml` `git clone --branch` — `CISOfy/lynis` tags |
 
 When bumping, review the complete changelog of each updated component
 and record adoption decisions in the PR or `docs/research/` (see the
@@ -152,6 +153,13 @@ The uv-managed CPython's bundled `pip` payload (vendored urllib3,
 msgpack, setuptools — never invoked; dependencies install via `uv` and
 the shipped venv is pip-less) is stripped in the `uv python install`
 layer, so the publish gate stays clean without `.trivyignore` waivers.
+
+Other CVE-driven image surgery: the base image's default `json` gem
+ships its gemspec and stdlib copies that shadow updates, so the gem
+layer removes every 2.18.x trace before installing the pinned release;
+base-image Debian packages that carry a released fix (e.g.
+`libpcre2-8-0`) are listed in the apt install layer so they upgrade —
+the digest-pinned base never self-updates.
 
 The weekly audit runs Lynis as the image's unprivileged `ux` user —
 `tests/test_workflow_paths.py` requires every workflow `docker run

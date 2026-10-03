@@ -13,6 +13,7 @@ from scripts.check_dependency_updates import (
     DependencyStatus,
     _github_latest_tag,  # pyright: ignore[reportPrivateUsage]
     check_docker_args,
+    check_lynis_pin,
     main,
 )
 
@@ -42,6 +43,35 @@ def test_docker_args_report_fetch_failed_on_timeout():
     assert uv_status.note == "fetch failed"
     assert uv_status.outdated is False
     assert uv_status.fetch_failed is True
+
+
+def test_lynis_pin_reads_audit_clone_branch():
+    def tags(url: str) -> list[str]:
+        assert url == "https://github.com/CISOfy/lynis"
+        return ["3.0.8", "3.1.7", "3.1.9"]
+
+    statuses = check_lynis_pin(ROOT, list_remote_tags=tags)
+    assert len(statuses) == 1
+    status = statuses[0]
+    assert status.surface == "workflow-pin"
+    assert status.name == "lynis"
+    assert status.current == "3.1.7"
+    assert status.latest == "3.1.9"
+    assert status.outdated is True
+    assert status.fetch_failed is False
+
+
+def test_lynis_pin_reports_fetch_failed_on_timeout():
+    def timed_out(url: str) -> list[str]:
+        raise subprocess.TimeoutExpired(["git", "ls-remote", "--tags", url], 1)
+
+    statuses = check_lynis_pin(ROOT, list_remote_tags=timed_out)
+    assert len(statuses) == 1
+    status = statuses[0]
+    assert status.latest == "?"
+    assert status.note == "fetch failed"
+    assert status.outdated is False
+    assert status.fetch_failed is True
 
 
 def test_subprocess_timeout_is_bounded():

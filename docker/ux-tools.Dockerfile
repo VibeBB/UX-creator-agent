@@ -14,9 +14,10 @@ ARG PLANTUML_VERSION=1.2026.8
 ARG PLANTUML_SHA256=3629c9cd017c7f73e6450396eea0040216c7e1eef8473ce33cc1aad469dab2f9
 ARG MRUBY_VERSION=4.0.0
 ARG MRUBY_SHA256=e2ea271dbed14e9f2b33df773ae447b747dbc242ce2675022c0a57efea85a7b4
-ARG MERMAID_CLI_VERSION=11.9.0
+ARG MERMAID_CLI_VERSION=11.17.0
 ARG RUBOCOP_VERSION=1.91.0
 ARG MINITEST_VERSION=6.0.6
+ARG JSON_VERSION=2.19.2
 
 # Fail the build when the left side of a verification pipe (curl|sha256sum)
 # breaks instead of silently passing the right side.
@@ -60,6 +61,9 @@ RUN apt-get -o Acquire::Retries=5 update \
         nodejs \
         npm \
         xz-utils \
+        # Ships in the digest-pinned base image; listed so apt upgrades it to
+        # the security build (CVE-2026-103111, fixed in 10.46-1~deb13u3).
+        libpcre2-8-0 \
     && npm install -g "@mermaid-js/mermaid-cli@${MERMAID_CLI_VERSION}" \
     && mmdc --version \
     && rm -rf /var/lib/apt/lists/*
@@ -123,8 +127,18 @@ RUN curl --fail --location --silent --show-error \
         "version=${MRUBY_VERSION}" \
         > /usr/share/doc/mruby/SOURCE
 
-RUN gem install "rubocop:${RUBOCOP_VERSION}" "minitest:${MINITEST_VERSION}" --no-document \
-    && rubocop --version | grep -F "${RUBOCOP_VERSION}"
+# The base image ships json 2.18.0 as a default gem (CVE-2026-33210). Install
+# the fixed release, then remove every 2.18.0 trace — the default gemspec that
+# Trivy flags plus the stdlib copies that would otherwise shadow the update.
+RUN rm -f /usr/local/lib/ruby/gems/*/specifications/default/json-*.gemspec \
+    && rm -rf /usr/local/lib/ruby/gems/*/gems/json-* \
+              /usr/local/lib/ruby/*/json.rb \
+              /usr/local/lib/ruby/*/json \
+              /usr/local/lib/ruby/*/x86_64-linux/json \
+    && gem install "json:${JSON_VERSION}" --no-document \
+    && gem install "rubocop:${RUBOCOP_VERSION}" "minitest:${MINITEST_VERSION}" --no-document \
+    && rubocop --version | grep -F "${RUBOCOP_VERSION}" \
+    && ruby -rjson -e 'exit 1 unless JSON::VERSION == ENV.fetch("JSON_VERSION")'
 
 # The uv-managed CPython bundles pip with vendored copies of urllib3,
 # msgpack, and setuptools that nothing in the image invokes — dependencies
@@ -157,6 +171,10 @@ RUN uv export --frozen --no-dev --no-emit-project --format requirements-txt \
     && python -c "import ux_creator, pydantic; print(ux_creator.__version__)" \
     && python -m ux_creator doctor \
     && rm -f /tmp/ux-requirements.txt
+
+# Tighten the login.defs umask to 027 (Lynis AUTH-9328): the image has no
+# interactive users, so files created at runtime stay group-readable only.
+RUN printf 'UMASK 027\n' >> /etc/login.defs
 
 RUN if ! getent group ux >/dev/null; then groupadd ux; fi \
     && if getent passwd 1000 >/dev/null; then \
