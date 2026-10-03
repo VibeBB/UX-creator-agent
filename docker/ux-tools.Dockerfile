@@ -18,6 +18,10 @@ ARG MERMAID_CLI_VERSION=11.9.0
 ARG RUBOCOP_VERSION=1.91.0
 ARG MINITEST_VERSION=6.0.6
 
+# Fail the build when the left side of a verification pipe (curl|sha256sum)
+# breaks instead of silently passing the right side.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 ENV DEBIAN_FRONTEND=noninteractive
 ENV UV_PYTHON_INSTALL_DIR=/opt/uv-python
 ENV JAVA_HOME=/opt/jre
@@ -104,10 +108,13 @@ RUN curl --fail --location --silent --show-error \
         "https://github.com/mruby/mruby/archive/refs/tags/${MRUBY_VERSION}.tar.gz" \
     && echo "${MRUBY_SHA256}  /tmp/mruby.tar.gz" | sha256sum --check \
     && tar -xzf /tmp/mruby.tar.gz -C /tmp \
-    && cd "/tmp/mruby-${MRUBY_VERSION}" \
-    && ruby ./minirake -j"$(nproc)" \
+    && ruby -C"/tmp/mruby-${MRUBY_VERSION}" ./minirake -j"$(nproc)" \
     && mkdir -p /opt/mruby/bin \
-    && install -m 0755 build/host/bin/mruby build/host/bin/mrbc build/host/bin/mirb /opt/mruby/bin/ \
+    && install -m 0755 \
+        "/tmp/mruby-${MRUBY_VERSION}/build/host/bin/mruby" \
+        "/tmp/mruby-${MRUBY_VERSION}/build/host/bin/mrbc" \
+        "/tmp/mruby-${MRUBY_VERSION}/build/host/bin/mirb" \
+        /opt/mruby/bin/ \
     && mruby --version | grep -F "mruby" \
     && rm -rf "/tmp/mruby-${MRUBY_VERSION}" /tmp/mruby.tar.gz \
     && mkdir -p /usr/share/doc/mruby \
@@ -119,7 +126,16 @@ RUN curl --fail --location --silent --show-error \
 RUN gem install "rubocop:${RUBOCOP_VERSION}" "minitest:${MINITEST_VERSION}" --no-document \
     && rubocop --version | grep -F "${RUBOCOP_VERSION}"
 
+# The uv-managed CPython bundles pip with vendored copies of urllib3,
+# msgpack, and setuptools that nothing in the image invokes — dependencies
+# install via uv and the shipped venv is pip-less — so strip the payload
+# instead of shipping unused vulnerable vendored packages.
 RUN uv python install 3.12 \
+    && rm -rf /opt/uv-python/bin/pip* \
+              /opt/uv-python/cpython-*/bin/pip* \
+              /opt/uv-python/cpython-*/lib/python3.12/site-packages/pip \
+              /opt/uv-python/cpython-*/lib/python3.12/site-packages/pip-*.dist-info \
+              /opt/uv-python/cpython-*/lib/python3.12/ensurepip \
     && uv venv --python 3.12 /opt/ux/.venv
 
 COPY pyproject.toml uv.lock /opt/ux/
@@ -131,8 +147,9 @@ COPY scripts/check_ruby_dsl.py /opt/ux/scripts/check_ruby_dsl.py
 COPY examples /opt/ux/examples
 COPY docker/puppeteer-config.json /opt/ux/docker/puppeteer-config.json
 
-RUN cd /opt/ux \
-    && uv export --frozen --no-dev --no-emit-project --format requirements-txt \
+WORKDIR /opt/ux
+
+RUN uv export --frozen --no-dev --no-emit-project --format requirements-txt \
         --output-file /tmp/ux-requirements.txt \
     && uv pip install --python /opt/ux/.venv/bin/python \
         --requirement /tmp/ux-requirements.txt \
@@ -152,7 +169,6 @@ RUN if ! getent group ux >/dev/null; then groupadd ux; fi \
     && mkdir -p /home/ux/.cache \
     && chown -R ux:ux /home/ux
 
-WORKDIR /opt/ux
 USER ux
 
 # Build-time smoke: ruby DSL -> contract -> author -> gates pass; mruby,
@@ -169,6 +185,7 @@ report = json.load(open("/tmp/smoke-out/ux-report.json", encoding="utf-8"))
 assert report["verdict"] == "pass", report
 print("image smoke check: verdict pass")
 PY
+
 RUN ruby -w -c /opt/ux/ruby/lib/ux_dsl.rb \
     && rubocop --config /opt/ux/ruby/.rubocop.yml /opt/ux/ruby \
     && ruby -I /opt/ux/ruby/lib /opt/ux/ruby/test/ux_dsl_test.rb \
