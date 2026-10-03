@@ -314,7 +314,9 @@ jobs:
         # The failing image must never serve :latest — promote the scanned
         # digest server-side only after the Trivy gate, attestations, SBOM,
         # smoke, and the digest-lock pin PR above have all passed.
+        env:
+          TOOLS_DIGEST: ${{ steps.tools.outputs.digest }}
         run: |
           docker buildx imagetools create \
-            "ghcr.io/${IMAGE_OWNER}/ux-tools:latest" \
-            "ghcr.io/${IMAGE_OWNER}/ux-tools@${{ steps.tools.outputs.digest }}"
+            --tag "ghcr.io/${IMAGE_OWNER}/ux-tools:latest" \
+            "ghcr.io/${IMAGE_OWNER}/ux-tools@${TOOLS_DIGEST}"
