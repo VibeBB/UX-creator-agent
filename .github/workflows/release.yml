@@ -300,4 +300,6 @@ jobs:
             --title "ux-creator-agent v${VERSION}" --generate-notes dist/*.zip
       - name: Dry run — skip release creation
         if: ${{ inputs.dry_run }}
-        run: echo "dry_run: release zips built; 'gh release create v${VERSION}' skipped" >> "$GITHUB_STEP_SUMMARY"
+        run: >
+          echo "dry_run: release zips built; 'gh release create v${VERSION}' skipped"
+          >> "$GITHUB_STEP_SUMMARY"
