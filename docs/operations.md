@@ -153,6 +153,13 @@ msgpack, setuptools — never invoked; dependencies install via `uv` and
 the shipped venv is pip-less) is stripped in the `uv python install`
 layer, so the publish gate stays clean without `.trivyignore` waivers.
 
+Other CVE-driven image surgery: the base image's default `json` gem
+ships its gemspec and stdlib copies that shadow updates, so the gem
+layer removes every 2.18.x trace before installing the pinned release;
+base-image Debian packages that carry a released fix (e.g.
+`libpcre2-8-0`) are listed in the apt install layer so they upgrade —
+the digest-pinned base never self-updates.
+
 The weekly audit runs Lynis as the image's unprivileged `ux` user —
 `tests/test_workflow_paths.py` requires every workflow `docker run
 --user` to be `ux` — so kernel- and account-level tests are skipped and
