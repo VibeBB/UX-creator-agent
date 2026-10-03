@@ -45,6 +45,7 @@ re-check deadline) go in `scripts/dependency_update_deferrals.json`.
 | Node.js / Chromium / Graphviz | Debian trixie apt (rolling with the release) |
 | openhands-sdk/-tools `1.50.1` | `pyproject.toml` sdk-check group |
 | GitHub Action SHAs | `.github/workflows/*.yml` + `dependabot.yml` |
+| Lynis audit version | `container-audit.yml` `git clone --branch` — `CISOfy/lynis` tags |
 
 When bumping, review the complete changelog of each updated component
 and record adoption decisions in the PR or `docs/research/` (see the

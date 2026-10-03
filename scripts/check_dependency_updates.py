@@ -44,6 +44,7 @@ DEPENDENCY_SURFACES = (
     "pypi-uvx",
     "docker-arg",
     "docker-base",
+    "workflow-pin",
 )
 
 FetchJson = Callable[[str], Any]
@@ -431,6 +432,41 @@ def check_docker_args(
     return statuses
 
 
+_AUDIT_WORKFLOW = ".github/workflows/container-audit.yml"
+_LYNIS_CLONE = re.compile(
+    r"git clone\s+--depth 1\s+--branch\s+(\S+)\s*\\?\s*https://github\.com/CISOfy/lynis",
+    re.DOTALL,
+)
+
+
+def check_lynis_pin(
+    repo_root: Path, *, list_remote_tags: ListRemoteTags = _default_list_remote_tags
+) -> list[DependencyStatus]:
+    """Weekly-audit Lynis clone pin vs. the latest CISOfy/lynis tag."""
+    path = repo_root / _AUDIT_WORKFLOW
+    if not path.is_file():
+        return []
+    match = _LYNIS_CLONE.search(path.read_text(encoding="utf-8"))
+    source = Path(_AUDIT_WORKFLOW).name
+    if match is None:
+        return [DependencyStatus("workflow-pin", "lynis", "-", "?", source, False, "pin missing")]
+    current = match.group(1)
+    latest = _github_latest_tag("CISOfy/lynis", list_remote_tags)
+    outdated = bool(latest) and latest != current
+    return [
+        DependencyStatus(
+            "workflow-pin",
+            "lynis",
+            current,
+            latest or "?",
+            source,
+            outdated,
+            "" if latest else "fetch failed",
+            fetch_failed=not latest,
+        )
+    ]
+
+
 _DOCKERHUB_TAGS = (
     "https://hub.docker.com/v2/repositories/library/{image}/tags"
     "?page_size=100&name={name}&ordering=last_updated"
@@ -675,6 +711,7 @@ def check_dependency_updates(
         *check_docker_args(repo_root, list_remote_tags=cached_tags),
         *check_docker_base(repo_root, fetch_json=fetch_json),
         *check_python_versions(repo_root, list_remote_tags=cached_tags),
+        *check_lynis_pin(repo_root, list_remote_tags=cached_tags),
     ]
 
 
@@ -688,6 +725,7 @@ def render_markdown(statuses: list[DependencyStatus]) -> str:
         "pypi-uvx": "PyPI (uvx tool pins in workflows)",
         "docker-arg": "Docker ARG",
         "docker-base": "Docker base image",
+        "workflow-pin": "Workflow version pins",
     }
     lines = ["# Dependency update check report", ""]
     for surface, label in labels.items():

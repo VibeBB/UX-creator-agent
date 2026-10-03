@@ -172,6 +172,10 @@ RUN uv export --frozen --no-dev --no-emit-project --format requirements-txt \
     && python -m ux_creator doctor \
     && rm -f /tmp/ux-requirements.txt
 
+# Tighten the login.defs umask to 027 (Lynis AUTH-9328): the image has no
+# interactive users, so files created at runtime stay group-readable only.
+RUN printf 'UMASK 027\n' >> /etc/login.defs
+
 RUN if ! getent group ux >/dev/null; then groupadd ux; fi \
     && if getent passwd 1000 >/dev/null; then \
          existing="$(getent passwd 1000 | cut -d: -f1)"; \
