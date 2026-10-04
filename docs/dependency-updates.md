@@ -37,8 +37,8 @@ via `uv export --no-dev`.
 
 | Tool | Pin | Where |
 | --- | --- | --- |
-| uv | `==0.12.22` | `[tool.uv] required-version` |
-| Python | `>=3.12`, CI matrix 3.12/3.13 | pyproject `requires-python` |
+| uv | `==0.12.23` | `[tool.uv] required-version` |
+| Python | `>=3.12`, CI matrix 3.12/3.13/3.14 (+3.15 canary) | pyproject `requires-python` |
 | zizmor | `1.30.1` (uvx pin) | `workflow-lint.yml` |
 
 ## GitHub Actions pins
@@ -69,8 +69,8 @@ All `uses:` entries are pinned to a 40-char SHA with a `# vX.Y.Z` comment:
 | Item | Pin | Where |
 | --- | --- | --- |
 | ruby base image | `ruby:4.0.7-slim-trixie` (digest-pinned) | `docker/ux-tools.Dockerfile` `FROM` |
-| uv | `0.12.22` (+ `UV_DIGEST`) | `docker/ux-tools.Dockerfile` `ARG UV_VERSION` (must equal `[tool.uv] required-version`) |
-| Python in image | `3.12` | `uv python install` inside the Dockerfile |
+| uv | `0.12.23` (+ `UV_DIGEST`) | `docker/ux-tools.Dockerfile` `ARG UV_VERSION` (must equal `[tool.uv] required-version`) |
+| Python in image | `3.14` | `uv python install` inside the Dockerfile |
 | IBM Semeru OpenJ9 JRE | `27.0.0.0` (+sha256) | `ARG SEMERU_JRE_VERSION` — `ibmruntimes/semeru27-binaries` releases |
 | PlantUML MIT jar | `1.2026.8` (+sha256) | `ARG PLANTUML_VERSION` — `plantuml/plantuml` releases |
 | mruby | `4.0.0` (+sha256) | `ARG MRUBY_VERSION` — `mruby/mruby` releases |
@@ -140,7 +140,6 @@ only while `review_by` has not passed and still matches the reported
 | Surface | Name | Latest | Re-check | Reason |
 | --- | --- | --- | --- | --- |
 | pypi | mcp | 2.3.0 | 2027-04-01 | `openhands-sdk` 1.51.0 requires `fastmcp>=3.2.0,<4`, which caps `mcp<2`. |
-| python-version | * | 3.14 | 2027-04-01 | Matrix is 3.12/3.13; openhands-sdk support for 3.14 is unconfirmed. |
 | docker-arg | MERMAID_CLI_VERSION | 12.0.0 | 2027-04-01 | mermaid-cli 12.x requires Node >=22.13; the image runs Debian nodejs 20.19.x. |
 
 ## Not covered
@@ -155,3 +154,13 @@ only while `review_by` has not passed and still matches the reported
   upstream tag comparison exists for it).
 - Debian/apt, gem, and npm packages inside the image beyond the tracked
   ARGs (apt tracks the Debian archive).
+
+## Decisions — 2026-10-04 round (GitHub Actions latest-state wave)
+
+| Component | Change | Decision | Reason |
+| --- | --- | --- | --- |
+| actions/cache | v5.0.5 -> v6.1.0 | adopted | v4's Node20 runtime was deleted 2026-09-23; v6.1.0 is the ESM line the family standardizes on. SHA `55cc8345…`. |
+| uv | 0.12.22 -> 0.12.23 | adopted | Patch release; required-version, `UV_VERSION`, `UV_DIGEST`, and the setup-uv `version:` input move in lockstep. |
+| CPython | matrix 3.12/3.13 -> +3.14, scalar pins -> 3.14, +3.15 canary | adopted | Latest stable minor; the 3.15 experimental leg reports via `::warning::` (step-level continue-on-error keeps the check green). |
+| codeql-action | new shared `codeql.yml` (actions + python) | adopted | Needs repo-level default setup disabled before uploads succeed — tracked family-wide. |
+| checker coverage | python-version scans all workflows + `.python-version` + Dockerfile `uv venv`/`python3.x`; RUBOCOP/MINITEST/JSON gem ARGs monitored via rubygems.org | adopted | Coverage audit found these pins unmonitored. |
