@@ -129,7 +129,7 @@ jobs:
           # MisconfSummary payload (the dead-metric anomaly): key the one
           # retry on the payload content, not the exit code.
           for attempt in 1 2; do
-            trivy image --compliance docker-cis-1.6.0 --report all \
+            trivy image --compliance docker-cis-1.6.0 --include-non-failures --report all \
               --ignorefile /dev/null --format json \
               --output "$RUNNER_TEMP/trivy-cis.json" "${PINNED_IMAGE}"
             if python3 - "$RUNNER_TEMP/trivy-cis.json" <<'PY'
