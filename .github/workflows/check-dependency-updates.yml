@@ -32,6 +32,9 @@ jobs:
         with:
           python-version: "3.12"
           cache-suffix: dependency-updates
+          # Read-only weekly check: restore via shared restore-keys but
+          # never write a ~156MB archive when uv.lock is unchanged.
+          save-cache: "false"
       - name: Sync dependencies
         run: uv sync --locked
       - name: Collect update candidates

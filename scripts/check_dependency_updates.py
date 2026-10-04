@@ -4,11 +4,14 @@
 Surfaces checked: direct/dev PyPI dependencies (compared against the
 resolved versions in uv.lock), uv.lock transitive drift via
 `uv lock --upgrade --dry-run`, the uv required-version pin, GitHub Actions
-`uses:` pins (40-char SHA + version comment), `uvx` tool pins in workflows,
-Docker ARG pins in docker/*.Dockerfile, the Docker base image tag, and the
-Python minor versions referenced by the repo (pyproject requires-python,
-Dockerfile `uv python install`, CI matrix) against the latest stable CPython
-minor.
+`uses:` pins (40-char SHA + version comment, including subpath actions such
+as `github/codeql-action/upload-sarif`), `uvx` tool pins in workflows,
+direct-download pins in workflows (the zizmor wheel and the actionlint
+tarball in workflow-lint.yml), `version:` inputs on aquasecurity
+trivy-action/setup-trivy steps, Docker ARG pins in docker/*.Dockerfile,
+the Docker base image tag, and the Python minor versions referenced by the
+repo (pyproject requires-python, Dockerfile `uv python install`, CI matrix)
+against the latest stable CPython minor.
 
 Renders a per-surface markdown report (and optionally JSON). Deferrals live
 in scripts/dependency_update_deferrals.json; see docs/dependency-updates.md
@@ -290,7 +293,9 @@ def workflow_files(repo_root: Path) -> list[Path]:
     return sorted(directory.glob("*.yml")) + sorted(directory.glob("*.yaml"))
 
 
-_ACTION = re.compile(r"uses:\s*([\w.-]+/[\w.-]+)@([0-9a-f]{40})(?:\s*#\s*(v[\w.-]+))?")
+# The repo part tolerates subpath actions (owner/repo/sub/path); the remote
+# tag lookup always uses the first two path segments.
+_ACTION = re.compile(r"uses:\s*([\w.-]+/[\w.-]+(?:/[\w.-]+)*)@([0-9a-f]{40})(?:\s*#\s*(v[\w.-]+))?")
 _UVX = re.compile(r"uvx\s+([\w.-]+)@([\w.]+)")
 
 
@@ -317,7 +322,8 @@ def check_github_actions(
     seen: set[str] = set()
     for workflow in workflow_files(repo_root):
         text = workflow.read_text(encoding="utf-8")
-        for repo, _sha, comment in _ACTION.findall(text):
+        for action_ref, _sha, comment in _ACTION.findall(text):
+            repo = "/".join(action_ref.split("/")[:2])
             if repo in seen:
                 continue
             seen.add(repo)
@@ -465,6 +471,101 @@ def check_lynis_pin(
             fetch_failed=not latest,
         )
     ]
+
+
+_ZIZMOR_WHEEL = re.compile(r"zizmor-(\d+\.\d+\.\d+)-py3-none-manylinux[\w.-]*\.whl")
+_ACTIONLINT_TARBALL = re.compile(r"actionlint_(\d+\.\d+\.\d+)_linux_amd64\.tar\.gz")
+_AQUASECURITY_USES = re.compile(r"uses:\s*aquasecurity/(?:trivy-action|setup-trivy)@")
+_VERSION_INPUT = re.compile(r"version:\s*[\"']?(v?\d+(?:\.\d+)+)")
+
+
+def _aquasecurity_version_inputs(text: str) -> list[str]:
+    """`version:` inputs inside aquasecurity trivy-action/setup-trivy steps."""
+    versions: list[str] = []
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if _AQUASECURITY_USES.search(line) is None:
+            continue
+        step_indent = len(line) - len(line.lstrip())
+        for candidate in lines[index + 1 :]:
+            stripped = candidate.lstrip()
+            if stripped.startswith("- ") and len(candidate) - len(stripped) <= step_indent:
+                break
+            match = _VERSION_INPUT.match(stripped)
+            if match is not None:
+                versions.append(match.group(1))
+                break
+    return versions
+
+
+def check_workflow_tool_pins(
+    repo_root: Path,
+    *,
+    fetch_json: FetchJson = _default_fetch_json,
+    list_remote_tags: ListRemoteTags = _default_list_remote_tags,
+) -> list[DependencyStatus]:
+    """Direct-download pins and trivy `version:` inputs inside workflows."""
+    wheels: dict[str, str] = {}
+    tarballs: dict[str, str] = {}
+    trivy_versions: dict[str, str] = {}
+    for workflow in workflow_files(repo_root):
+        text = workflow.read_text(encoding="utf-8")
+        for version in _ZIZMOR_WHEEL.findall(text):
+            wheels.setdefault(version, workflow.name)
+        for version in _ACTIONLINT_TARBALL.findall(text):
+            tarballs.setdefault(version, workflow.name)
+        for version in _aquasecurity_version_inputs(text):
+            trivy_versions.setdefault(version, workflow.name)
+    statuses: list[DependencyStatus] = []
+    for current, source in sorted(wheels.items()):
+        try:
+            latest = _pypi_latest("zizmor", fetch_json)
+        except (ValueError, OSError):
+            latest = "?"
+        statuses.append(
+            DependencyStatus(
+                "workflow-pin",
+                "zizmor (wheel)",
+                current,
+                latest,
+                source,
+                latest not in ("?", current),
+                "" if latest != "?" else "fetch failed",
+                fetch_failed=latest == "?",
+            )
+        )
+    for current, source in sorted(tarballs.items()):
+        latest = _github_latest_tag("rhysd/actionlint", list_remote_tags)
+        latest_cmp = latest.removeprefix("v")
+        statuses.append(
+            DependencyStatus(
+                "workflow-pin",
+                "actionlint (tarball)",
+                current,
+                latest or "?",
+                source,
+                bool(latest_cmp) and latest_cmp != current,
+                "" if latest_cmp else "fetch failed",
+                fetch_failed=not latest_cmp,
+            )
+        )
+    for current, source in sorted(trivy_versions.items()):
+        latest = _github_latest_tag("aquasecurity/trivy", list_remote_tags)
+        latest_cmp = latest.removeprefix("v")
+        current_cmp = current.removeprefix("v")
+        statuses.append(
+            DependencyStatus(
+                "workflow-pin",
+                "trivy (action input)",
+                current,
+                latest or "?",
+                source,
+                bool(latest_cmp) and latest_cmp != current_cmp,
+                "" if latest_cmp else "fetch failed",
+                fetch_failed=not latest_cmp,
+            )
+        )
+    return statuses
 
 
 _DOCKERHUB_TAGS = (
@@ -728,6 +829,7 @@ def check_dependency_updates(
         *check_docker_base(repo_root, fetch_json=fetch_json),
         *check_python_versions(repo_root, list_remote_tags=cached_tags),
         *check_lynis_pin(repo_root, list_remote_tags=cached_tags),
+        *check_workflow_tool_pins(repo_root, fetch_json=fetch_json, list_remote_tags=cached_tags),
     ]
 
 
