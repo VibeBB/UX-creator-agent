@@ -157,9 +157,9 @@ RUN rm -f /usr/local/lib/ruby/gems/*/specifications/default/json-*.gemspec \
 RUN uv python install 3.14 \
     && rm -rf /opt/uv-python/bin/pip* \
               /opt/uv-python/cpython-*/bin/pip* \
-              /opt/uv-python/cpython-*/lib/python3.14/site-packages/pip \
-              /opt/uv-python/cpython-*/lib/python3.14/site-packages/pip-*.dist-info \
-              /opt/uv-python/cpython-*/lib/python3.14/ensurepip \
+              /opt/uv-python/cpython-*/lib/python3.*/site-packages/pip \
+              /opt/uv-python/cpython-*/lib/python3.*/site-packages/pip-*.dist-info \
+              /opt/uv-python/cpython-*/lib/python3.*/ensurepip \
     && uv venv --python 3.14 /opt/ux/.venv
 
 COPY pyproject.toml uv.lock /opt/ux/
