@@ -23,7 +23,7 @@ printf '%s\\n' "$*" >> "$GH_STUB_CALLS"
 case "$1 $2" in
   "pr view")
     case "$GH_STUB_CASE" in
-      merged) printf 'MERGED\\n' ;;
+      merged|merged-push-covered) printf 'MERGED\\n' ;;
       closed) printf 'CLOSED\\n' ;;
       *) printf 'OPEN\\n' ;;
     esac
@@ -33,6 +33,12 @@ case "$1 $2" in
   "run list")
     case "$GH_STUB_CASE" in
       pr-runs-present) printf '2\\n' ;;
+      merged-push-covered)
+        case "$*" in
+          *"--event push"*) printf '1\\n' ;;
+          *) printf '0\\n' ;;
+        esac
+        ;;
       *) printf '0\\n' ;;
     esac
     ;;
@@ -218,6 +224,23 @@ def test_no_required_checks_arms_auto_merge(
     assert "auto-merge armed; required checks still running" in summary
     assert call_log.count("pr checks ") == 1
     assert "--auto --squash --delete-branch" in call_log
+
+
+def test_main_dispatch_is_skipped_when_push_runs_cover_merge(
+    publish_pin_pr: tuple[Path, dict[str, str], Path],
+    tmp_path: Path,
+) -> None:
+    script, env, calls = publish_pin_pr
+    env["GH_STUB_CASE"] = "merged-push-covered"
+
+    result = run_helper(script, env)
+    summary = (tmp_path / "summary.md").read_text(encoding="utf-8")
+    call_log = calls.read_text(encoding="utf-8")
+
+    assert result.returncode == 0
+    assert "already has a push run" in summary
+    assert f"workflow run ci.yml --repo {REPOSITORY} --ref main" not in call_log
+    assert "--event push" in call_log
 
 
 def test_dispatch_is_skipped_when_pull_request_runs_exist(

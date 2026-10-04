@@ -99,23 +99,23 @@ jobs:
           exit-code: '0'
           format: json
           output: trivy-image.json
-      - name: Scan tools image (Trivy SARIF)
-        id: trivy-scan
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          scan-type: image
-          # Scan the exact pushed digest — the content the SBOM and
-          # provenance attestations bind to.
-          scan-ref: ghcr.io/${{ env.IMAGE_OWNER }}/ux-tools@${{ steps.tools.outputs.digest }}
-          version: v0.75.0
-          scanners: vuln,secret,misconfig
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          exit-code: '1'
-          format: sarif
-          output: trivy-image.sarif
-          limit-severities-for-sarif: true
-          skip-setup-trivy: true
+      # One scan feeds both outputs: the full JSON above is the artifact,
+      # and the SARIF + gate below come from a filtered view of it —
+      # identical to the old second scan's severity/ignore-unfixed filter,
+      # but without re-scanning the same digest.
+      - name: Filter findings, convert SARIF, gate on fixable H/C
+        run: |
+          set -euo pipefail
+          findings=$(python3 scripts/trivy_findings.py \
+            --input trivy-image.json \
+            --filtered trivy-image.filtered.json \
+            --summary "$GITHUB_STEP_SUMMARY")
+          trivy convert --format sarif \
+            --output trivy-image.sarif trivy-image.filtered.json
+          if [ "$findings" -gt 0 ]; then
+            echo "::error::${findings} fixable HIGH/CRITICAL Trivy findings gate this publish (see step summary)"
+            exit 1
+          fi
       - name: Upload Trivy SARIF
         if: always() && hashFiles('trivy-image.sarif') != ''
         uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2

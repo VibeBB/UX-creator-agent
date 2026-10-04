@@ -69,19 +69,28 @@ jobs:
           # that has no ci.yml dispatch since its merge; one run verifies main.
           if [ "$dispatch_post_merge" != true ]; then
             cutoff=$(date -u -d '7 hours ago' +%Y-%m-%dT%H:%M:%SZ)
-            while IFS= read -r merged_at; do
+            while IFS=$'\t' read -r merged_at merge_sha; do
               [ -n "$merged_at" ] || continue
               [ "$merged_at" \> "$cutoff" ] || continue
-              runs=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml \
+              # A human merge fires push-triggered runs for the merge
+              # commit; only dispatch when neither a push run for the
+              # merge SHA nor a post-merge dispatch covers it.
+              push_runs=0
+              if [ -n "$merge_sha" ]; then
+                push_runs=$(gh run list --repo "$GITHUB_REPOSITORY" \
+                  --workflow ci.yml --commit "$merge_sha" --event push \
+                  --json databaseId --jq 'length' || echo 0)
+              fi
+              dispatched=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml \
                 --branch main --event workflow_dispatch \
                 --created ">=$merged_at" --json databaseId --jq 'length' || echo 0)
-              if [ "${runs:-0}" = "0" ]; then
+              if [ "${push_runs:-0}" = "0" ] && [ "${dispatched:-0}" = "0" ]; then
                 dispatch_post_merge=true
                 break
               fi
             done < <(gh pr list --repo "$GITHUB_REPOSITORY" --state merged --limit 10 \
-              --json headRefName,mergedAt \
-              --jq '.[] | select(.headRefName | startswith("bot/update-image-digests-")) | .mergedAt')
+              --json headRefName,mergedAt,mergeCommit \
+              --jq '.[] | select(.headRefName | startswith("bot/update-image-digests-")) | [.mergedAt, (.mergeCommit.oid // "")] | @tsv')
           fi
           if [ "$dispatch_post_merge" = true ]; then
             gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref main || true

@@ -58,12 +58,32 @@ assert_pin_pr_merged() {
   fi
 }
 
+pin_pr_merge_sha() {
+  retry gh pr view "$PR_URL" --repo "$GITHUB_REPOSITORY" \
+    --json mergeCommit --jq '.mergeCommit.oid' || true
+}
+
+push_runs_cover() {
+  # A human-initiated merge fires the push triggers on main for the merge
+  # commit; the dispatch exists only for the GITHUB_TOKEN merge gap.
+  local workflow=$1 merge_sha=$2 count
+  [ -n "$merge_sha" ] || return 1
+  count=$(retry gh run list --repo "$GITHUB_REPOSITORY" --workflow "$workflow" \
+    --commit "$merge_sha" --event push --json databaseId --jq 'length' || true)
+  [ "${count:-0}" -gt 0 ]
+}
+
 dispatch_main_workflows() {
-  local workflow
+  local workflow merge_sha
   local -a workflows=()
   read -r -a workflows <<< "$POST_MERGE_WORKFLOWS"
+  merge_sha=$(pin_pr_merge_sha)
   for workflow in "${workflows[@]}"; do
     assert_pin_pr_merged
+    if push_runs_cover "$workflow" "$merge_sha"; then
+      write_summary "${workflow} already has a push run for ${merge_sha}; skipping dispatch."
+      continue
+    fi
     local -a command=(gh workflow run "$workflow" --repo "$GITHUB_REPOSITORY" --ref main)
     if [ "$workflow" = ci.yml ] && [ -n "$BASE_SHA" ]; then
       command+=(-f "base_sha=$BASE_SHA")

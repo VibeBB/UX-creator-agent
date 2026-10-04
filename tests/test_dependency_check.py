@@ -11,10 +11,13 @@ from scripts.check_dependency_updates import (
     ROOT,
     SUBPROCESS_TIMEOUT_SECONDS,
     DependencyStatus,
+    _aquasecurity_version_inputs,  # pyright: ignore[reportPrivateUsage]
     _github_latest_tag,  # pyright: ignore[reportPrivateUsage]
     check_docker_args,
     check_docker_base,
+    check_github_actions,
     check_lynis_pin,
+    check_workflow_tool_pins,
     main,
 )
 
@@ -111,6 +114,91 @@ def test_lynis_pin_reports_fetch_failed_on_timeout():
     assert status.note == "fetch failed"
     assert status.outdated is False
     assert status.fetch_failed is True
+
+
+def test_github_actions_strips_subpath_action_refs(tmp_path: Path):
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    sha = "a" * 40
+    (workflows / "lint.yml").write_text(
+        f"- uses: github/codeql-action/upload-sarif@{sha} # v4.38.2\n",
+        encoding="utf-8",
+    )
+    urls: list[str] = []
+
+    def tags(url: str) -> list[str]:
+        urls.append(url)
+        return ["v4.39.0"]
+
+    statuses = check_github_actions(tmp_path, list_remote_tags=tags)
+    assert urls == ["https://github.com/github/codeql-action"]
+    status = next(status for status in statuses if status.name == "github/codeql-action")
+    assert status.current == "v4.38.2"
+    assert status.latest == "v4.39.0"
+    assert status.outdated is True
+
+
+def test_aquasecurity_version_inputs_stays_inside_the_step():
+    sha = "0" * 40
+    text = (
+        f"      - uses: aquasecurity/trivy-action@{sha} # v0.36.0\n"
+        "        with:\n"
+        "          scan-type: image\n"
+        "          version: v0.75.0\n"
+        "      - name: other\n"
+        "        run: echo hi\n"
+        "      - uses: actions/checkout@0123456789abcdef0123456789abcdef01234567 # v7.0.1\n"
+        "        with:\n"
+        "          version: v9.9.9\n"
+    )
+    assert _aquasecurity_version_inputs(text) == ["v0.75.0"]
+
+
+def test_workflow_tool_pins_reads_direct_download_and_trivy_inputs():
+    def fetch_json(url: str):
+        assert "zizmor" in url
+        return {"info": {"version": "1.31.0"}}
+
+    def tags(url: str) -> list[str]:
+        return {"rhysd/actionlint": ["v1.7.12"], "aquasecurity/trivy": ["v0.75.0"]}[
+            url.removeprefix("https://github.com/")
+        ]
+
+    statuses = {
+        status.name: status
+        for status in check_workflow_tool_pins(ROOT, fetch_json=fetch_json, list_remote_tags=tags)
+    }
+    wheel = statuses["zizmor (wheel)"]
+    assert wheel.surface == "workflow-pin"
+    assert wheel.current == "1.30.1"
+    assert wheel.latest == "1.31.0"
+    assert wheel.outdated is True
+    assert wheel.source == "workflow-lint.yml"
+    tarball = statuses["actionlint (tarball)"]
+    assert tarball.current == "1.7.12"
+    assert tarball.latest == "v1.7.12"
+    assert tarball.outdated is False
+    trivy = statuses["trivy (action input)"]
+    assert trivy.current == "v0.75.0"
+    assert trivy.latest == "v0.75.0"
+    assert trivy.outdated is False
+
+
+def test_workflow_tool_pins_reports_fetch_failed():
+    def fetch_json(url: str):
+        raise OSError("network down")
+
+    def timed_out(url: str) -> list[str]:
+        raise subprocess.TimeoutExpired(["git", "ls-remote", "--tags", url], 1)
+
+    statuses = check_workflow_tool_pins(ROOT, fetch_json=fetch_json, list_remote_tags=timed_out)
+    assert {status.name for status in statuses} == {
+        "zizmor (wheel)",
+        "actionlint (tarball)",
+        "trivy (action input)",
+    }
+    assert all(status.fetch_failed for status in statuses)
+    assert all(status.latest == "?" for status in statuses)
 
 
 def test_subprocess_timeout_is_bounded():
