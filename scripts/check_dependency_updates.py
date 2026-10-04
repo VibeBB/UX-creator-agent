@@ -445,9 +445,7 @@ def check_docker_args(
             continue
         try:
             payload = _dict(
-                _default_fetch_json(
-                    f"https://rubygems.org/api/v1/versions/{gem}/latest.json"
-                ),
+                _default_fetch_json(f"https://rubygems.org/api/v1/versions/{gem}/latest.json"),
                 f"rubygems.org response is invalid for {gem}",
             )
             version = payload.get("version")
