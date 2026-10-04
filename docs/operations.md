@@ -83,7 +83,19 @@ GitHub release. CHANGELOG `[Unreleased]` is folded into the versioned
 section by `scripts/bump_version.py`. Dispatching with `dry_run: true`
 exercises the same version computation, CI verification, install smoke,
 and artifact build while skipping the push/merge and `gh release create`
-— the way to rehearse the pipeline without cutting a release.
+— the way to rehearse the pipeline without cutting a release. The
+bump-version state machine — version resolution, tag check, direct push,
+and the self-approving + dispatched-checks + auto-merge fallback PR —
+lives in `scripts/release_bump.sh` (the workflow step is a thin wrapper)
+and is covered by `tests/test_release_bump.py` (stubbed `gh`, local git
+remotes).
+
+`publish-ux-images.yml` accepts a `dry_run` dispatch input that rehearses
+the publish: the ux-tools image builds into the local daemon and the
+Trivy gate, SBOM chain, measurements, and smoke checks still run against
+it, but nothing is pushed, promoted (`:latest`), attested, locked, or
+dispatched, and no SARIF reaches code scanning. The run summary lists
+every skipped step.
 
 ## CI hygiene
 
