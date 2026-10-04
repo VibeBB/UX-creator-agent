@@ -1,11 +1,11 @@
 {
-  "attestation": "https://github.com/VibeBB/UX-creator-agent/attestations/52496960",
-  "digest": "sha256:c444da27514056d085522c43eb86a54e0d0fea22ad1ebeda42900ce5b073556d",
+  "attestation": "https://github.com/VibeBB/UX-creator-agent/attestations/52501334",
+  "digest": "sha256:efe018280b1ef4047907923b78add52350e67ab88c4f965a36d0996e41d66095",
   "dockerfile": "docker/ux-tools.Dockerfile",
   "image": "ghcr.io/vibebb/ux-tools",
-  "published_at": "2026-10-04T00:27:01Z",
-  "sbom_attestation": "https://github.com/VibeBB/UX-creator-agent/attestations/52497093",
-  "tag": "9a9afbb5a44b6c35b69975e570ad881dbabfc36d-tools",
+  "published_at": "2026-10-04T01:12:35Z",
+  "sbom_attestation": "https://github.com/VibeBB/UX-creator-agent/attestations/52501458",
+  "tag": "74c55e6c92206e7c10ab8d29f2d6961e4feba903-tools",
   "tools": {
     "git": "2.47.3",
     "pydantic": "2.13.5",
@@ -13,5 +13,5 @@
     "uv": "0.12.22 (x86_64-unknown-linux-musl)",
     "ux_creator": "0.1.0"
   },
-  "workflow_run": "https://github.com/VibeBB/UX-creator-agent/actions/runs/37164383934"
+  "workflow_run": "https://github.com/VibeBB/UX-creator-agent/actions/runs/37165544251"
 }
