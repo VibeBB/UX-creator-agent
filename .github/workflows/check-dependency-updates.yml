@@ -30,7 +30,7 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           cache-suffix: dependency-updates
           # Read-only weekly check: restore via shared restore-keys but
           # never write a ~156MB archive when uv.lock is unchanged.

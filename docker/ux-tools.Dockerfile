@@ -1,12 +1,12 @@
-ARG UV_VERSION=0.12.22
-ARG UV_DIGEST=sha256:f513a91fc62fe7c17567eee97230dd198e43edb8a9fbecca843714a4358fe1bc
+ARG UV_VERSION=0.12.23
+ARG UV_DIGEST=sha256:61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21
 FROM ghcr.io/astral-sh/uv:${UV_VERSION}@${UV_DIGEST} AS uv
 
 # ruby:4.0.7-slim-trixie — Debian 13 with Ruby 4.0.7 (YJIT+ZJIT).
 FROM ruby:4.0.7-slim-trixie@sha256:d10bdb076bb10d2261773ea20eadf4cdbde3346fc8f8db409856608b2d01b9c9
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG UV_VERSION=0.12.22
+ARG UV_VERSION=0.12.23
 ARG IMAGE_REVISION=unknown
 ARG SEMERU_JRE_VERSION=27.0.0.0
 ARG SEMERU_JRE_SHA256=9e6d9c1131da124bd08eb4183f7787a9f90111fc3d62c1231976c2d37372d59e
@@ -154,13 +154,13 @@ RUN rm -f /usr/local/lib/ruby/gems/*/specifications/default/json-*.gemspec \
 # msgpack, and setuptools that nothing in the image invokes — dependencies
 # install via uv and the shipped venv is pip-less — so strip the payload
 # instead of shipping unused vulnerable vendored packages.
-RUN uv python install 3.12 \
+RUN uv python install 3.14 \
     && rm -rf /opt/uv-python/bin/pip* \
               /opt/uv-python/cpython-*/bin/pip* \
-              /opt/uv-python/cpython-*/lib/python3.12/site-packages/pip \
-              /opt/uv-python/cpython-*/lib/python3.12/site-packages/pip-*.dist-info \
-              /opt/uv-python/cpython-*/lib/python3.12/ensurepip \
-    && uv venv --python 3.12 /opt/ux/.venv
+              /opt/uv-python/cpython-*/lib/python3.14/site-packages/pip \
+              /opt/uv-python/cpython-*/lib/python3.14/site-packages/pip-*.dist-info \
+              /opt/uv-python/cpython-*/lib/python3.14/ensurepip \
+    && uv venv --python 3.14 /opt/ux/.venv
 
 COPY pyproject.toml uv.lock /opt/ux/
 COPY src /opt/ux/src
