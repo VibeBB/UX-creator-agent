@@ -15,8 +15,8 @@ the adoption decision for each. Update it in the same change that touches
 
 | Package | Pin | Source | Decision |
 | --- | --- | --- | --- |
-| openhands-sdk | `==1.51.0` | PyPI | Exact pin — plugin API contract; same pin as the sibling plugins so a merged conversation sees one SDK. |
-| openhands-tools | `==1.51.0` | PyPI | Exact pin — matches SDK. |
+| openhands-sdk | `==1.52.0` | PyPI | Exact pin — plugin API contract; same pin as the sibling plugins so a merged conversation sees one SDK. |
+| openhands-tools | `==1.52.0` | PyPI | Exact pin — matches SDK. |
 
 The `sdk-check` group is installed by default (`tool.uv default-groups`) so
 pyright strict can type `check_plugin_load.py`; the Docker image excludes it
@@ -139,7 +139,7 @@ only while `review_by` has not passed and still matches the reported
 
 | Surface | Name | Latest | Re-check | Reason |
 | --- | --- | --- | --- | --- |
-| pypi | mcp | 2.3.0 | 2027-04-01 | `openhands-sdk` 1.51.0 requires `fastmcp>=3.2.0,<4`, which caps `mcp<2`. |
+| pypi | mcp | 2.3.0 | 2027-04-01 | `openhands-sdk` 1.52.0 requires `fastmcp>=3.2.0,<4`, which caps `mcp<2`. |
 | docker-arg | MERMAID_CLI_VERSION | 12.0.0 | 2027-04-01 | mermaid-cli 12.x requires Node >=22.13; the image runs Debian nodejs 20.19.x. |
 
 ## Not covered
@@ -154,6 +154,13 @@ only while `review_by` has not passed and still matches the reported
   upstream tag comparison exists for it).
 - Debian/apt, gem, and npm packages inside the image beyond the tracked
   ARGs (apt tracks the Debian archive).
+
+## Decisions — 2026-10-05 round (SDK 1.52.0)
+
+| Component | From -> To | Decision |
+| --- | --- | --- |
+| `openhands-sdk` / `openhands-tools` (sdk-check group) | 1.51.0 -> 1.52.0 | Adopted. All 19 upstream commits reviewed; see [SDK v1.52.0 feature evaluation](research/sdk-v1.52.0-feature-evaluation.md). |
+| mcp | stays <2 | Deferred: `openhands-sdk` 1.52.0 still requires `fastmcp<4` -> `mcp<2`; reason refreshed to cite 1.52.0, `review_by` unchanged. |
 
 ## Decisions — 2026-10-04 round (GitHub Actions latest-state wave)
 
