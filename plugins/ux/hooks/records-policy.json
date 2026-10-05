@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "plugin": "ux",
+  "records_dir": "observations/ux",
+  "artifact_globs": [
+    "**/*.ux.json",
+    "**/*.ux.rb",
+    "**/*.ux-proposals.json",
+    "**/*.triage.json",
+    "**/*.ux-request.json",
+    "**/*.production.json",
+    "**/*.production-status.json",
+    "**/ux-report.json",
+    "**/*.journey.mmd",
+    "**/*.statechart.mmd",
+    "**/*.blueprint.puml",
+    "**/*.emotion.json",
+    "**/*.wireframe.puml"
+  ],
+  "ignore_globs": [
+    "examples/**",
+    "tests/**",
+    "observations/**",
+    ".devin/**",
+    "node_modules/**",
+    ".venv/**"
+  ],
+  "max_stop_denials": 2,
+  "record_hint": "Use ux_record_decision, ux_record_impression, ux_record_vision_review or `python -m ux_creator record decision|impression|vision-review --json <file>`. Impressions need at least 400 characters and 3 sentences: what you noticed, what works, what worries you, how a maker or user would read it, and what to do next."
+}

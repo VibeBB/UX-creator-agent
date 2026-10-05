@@ -60,3 +60,31 @@ def test_path_escape_is_a_transport_error(monkeypatch: pytest.MonkeyPatch, tmp_p
     payload = _payload(result)
     assert payload["error_type"] == "ValueError"
     assert "outside the workspace" in payload["detail"]
+
+
+def test_record_tools_are_declared_append_only_and_read_only() -> None:
+    tools = {tool.name: tool for tool in mcp_server.tool_specs()}
+    append_tools = {
+        "ux_record_decision",
+        "ux_record_impression",
+        "ux_record_vision_review",
+    }
+    assert append_tools | {"ux_records_status"} <= tools.keys()
+    for name in append_tools:
+        annotations = tools[name].annotations
+        assert annotations is not None
+        assert annotations.readOnlyHint is False
+        assert annotations.destructiveHint is False
+        assert annotations.idempotentHint is False
+    status_annotations = tools["ux_records_status"].annotations
+    assert status_annotations is not None
+    assert status_annotations.readOnlyHint is True
+
+
+def test_records_status_mcp_tool_uses_current_workspace(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    payload = asyncio.run(mcp_server.dispatch_tool("ux_records_status", {}))
+    assert isinstance(payload, dict)
+    assert payload["records_dir"] == str(tmp_path / "observations" / "ux")

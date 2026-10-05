@@ -35,6 +35,15 @@ from .imports import import_source
 from .production import load_plan, plan_sha256, run_production_gates, write_production
 from .projections import write_projections, write_provenance
 from .proposals import ProposalSet, triage, write_triage
+from .records import (
+    DecisionInput,
+    StageImpressionInput,
+    VisionReviewInput,
+    record_decision,
+    record_impression,
+    record_vision_review,
+    records_summary,
+)
 from .render import RenderResult, render_all
 from .report import write_report
 from .requests import build_request, write_request
@@ -45,6 +54,14 @@ from .workspace import workspace_path
 server: Server = Server(f"ux-mcp/{__version__}")
 
 _SCHEMAS: dict[str, dict[str, Any]] = {
+    "ux_record_decision": DecisionInput.model_json_schema(),
+    "ux_record_impression": StageImpressionInput.model_json_schema(),
+    "ux_record_vision_review": VisionReviewInput.model_json_schema(),
+    "ux_records_status": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": False,
+    },
     "ux_doctor": {"type": "object", "properties": {}, "additionalProperties": False},
     "ux_validate_contract": {
         "type": "object",
@@ -164,6 +181,14 @@ _WRITE_TOOLS = {
     "ux_propose",
     "ux_from_ruby",
     "ux_produce",
+    "ux_record_decision",
+    "ux_record_impression",
+    "ux_record_vision_review",
+}
+_APPEND_RECORD_TOOLS = {
+    "ux_record_decision",
+    "ux_record_impression",
+    "ux_record_vision_review",
 }
 
 _IMAGE_MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
@@ -260,7 +285,7 @@ def tool_specs() -> list[types.Tool]:
                     title=name,
                     readOnlyHint=name not in _WRITE_TOOLS,
                     destructiveHint=False,
-                    idempotentHint=True,
+                    idempotentHint=name not in _APPEND_RECORD_TOOLS,
                     openWorldHint=False,
                 ),
             )
@@ -276,6 +301,14 @@ async def list_tools() -> list[types.Tool]:
 async def dispatch_tool(
     name: str, arguments: dict[str, Any]
 ) -> dict[str, Any] | list[types.ContentBlock]:
+    if name == "ux_record_decision":
+        return record_decision(arguments)
+    if name == "ux_record_impression":
+        return record_impression(arguments)
+    if name == "ux_record_vision_review":
+        return record_vision_review(arguments)
+    if name == "ux_records_status":
+        return records_summary()
     if name == "ux_doctor":
         return run_doctor()
     if name == "ux_validate_contract":

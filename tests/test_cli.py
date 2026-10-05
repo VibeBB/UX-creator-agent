@@ -29,6 +29,17 @@ def test_gates_pass() -> None:
     assert json.loads(proc.stdout)["verdict"] == "pass"
 
 
+def test_record_status_reports_empty_workspace(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    proc = _run("record", "status")
+    assert proc.returncode == 0, proc.stderr + proc.stdout
+    payload = json.loads(proc.stdout)
+    assert payload["records_dir"] == str(tmp_path / "observations" / "ux")
+    assert payload["counts"] == {"decision": 0, "stage_impression": 0, "vision_review": 0}
+
+
 def test_author_writes_projections(tmp_path: Path) -> None:
     out = tmp_path / "out"
     proc = _run("author", CONTRACT, "--out", str(out))

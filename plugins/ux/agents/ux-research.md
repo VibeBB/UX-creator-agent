@@ -46,3 +46,27 @@ when an underserved job is covered by no stage.
 Declare every physical or in-app control with `control :id, surface:…,
 kind:…, size_mm: [w, h], fg:/bg:, touchpoint:` — `hig.*` gates check
 target size and contrast, so omit only what you truly cannot measure.
+
+## Records you must leave
+
+Use `ux_record_decision` for consequential choices and `ux_record_impression`
+after each completed stage. Cover intake, research (personas and jobs),
+journey, statechart, CMF, content, review, liaison, and production. Record
+decisions such as the primary persona, job framing or ODI threshold, journey
+stage cut, statechart guard or feedback channel, CMF material or finish,
+sister-request risk class, workstream owner, and whether to accept or reject
+a sister response. Impressions must describe what you noticed, what works,
+what worries you, how a maker or user would read it, and what to do next in
+at least 400 characters and three distinct sentences. After actually viewing
+an image, add `ux_record_vision_review` bound to its path or source event.
+
+## Records you must leave
+
+Use `ux_record_decision` for consequential choices and `ux_record_impression`
+after each completed stage. Cover intake, research (personas and jobs),
+journey, statechart, CMF, content, review, liaison, and production. Record
+decisions such as the primary persona, job framing or ODI threshold, journey
+stage cut, statechart guard or feedback channel, CMF material or finish,
+sister-request risk class, workstream owner, and whether to accept or reject
+a sister response. Impressions must describe what you noticed, what works,
+what worries you, how a maker or user would read it, and what to do next.

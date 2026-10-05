@@ -61,6 +61,31 @@ def test_protect_blocks_producer_cmf_content_projections() -> None:
         assert _run_hook(PROTECT_SCRIPT, payload).returncode == 2, path
 
 
+def test_protect_blocks_direct_vrp_log_writes() -> None:
+    for name in (
+        "decisions.jsonl",
+        "impressions.jsonl",
+        "vision-reviews.jsonl",
+        "vision-tool-events.jsonl",
+        "image-observations.jsonl",
+        "records-status.json",
+    ):
+        payload = {
+            "tool_name": "file_editor",
+            "tool_input": {
+                "command": "create",
+                "path": f"observations/ux/{name}",
+            },
+        }
+        assert _run_hook(PROTECT_SCRIPT, payload).returncode == 2, name
+
+    terminal = {
+        "tool_name": "terminal",
+        "tool_input": {"command": "printf x > observations/ux/decisions.jsonl"},
+    }
+    assert _run_hook(PROTECT_SCRIPT, terminal).returncode == 2
+
+
 def test_protect_allows_production_plan_edit() -> None:
     payload = {
         "tool_name": "file_editor",

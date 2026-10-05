@@ -43,6 +43,14 @@ ARTIFACT_NAMES = (
     "ux-report.json",
     "ux-report.md",
 )
+RECORD_LOGS = {
+    "decisions.jsonl",
+    "impressions.jsonl",
+    "vision-reviews.jsonl",
+    "vision-tool-events.jsonl",
+    "image-observations.jsonl",
+    "records-status.json",
+}
 WRITE_TOOLS = {"file_editor", "apply_patch"}
 VIEW_ACTIONS = {"view", "read", "undo_edit"}
 WRITE_ACTIONS = {"create", "str_replace", "insert", "edit", "write"}
@@ -94,6 +102,8 @@ def _path_values(tool_input: dict[str, Any]) -> list[str]:
 def _is_protected(value: str) -> bool:
     normalized = value.replace("\\", "/").lower()
     base = normalized.rsplit("/", 1)[-1]
+    if base in RECORD_LOGS and "/observations/ux/" in f"/{normalized.strip('/')}/":
+        return True
     if base in ARTIFACT_NAMES:
         return True
     # Projected artifacts live under an export directory; contract/intake

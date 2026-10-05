@@ -2,7 +2,7 @@
 
 Subcommands: doctor, gates, author, render, import, from-ruby, mruby-check,
 request, propose, review-record, review-reconcile, liaison, produce,
-intake-record, intake-reconcile.
+intake-record, intake-reconcile, record.
 
 Every subcommand prints a JSON verdict object and exits 0 only on
 "pass"/"ok"; fail-closed throughout.
@@ -35,6 +35,7 @@ from .imports import import_source
 from .production import load_plan, plan_sha256, run_production_gates, write_production
 from .projections import write_projections, write_provenance
 from .proposals import ProposalSet, triage, write_triage
+from .records import RECORDERS, records_summary
 from .render import render_all
 from .report import write_report
 from .requests import build_request, write_request
@@ -243,6 +244,21 @@ def _cmd_liaison(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_record(args: argparse.Namespace) -> int:
+    if args.kind == "status":
+        _print(records_summary())
+        return 0
+    try:
+        payload: Any = json.loads(Path(args.json).read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("record JSON must be an object")
+        result = RECORDERS[args.kind](cast(dict[str, Any], payload))
+    except (OSError, ValueError, ValidationError) as exc:
+        return _fail("record", exc)
+    _print(result)
+    return 0 if result.get("verdict") == PASS else 1
+
+
 def _cmd_produce(args: argparse.Namespace) -> int:
     """Product-level plan: production gates → status projections."""
     try:
@@ -401,7 +417,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out-dir", required=True)
     p.set_defaults(func=_cmd_intake_reconcile)
 
+    p = sub.add_parser("record", help="append a VibeBB Record Protocol record")
+    p.add_argument("kind", choices=["decision", "impression", "vision-review", "status"])
+    p.add_argument("--json", default=None, help="JSON object file with the record fields")
+
     args = parser.parse_args(argv)
+    if args.command == "record" and args.kind != "status" and not args.json:
+        parser.error("record decision|impression|vision-review requires --json")
     try:
         if args.command == "doctor" and getattr(args, "warn", False):
             report = run_doctor()
