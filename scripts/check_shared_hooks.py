@@ -80,7 +80,9 @@ def _digest(path: Path, plugin_name: str) -> str:
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     hook_paths = (root / "plugins").glob("*/hooks/scripts")
-    hook_dirs = sorted(path for path in hook_paths if path.is_dir())
+    hook_dirs = sorted(
+        path for path in hook_paths if path.is_dir() and any(path.glob("*.py"))
+    )
     if len(hook_dirs) != 1:
         print("expected one plugins/<name>/hooks/scripts directory", file=sys.stderr)
         return 1
