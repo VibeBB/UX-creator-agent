@@ -4,6 +4,7 @@ import asyncio
 import base64
 import hashlib
 import json
+import shutil
 from pathlib import Path
 from typing import Any, cast
 
@@ -105,4 +106,105 @@ def test_author_render_returns_text_and_inline_png(
         }
     ]
     assert len(images) == 1
+    assert base64.b64decode(images[0].data) == image_bytes
+
+
+def test_produce_render_attaches_production_plan_image(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    source = Path(__file__).resolve().parents[1] / "examples" / "smart-kettle-product"
+    workspace = tmp_path / "product"
+    shutil.copytree(source, workspace)
+    plan_path = workspace / "smart-kettle.production.json"
+    out_dir = tmp_path / "production-out"
+    image_bytes = b"production-plan-png"
+
+    def fake_render_all(out: Path, **_kwargs: Any) -> list[RenderResult]:
+        assert _kwargs == {"fmts": ("svg", "png")}
+        image = out / "smart-kettle.production.png"
+        image.write_bytes(image_bytes)
+        return [RenderResult(out / "smart-kettle.production.mmd", image, "ok", "")]
+
+    monkeypatch.setattr(mcp_server, "render_all", fake_render_all)
+
+    result = asyncio.run(
+        _call_tool(
+            "ux_produce",
+            {
+                "plan_path": str(plan_path),
+                "out_dir": str(out_dir),
+                "workspace": str(workspace),
+                "liaison_dir": str(workspace / "requests"),
+                "render": True,
+            },
+        )
+    )
+
+    payload, content = _content_payload(result)
+    images = [block for block in content if isinstance(block, types.ImageContent)]
+    assert payload["verdict"] == "pass"
+    assert payload["renders"][0]["status"] == "ok"
+    assert payload["inline_images"][0]["attached"] is True
+    assert len(images) == 1
+    assert base64.b64decode(images[0].data) == image_bytes
+
+
+def test_liaison_status_attaches_answered_image_artifacts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    liaison = tmp_path / "liaison"
+    liaison.mkdir()
+    image = tmp_path / "deliverables" / "assembly.JPG"
+    image.parent.mkdir()
+    image_bytes = b"sister-image"
+    image.write_bytes(image_bytes)
+    (liaison / "request-1.ux-request.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "system": "ux-creator",
+                "target_agent": "mech",
+                "risk": "low",
+                "rationale": "",
+                "requested_changes": ["review enclosure access"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (liaison / "request-1.ux-response.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "system": "ux-creator",
+                "request": "request-1",
+                "responder": "mech",
+                "status": "accepted",
+                "reason": "enclosure update is ready",
+                "artifacts": ["deliverables/assembly.JPG"],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = asyncio.run(
+        _call_tool(
+            "ux_liaison_status",
+            {"out_dir": str(liaison), "attach_images": True},
+        )
+    )
+
+    payload, content = _content_payload(result)
+    images = [block for block in content if isinstance(block, types.ImageContent)]
+    assert payload["entries"][0]["state"] == "answered"
+    assert payload["inline_images"] == [
+        {
+            "path": str(image),
+            "sha256": hashlib.sha256(image_bytes).hexdigest(),
+            "attached": True,
+        }
+    ]
+    assert len(images) == 1
+    assert images[0].mimeType == "image/jpeg"
     assert base64.b64decode(images[0].data) == image_bytes

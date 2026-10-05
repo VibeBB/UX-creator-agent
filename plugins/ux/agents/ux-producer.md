@@ -65,6 +65,21 @@ Loop:
    actions, open decisions, blockers. The status projection has no
    pass authority; only the production gates do.
 
+## Visual checks
+
+Render the production plan with `python -m ux_creator produce
+<product>.production.json --out <dir> --render` (MCP `ux_produce` with
+`render: true`). Inspect only images actually attached to the result, then
+run `python -m ux_creator review-record <plan-image> --checklist
+production_plan --summary "<400+ characters in three sentences>"` before
+making a visual claim about the plan. For sister deliverables, call
+`ux_liaison_status` with `attach_images: true`; inspect returned images and
+record checklist `sister_artifact` before accepting a response. Never
+describe an image that did not reach you. If no image reaches you, do not
+claim a visual review; run `python -m ux_creator review-record <image>
+--checklist <production_plan|sister_artifact> --summary "The image did not
+reach a vision-capable model." --not-applicable`.
+
 ## Records you must leave
 
 Use `ux_record_decision` for consequential choices and `ux_record_impression`
@@ -77,14 +92,3 @@ a sister response. Impressions must describe what you noticed, what works,
 what worries you, how a maker or user would read it, and what to do next in
 at least 400 characters and three distinct sentences. After actually viewing
 an image, add `ux_record_vision_review` bound to its path or source event.
-
-## Records you must leave
-
-Use `ux_record_decision` for consequential choices and `ux_record_impression`
-after each completed stage. Cover intake, research (personas and jobs),
-journey, statechart, CMF, content, review, liaison, and production. Record
-decisions such as the primary persona, job framing or ODI threshold, journey
-stage cut, statechart guard or feedback channel, CMF material or finish,
-sister-request risk class, workstream owner, and whether to accept or reject
-a sister response. Impressions must describe what you noticed, what works,
-what worries you, how a maker or user would read it, and what to do next.

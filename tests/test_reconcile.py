@@ -8,6 +8,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pytest
+
+from ux_creator import cli
 from ux_creator.advisory import (
     VisualFinding,
     load_visual_reviews,
@@ -203,6 +206,114 @@ def test_verdict_independent_of_advisory(contract_dict: dict[str, Any], tmp_path
     with_advisory = build_report(contract, report, out_dir=tmp_path)
     assert base["verdict"] == with_advisory["verdict"]
     assert with_advisory["lenses"]["review"]["reconciliation"]["contradicted"] == 1
+
+
+def test_cli_review_record_appends_vrp_before_advisory(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    image = tmp_path / "production.png"
+    image.write_bytes(b"image")
+    summary = (
+        "The production plan keeps workstream ownership visible while its dependency edges, "
+        "stage grouping, and artifact labels make the intended handoffs easy to follow even "
+        "when a maker scans the diagram between tasks. The layout separates decisions that "
+        "remain open from work that is ready to advance, and it shows where measured evidence "
+        "must feed a later design or revision instead of being forgotten after evaluation. "
+        "A product team can use this view to coordinate the next build, identify questions "
+        "that need an owner, and communicate across disciplines without treating the diagram "
+        "as a deterministic gate verdict."
+    )
+
+    result = cli.main(
+        [
+            "review-record",
+            str(image),
+            "--checklist",
+            "production_plan",
+            "--summary",
+            summary,
+            "--finding",
+            "missing_touchpoint:minor:power_button:button is absent from the entry flow",
+            "--finding",
+            "design_intent:major::the ownership cue is not visible",
+        ]
+    )
+
+    assert result == 0
+    output = json.loads(capsys.readouterr().out)
+    assert output["verdict"] == "pass"
+    vision = json.loads(
+        (tmp_path / "observations" / "ux" / "vision-reviews.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()[0]
+    )
+    advisory = json.loads(Path(output["record"]).read_text(encoding="utf-8"))
+    assert vision["checklist"] == "production-plan"
+    assert vision["findings"] == [
+        {
+            "category": "missing_touchpoint",
+            "severity": "warning",
+            "note": "button is absent from the entry flow @ power_button",
+        },
+        {
+            "category": "design_intent",
+            "severity": "error",
+            "note": "the ownership cue is not visible",
+        },
+    ]
+    assert advisory["detail"]["findings"][0]["severity"] == "minor"
+
+
+def test_cli_review_record_rejects_short_impression_before_advisory(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    image = tmp_path / "plan.png"
+    image.write_bytes(b"image")
+
+    result = cli.main(
+        [
+            "review-record",
+            str(image),
+            "--checklist",
+            "production_plan",
+            "--summary",
+            "Too short.",
+        ]
+    )
+
+    assert result == 1
+    assert "at least 400" in capsys.readouterr().out
+    assert not (tmp_path / "observations" / "ux" / "vision-reviews.jsonl").exists()
+    assert not (tmp_path / "review-visual-plan.advisory.json").exists()
+
+
+def test_cli_review_record_not_applicable_does_not_claim_vision_review(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    image = tmp_path / "unavailable.png"
+    image.write_bytes(b"image")
+
+    result = cli.main(
+        [
+            "review-record",
+            str(image),
+            "--checklist",
+            "sister_artifact",
+            "--summary",
+            "The image did not reach a vision-capable model.",
+            "--not-applicable",
+        ]
+    )
+
+    assert result == 0
+    output = json.loads(capsys.readouterr().out)
+    advisory = json.loads(Path(output["record"]).read_text(encoding="utf-8"))
+    assert advisory["status"] == "not_applicable"
+    assert advisory["detail"]["checklist"] == "sister_artifact"
+    assert not (tmp_path / "observations" / "ux" / "vision-reviews.jsonl").exists()
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:

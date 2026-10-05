@@ -23,7 +23,16 @@ VISION_REVIEW_TOOL = "vision_review"
 IMPRESSION_MIN_LENGTH = 240
 _SENTENCE_MARKS = "。.!?"
 
-VisualChecklist = Literal["journey_map", "statechart", "wireframe", "intake_image"]
+VisualChecklist = Literal[
+    "journey_map",
+    "statechart",
+    "wireframe",
+    "intake_image",
+    "service_blueprint",
+    "emotion_curve",
+    "production_plan",
+    "sister_artifact",
+]
 VisualFindingCategory = Literal[
     "missing_touchpoint",
     "broken_flow",
@@ -98,7 +107,7 @@ def write_visual_review(
     model: str = "",
 ) -> Path:
     """Compute the image sha256 and write the sibling advisory record."""
-    slug = re.sub(r"[^a-z0-9]+", "-", image.stem.lower()).strip("-") or "image"
+    path = _visual_review_path(image)
     detail = VisualReviewDetail(
         checklist=checklist,
         image_path=str(image),
@@ -107,12 +116,33 @@ def write_visual_review(
         findings=findings,
     )
     record = AdvisoryResult(status="ok", summary=summary, artifacts=[str(image)], detail=detail)
-    path = image.parent / f"review-visual-{slug}.advisory.json"
+    path.write_text(
+        json.dumps(record.model_dump(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return path
+
+
+def write_visual_review_not_applicable(image: Path, checklist: VisualChecklist, summary: str) -> Path:
+    """Record that no vision-capable review could be performed on an image."""
+    if not image.is_file():
+        raise FileNotFoundError(f"image artifact does not exist: {image}")
+    path = _visual_review_path(image)
+    record = AdvisoryResult(
+        status="not_applicable",
+        summary=summary,
+        artifacts=[str(image)],
+        detail={"checklist": checklist},
+    )
 
     path.write_text(
         json.dumps(record.model_dump(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     return path
+
+
+def _visual_review_path(image: Path) -> Path:
+    slug = re.sub(r"[^a-z0-9]+", "-", image.stem.lower()).strip("-") or "image"
+    return image.parent / f"review-visual-{slug}.advisory.json"
 
 
 Reconciliation = Literal["corroborated", "contradicted", "unverifiable"]

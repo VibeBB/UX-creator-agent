@@ -47,6 +47,17 @@ rejected/deferred high-risk answers — a rejected high-risk request is a
 design signal: re-open the proposal with a new rationale or reframe the
 job; never bypass the sister.
 
+## Image handoff
+
+For an answered response with image artifacts, use `ux_liaison_status` with
+`attach_images: true` so the producer can inspect the actual images before
+acceptance. Do not describe an image that was not attached to the model.
+If no image reaches the model, do not claim a visual review; use
+`python -m ux_creator review-record <image> --checklist sister_artifact
+--summary "The image did not reach a vision-capable model."
+--not-applicable`. Otherwise the producer writes a `sister_artifact`
+`review-record` before accepting the deliverable.
+
 ## Records you must leave
 
 Use `ux_record_decision` for consequential choices and `ux_record_impression`
@@ -59,14 +70,3 @@ a sister response. Impressions must describe what you noticed, what works,
 what worries you, how a maker or user would read it, and what to do next in
 at least 400 characters and three distinct sentences. After actually viewing
 an image, add `ux_record_vision_review` bound to its path or source event.
-
-## Records you must leave
-
-Use `ux_record_decision` for consequential choices and `ux_record_impression`
-after each completed stage. Cover intake, research (personas and jobs),
-journey, statechart, CMF, content, review, liaison, and production. Record
-decisions such as the primary persona, job framing or ODI threshold, journey
-stage cut, statechart guard or feedback channel, CMF material or finish,
-sister-request risk class, workstream owner, and whether to accept or reject
-a sister response. Impressions must describe what you noticed, what works,
-what worries you, how a maker or user would read it, and what to do next.

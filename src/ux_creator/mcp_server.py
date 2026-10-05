@@ -47,7 +47,7 @@ from .records import (
 from .render import RenderResult, render_all
 from .report import write_report
 from .requests import build_request, write_request
-from .responses import liaison_status
+from .responses import LiaisonStatus, liaison_status
 from .ruby_bridge import contract_from_ruby, mruby_check
 from .workspace import workspace_path
 
@@ -147,13 +147,17 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
             "out_dir": {"type": "string"},
             "workspace": {"type": "string"},
             "liaison_dir": {"type": "string"},
+            "render": {"type": "boolean"},
         },
         "required": ["plan_path", "out_dir"],
         "additionalProperties": False,
     },
     "ux_liaison_status": {
         "type": "object",
-        "properties": {"out_dir": {"type": "string"}},
+        "properties": {
+            "out_dir": {"type": "string"},
+            "attach_images": {"type": "boolean"},
+        },
         "required": ["out_dir"],
         "additionalProperties": False,
     },
@@ -271,6 +275,32 @@ def _render_content(
         ),
         *images,
     ]
+
+
+def _liaison_image_renders(status: LiaisonStatus, workspace: Path) -> list[RenderResult]:
+    renders: list[RenderResult] = []
+    for entry in status.entries:
+        if entry.state != "answered" or not entry.response_path:
+            continue
+        response_path = workspace_path(entry.response_path, workspace)
+        response: object = json.loads(response_path.read_text(encoding="utf-8"))
+        if not isinstance(response, dict):
+            continue
+        artifacts = response.get("artifacts")
+        if not isinstance(artifacts, list):
+            continue
+        for artifact in artifacts:
+            value = (
+                artifact.get("path")
+                if isinstance(artifact, dict)
+                else artifact
+            )
+            if not isinstance(value, str):
+                continue
+            image = workspace_path(value, workspace)
+            if image.suffix.lower() in _IMAGE_MIME:
+                renders.append(RenderResult(image, image, "ok", ""))
+    return renders
 
 
 def tool_specs() -> list[types.Tool]:
@@ -429,21 +459,45 @@ async def dispatch_tool(
                 out_dir,
                 plan_path,
             )
+            renders = (
+                render_all(out_dir, fmts=("svg", "png")) if arguments.get("render") else []
+            )
         except (OSError, ValueError, ValidationError) as exc:
             return {"verdict": FAIL, "stage": "produce", "detail": str(exc)}
         payload = report.to_dict(plan, plan_sha256(plan_path))
         payload["written"] = {k: str(p) for k, p in sorted(paths.items())}
+        if arguments.get("render"):
+            payload["renders"] = [
+                {
+                    "source": str(render.source),
+                    "output": str(render.output) if render.output else None,
+                    "status": render.status,
+                    "detail": render.detail,
+                }
+                for render in renders
+            ]
+            return _render_content(payload, renders)
         return payload
     if name == "ux_liaison_status":
         out_dir = _path_arg(arguments, "out_dir")
+        workspace = _workspace_arg(arguments)
         try:
             status = liaison_status(out_dir, out_dir)
+            renders = (
+                _liaison_image_renders(status, workspace)
+                if arguments.get("attach_images")
+                else []
+            )
         except (OSError, ValueError) as exc:
             return {"verdict": FAIL, "stage": "liaison", "detail": str(exc)}
         payload = status.model_dump()
         payload["verdict"] = PASS
         payload["stage"] = "liaison"
-        return payload
+        return (
+            _render_content(payload, renders)
+            if arguments.get("attach_images")
+            else payload
+        )
     if name == "ux_intake_reconcile":
         contract_path = _path_arg(arguments, "contract_path")
         out_dir = _path_arg(arguments, "out_dir")

@@ -21,12 +21,14 @@ from pydantic import ValidationError
 from . import __version__
 from .advisory import (
     TouchpointCandidate,
+    VisualFinding,
     load_intake_records,
     load_visual_reviews,
     reconcile_findings,
     reconcile_intake,
     write_intake_record,
     write_visual_review,
+    write_visual_review_not_applicable,
 )
 from .contract import load_contract
 from .doctor import run_doctor
@@ -35,12 +37,13 @@ from .imports import import_source
 from .production import load_plan, plan_sha256, run_production_gates, write_production
 from .projections import write_projections, write_provenance
 from .proposals import ProposalSet, triage, write_triage
-from .records import RECORDERS, records_summary
+from .records import RECORDERS, record_vision_review, records_summary
 from .render import render_all
 from .report import write_report
 from .requests import build_request, write_request
 from .responses import liaison_status
 from .ruby_bridge import contract_from_ruby, mruby_check
+from .workspace import workspace_path, workspace_root
 
 
 def _print(payload: dict[str, Any]) -> None:
@@ -269,10 +272,21 @@ def _cmd_produce(args: argparse.Namespace) -> int:
         report = run_production_gates(plan, workspace, liaison_dir)
         name = plan_path.name.removesuffix(".production.json")
         paths = write_production(plan, report, name, Path(args.out), plan_path)
+        renders = render_all(Path(args.out), fmts=("svg", "png")) if args.render else []
     except (OSError, ValueError, ValidationError) as exc:
         return _fail("produce", exc)
     payload = report.to_dict(plan, plan_sha256(plan_path))
     payload["written"] = {k: str(p) for k, p in sorted(paths.items())}
+    if args.render:
+        payload["renders"] = [
+            {
+                "source": str(render.source),
+                "output": str(render.output) if render.output else None,
+                "status": render.status,
+                "detail": render.detail,
+            }
+            for render in renders
+        ]
     _print(payload)
     return 0 if report.verdict == PASS else 1
 
@@ -298,17 +312,76 @@ def _cmd_review_reconcile(args: argparse.Namespace) -> int:
 
 def _cmd_review_record(args: argparse.Namespace) -> int:
     try:
-        path = write_visual_review(
-            Path(args.image),
-            args.checklist,
-            args.summary,
-            [],
-            model=args.model,
+        root = workspace_root()
+        image = workspace_path(args.image, root)
+        if args.not_applicable:
+            if args.finding:
+                raise ValueError("--finding cannot be used when the visual review is not applicable")
+            path = write_visual_review_not_applicable(
+                image, args.checklist, args.summary
+            )
+            _print(
+                {
+                    "verdict": PASS,
+                    "stage": "review-record",
+                    "status": "not_applicable",
+                    "record": str(path),
+                }
+            )
+            return 0
+        findings = [_parse_review_finding(spec) for spec in args.finding]
+        model = args.model.strip() or "unspecified"
+        severity_map = {"info": "info", "minor": "warning", "major": "error"}
+        record = record_vision_review(
+            {
+                "image_path": image.relative_to(root).as_posix(),
+                "model": model,
+                "checklist": args.checklist.replace("_", "-"),
+                "findings": [
+                    {
+                        "category": finding.category,
+                        "severity": severity_map[finding.severity],
+                        "note": (
+                            f"{finding.observation} @ {finding.where}"
+                            if finding.where
+                            else finding.observation
+                        ),
+                    }
+                    for finding in findings
+                ],
+                "impression": args.summary,
+            },
+            root=root,
         )
+        path = write_visual_review(image, args.checklist, args.summary, findings, model=model)
     except (OSError, ValueError, ValidationError) as exc:
         return _fail("review-record", exc)
-    _print({"verdict": PASS, "stage": "review-record", "record": str(path)})
+    _print(
+        {
+            "verdict": PASS,
+            "stage": "review-record",
+            "record": str(path),
+            "vision_record": record["path"],
+        }
+    )
     return 0
+
+
+def _parse_review_finding(value: str) -> VisualFinding:
+    category, first_sep, remaining = value.partition(":")
+    severity, second_sep, remaining = remaining.partition(":")
+    where, third_sep, observation = remaining.partition(":")
+    if not first_sep or not second_sep or not third_sep:
+        raise ValueError(
+            "--finding expects CATEGORY:SEVERITY:WHERE:OBSERVATION, "
+            f"got {value!r}"
+        )
+    return VisualFinding(
+        category=category,
+        severity=severity,
+        where=where,
+        observation=observation,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -375,10 +448,30 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument(
         "--checklist",
         required=True,
-        choices=["journey_map", "statechart", "wireframe", "intake_image"],
+        choices=[
+            "journey_map",
+            "statechart",
+            "wireframe",
+            "intake_image",
+            "service_blueprint",
+            "emotion_curve",
+            "production_plan",
+            "sister_artifact",
+        ],
     )
     p.add_argument("--summary", required=True)
     p.add_argument("--model", default="")
+    p.add_argument(
+        "--not-applicable",
+        action="store_true",
+        help="record that the image did not reach a vision-capable model",
+    )
+    p.add_argument(
+        "--finding",
+        action="append",
+        default=[],
+        help="CATEGORY:SEVERITY:WHERE:OBSERVATION (repeatable)",
+    )
     p.set_defaults(func=_cmd_review_record)
 
     p = sub.add_parser(
@@ -398,6 +491,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out", required=True)
     p.add_argument("--workspace", default=None)
     p.add_argument("--liaison-dir", default=None, help="dir holding ux-request/ux-response files")
+    p.add_argument("--render", action="store_true", help="render the production Mermaid plan")
     p.set_defaults(func=_cmd_produce)
 
     p = sub.add_parser("intake-record", help="write an intake-touchpoints advisory record")

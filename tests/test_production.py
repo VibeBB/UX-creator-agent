@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 
+from ux_creator import cli
 from ux_creator.production import (
     ProductionPlan,
     load_plan,
@@ -16,6 +17,7 @@ from ux_creator.production import (
     run_production_gates,
     write_production,
 )
+from ux_creator.render import RenderResult
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PRODUCT = REPO_ROOT / "examples" / "smart-kettle-product"
@@ -299,6 +301,43 @@ def test_cli_produce(tmp_path: Path) -> None:
     assert payload["verdict"] == "pass"
     assert payload["plan"]["sha256"].startswith("sha256:")
     assert (tmp_path / "smart-kettle.production-status.md").is_file()
+
+
+def test_cli_produce_render_returns_rendered_plan(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def fake_render_all(out_dir: Path, **_kwargs: object) -> list[RenderResult]:
+        assert _kwargs == {"fmts": ("svg", "png")}
+        image = out_dir / "smart-kettle.production.png"
+        image.write_bytes(b"rendered-plan")
+        return [RenderResult(out_dir / "smart-kettle.production.mmd", image, "ok", "")]
+
+    monkeypatch.setattr(cli, "render_all", fake_render_all)
+
+    result = cli.main(
+        [
+            "produce",
+            str(PLAN),
+            "--out",
+            str(tmp_path),
+            "--workspace",
+            str(PRODUCT),
+            "--liaison-dir",
+            str(PRODUCT / "requests"),
+            "--render",
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["renders"] == [
+        {
+            "source": str(tmp_path / "smart-kettle.production.mmd"),
+            "output": str(tmp_path / "smart-kettle.production.png"),
+            "status": "ok",
+            "detail": "",
+        }
+    ]
 
 
 def test_cli_produce_fails_closed_without_liaison(tmp_path: Path) -> None:
