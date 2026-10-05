@@ -21,6 +21,8 @@ transport. An agent's narrative is not a gate verdict.
 - The `ux-creator`, `ux-liaison`, and `ux-producer` agents have
   `task_tool_set` for specialist delegation. Other agents perform focused
   work within their authored files.
+- Delegation briefs name a sister's own record tools; `ux_record_*` tools
+  are only for agents working through the UX plugin.
 - Generated projections are protected from hand editing. Change the contract
   or plan and regenerate them.
 - Use the relevant skill from `plugins/ux/skills/` for domain guidance. See

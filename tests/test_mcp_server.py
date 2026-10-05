@@ -142,7 +142,9 @@ def test_mcp_request_and_delegate_round_trip(
     assert delegated["verdict"] == "pass"
     assert delegated["delegate"]["subagent_type"] == SISTERS["circuit"].liaison_agent
     assert "task_tool_set" not in delegated["delegate"]
-    assert "ux_record_decision" in delegated["delegate"]["prompt"]
+    assert SISTERS["circuit"].record_decision_tool in delegated["delegate"]["prompt"]
+    assert SISTERS["circuit"].record_impression_tool in delegated["delegate"]["prompt"]
+    assert "ux_record_" not in delegated["delegate"]["prompt"]
 
 
 def test_records_status_mcp_tool_uses_current_workspace(

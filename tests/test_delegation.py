@@ -14,16 +14,16 @@ from ux_creator.contract import load_contract
 from ux_creator.delegation import delegation_brief
 from ux_creator.records import sha256_file
 from ux_creator.requests import UXRequest, build_request, write_request
-from ux_creator.sisters import SISTERS
+from ux_creator.sisters import SISTERS, TARGET_AGENTS, TargetAgent
 
 CONTRACT = Path(__file__).resolve().parents[1] / "examples/smart-kettle/smart-kettle.ux.json"
 
 
-def _request(workspace: Path) -> UXRequest:
+def _request(workspace: Path, target_agent: TargetAgent = "circuit") -> UXRequest:
     return build_request(
         load_contract(CONTRACT),
         id="circuit-request",
-        target_agent="circuit",
+        target_agent=target_agent,
         stage="design",
         risk="high",
         purpose="Coordinate the status LED hardware change",
@@ -37,15 +37,19 @@ def _request(workspace: Path) -> UXRequest:
     )
 
 
-def test_delegation_brief_uses_registry_protocol(tmp_path: Path) -> None:
-    request = _request(tmp_path)
+@pytest.mark.parametrize("target_agent", TARGET_AGENTS)
+def test_delegation_brief_uses_registry_protocol(tmp_path: Path, target_agent: TargetAgent) -> None:
+    request = _request(tmp_path, target_agent)
     brief = delegation_brief(request, "liaison")
-    sister = SISTERS["circuit"]
+    sister = SISTERS[target_agent]
     assert brief["subagent_type"] == sister.liaison_agent
-    assert brief["description"] == "circuit answer circuit-request"
+    assert brief["description"] == f"{target_agent} answer circuit-request"
     assert "`liaison/circuit-request.ux-request.json`" in brief["prompt"]
     assert sister.inbox_tool in brief["prompt"]
     assert sister.respond_tool in brief["prompt"]
+    assert sister.record_decision_tool in brief["prompt"]
+    assert sister.record_impression_tool in brief["prompt"]
+    assert "ux_record_" not in brief["prompt"]
     assert "Never hand-write or edit the response JSON" in brief["prompt"]
     assert sister.repo in brief["prompt"]
 

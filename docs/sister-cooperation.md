@@ -45,8 +45,10 @@ different existing file unless `replace` is explicitly true.
 The `ux-producer` and `ux-liaison` use OpenHands `task_tool_set` with the
 deterministic brief from `ux_delegate`. The brief names the correct liaison
 agent and passes the request ID, path, acceptance criteria, and expected
-deliverables. The task call itself is not evidence that a request was
-received or completed; the sibling response file is authoritative.
+deliverables. It names the sister's own `<target>_record_decision` and
+`<target>_record_impression` tools for VRP records; never direct a sister to
+UX-only `ux_record_*` tools. The task call itself is not evidence that a
+request was received or completed; the sibling response file is authoritative.
 
 ## Response and evidence
 

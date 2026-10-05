@@ -66,6 +66,9 @@ Use `ux_request` or `python -m ux_creator request`; the result includes a
 deterministic delegation brief. `ux_delegate` and `python -m ux_creator
 delegate` rebuild that brief from an existing request. Differing request
 files are not overwritten unless replacement is explicitly requested.
+The brief names the sister's `<target>_record_decision` and
+`<target>_record_impression` tools; do not direct sisters to UX-only
+`ux_record_*` tools.
 
 High-risk requests must cite at least one declared UX job id in
 `rationale`. The proposal triage defaults hardware, mechanism, and

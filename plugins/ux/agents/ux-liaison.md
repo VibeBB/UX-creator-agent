@@ -55,7 +55,9 @@ overwritten; replacement must be explicit.
 Use `ux_delegate` or `python -m ux_creator delegate` to get the
 deterministic task-tool brief. When a sister agent is loaded, delegate
 with `task_tool_set`; if unavailable, direct the user to open the request
-in the named sister plugin. The ten targets and their liaison agents are:
+in the named sister plugin. The brief names that sister's own
+`<target>_record_decision` and `<target>_record_impression` tools, not the
+UX plugin's `ux_record_*` tools. The ten targets and their liaison agents are:
 
 | Target | Sister agent | Inbox tool | Response tool |
 | --- | --- | --- | --- |

@@ -60,6 +60,8 @@ class Sister:
     liaison_agent: str
     inbox_tool: str
     respond_tool: str
+    record_decision_tool: str
+    record_impression_tool: str
     delivers: str
 
 
@@ -71,6 +73,8 @@ SISTERS: Final[dict[str, Sister]] = {
         "bard",
         "bard_ux_inbox",
         "bard_ux_respond",
+        "bard_record_decision",
+        "bard_record_impression",
         "sound cues and music",
     ),
     "circuit": Sister(
@@ -88,6 +92,8 @@ SISTERS: Final[dict[str, Sister]] = {
         "circuit-brief",
         "circuit_ux_inbox",
         "circuit_ux_respond",
+        "circuit_record_decision",
+        "circuit_record_impression",
         "electrical design",
     ),
     "dashboard": Sister(
@@ -97,6 +103,8 @@ SISTERS: Final[dict[str, Sister]] = {
         "dashboard-architect",
         "dashboard_ux_inbox",
         "dashboard_ux_respond",
+        "dashboard_record_decision",
+        "dashboard_record_impression",
         "operator and telemetry UI",
     ),
     "doc": Sister(
@@ -106,6 +114,8 @@ SISTERS: Final[dict[str, Sister]] = {
         "doc-liaison",
         "doc_ux_inbox",
         "doc_ux_respond",
+        "doc_record_decision",
+        "doc_record_impression",
         "user and maintainer documentation",
     ),
     "firmware": Sister(
@@ -115,6 +125,8 @@ SISTERS: Final[dict[str, Sister]] = {
         "firmware-architect",
         "firmware_ux_inbox",
         "firmware_ux_respond",
+        "firmware_record_decision",
+        "firmware_record_impression",
         "embedded software",
     ),
     "fpga": Sister(
@@ -124,6 +136,8 @@ SISTERS: Final[dict[str, Sister]] = {
         "fpga-architect",
         "fpga_ux_inbox",
         "fpga_ux_respond",
+        "fpga_record_decision",
+        "fpga_record_impression",
         "programmable logic",
     ),
     "mech": Sister(
@@ -133,6 +147,8 @@ SISTERS: Final[dict[str, Sister]] = {
         "mech-brief",
         "mech_ux_inbox",
         "mech_ux_respond",
+        "mech_record_decision",
+        "mech_record_impression",
         "enclosure and mechanical design",
     ),
     "prodeng": Sister(
@@ -142,6 +158,8 @@ SISTERS: Final[dict[str, Sister]] = {
         "prodeng-liaison",
         "prodeng_ux_inbox",
         "prodeng_ux_respond",
+        "prodeng_record_decision",
+        "prodeng_record_impression",
         "manufacturing and production engineering",
     ),
     "sim": Sister(
@@ -151,6 +169,8 @@ SISTERS: Final[dict[str, Sister]] = {
         "sim-liaison",
         "sim_ux_inbox",
         "sim_ux_respond",
+        "sim_record_decision",
+        "sim_record_impression",
         "simulation and analysis",
     ),
     "wire": Sister(
@@ -160,6 +180,8 @@ SISTERS: Final[dict[str, Sister]] = {
         "wire-brief",
         "wire_ux_inbox",
         "wire_ux_respond",
+        "wire_record_decision",
+        "wire_record_impression",
         "electrical wiring and harnesses",
     ),
 }

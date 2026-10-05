@@ -55,7 +55,8 @@ Loop:
 4. Call `ux_delegate` and pass its exact `subagent_type`, `description`,
    and `prompt` to the task tool. If task errors because the sister agent is not loaded,
    leave the request file unchanged and tell the user to open it in that sister plugin;
-   do not invent a response.
+   do not invent a response. The brief names the sister's own record tools; do not
+   ask it to call this plugin's `ux_record_*` tools.
 5. Re-run `ux_liaison_status`, inspect any attached response images, and
    record a vision review when an image was actually seen. Accept or
    reject the response with a VRP decision, then update the plan.
