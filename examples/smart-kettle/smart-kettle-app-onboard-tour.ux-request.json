@@ -1,0 +1,28 @@
+{
+  "acceptance": [
+    "Responds with status done and an artifact that realizes add a first-run pairing tour to the companion app",
+    "job boil remains served"
+  ],
+  "created_at": "2026-10-05T17:16:01.609726+00:00",
+  "depends_on": [],
+  "expected_deliverables": [
+    "mobile_app change implementing: add a first-run pairing tour to the companion app"
+  ],
+  "id": "smart-kettle-app-onboard-tour",
+  "inputs": [
+    {
+      "path": "examples/smart-kettle/smart-kettle.ux.json",
+      "sha256": "62fbd00f8211195c9599a0a15c377479252eca31e76809432c638503ef23b38c"
+    }
+  ],
+  "purpose": "UX proposal smart-kettle-app-onboard-tour: add a first-run pairing tour to the companion app",
+  "rationale": "add a first-run pairing tour to the companion app",
+  "requested_changes": [
+    "add a first-run pairing tour to the companion app"
+  ],
+  "risk": "low",
+  "schema_version": 2,
+  "stage": "design",
+  "system": "ux-creator",
+  "target_agent": "dashboard"
+}

@@ -3,6 +3,20 @@
 Release, dependency-update, and CI policy. Product documentation lives in
 the README and `docs/`; design decisions live in `docs/adr/`.
 
+## Documentation map
+
+- [Architecture](architecture.md), [workflow](workflow.md),
+  [agents](agents.md), [skills](skills.md), and [commands](commands.md)
+  describe the product and authoring surface.
+- [MCP](mcp.md), [hooks](hooks.md), [contracts](contracts.md),
+  [records and vision](records-and-vision.md), and
+  [sister cooperation](sister-cooperation.md) define integration behavior.
+- [Performance and limits](performance-and-limits.md),
+  [development](development.md), and
+  [improvement notes](improvement-notes.md) record practical constraints and
+  maintainer follow-ups.
+- [ADR index](README.md) lists accepted decisions.
+
 ## SBOM attestations
 
 `publish-ux-images.yml` generates and attests a package-level SPDX-2.3 SBOM

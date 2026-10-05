@@ -36,7 +36,7 @@
       "owner": "bard",
       "request": "smart-kettle-cues",
       "stage": "design",
-      "status": "done"
+      "status": "in_progress"
     },
     {
       "deliverable": "rev-a schematic and board with ring LED and piezo driver",
@@ -67,7 +67,7 @@
       "deliverable": "rev-a board fabrication package",
       "depends_on": ["circuit_rev_a"],
       "id": "pcb_order",
-      "owner": "production-engineering",
+      "owner": "prodeng",
       "stage": "manufacturing_handoff",
       "status": "blocked"
     },

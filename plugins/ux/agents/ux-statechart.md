@@ -37,3 +37,16 @@ permission_mode: never_confirm
 Gate rules you must satisfy: exactly one initial state, every transition
 endpoint defined, every state reachable from the initial state, and no
 non-final dead-end states.
+
+## Records you must leave
+
+Use `ux_record_decision` for consequential choices and `ux_record_impression`
+after each completed stage. Cover intake, research (personas and jobs),
+journey, statechart, CMF, content, review, liaison, and production. Record
+decisions such as the primary persona, job framing or ODI threshold, journey
+stage cut, statechart guard or feedback channel, CMF material or finish,
+sister-request risk class, workstream owner, and whether to accept or reject
+a sister response. Impressions must describe what you noticed, what works,
+what worries you, how a maker or user would read it, and what to do next in
+at least 400 characters and three distinct sentences. After actually viewing
+an image, add `ux_record_vision_review` bound to its path or source event.

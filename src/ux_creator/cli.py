@@ -2,7 +2,7 @@
 
 Subcommands: doctor, gates, author, render, import, from-ruby, mruby-check,
 request, propose, review-record, review-reconcile, liaison, produce,
-intake-record, intake-reconcile.
+delegate, intake-record, intake-reconcile, record.
 
 Every subcommand prints a JSON verdict object and exits 0 only on
 "pass"/"ok"; fail-closed throughout.
@@ -21,25 +21,31 @@ from pydantic import ValidationError
 from . import __version__
 from .advisory import (
     TouchpointCandidate,
+    VisualFinding,
     load_intake_records,
     load_visual_reviews,
     reconcile_findings,
     reconcile_intake,
     write_intake_record,
     write_visual_review,
+    write_visual_review_not_applicable,
 )
 from .contract import load_contract
+from .delegation import delegation_brief
 from .doctor import run_doctor
 from .gates import FAIL, PASS, run_gates
 from .imports import import_source
 from .production import load_plan, plan_sha256, run_production_gates, write_production
 from .projections import write_projections, write_provenance
 from .proposals import ProposalSet, triage, write_triage
+from .records import RECORDERS, record_vision_review, records_summary
 from .render import render_all
 from .report import write_report
-from .requests import build_request, write_request
+from .requests import build_request, load_request, write_request
 from .responses import liaison_status
 from .ruby_bridge import contract_from_ruby, mruby_check
+from .sisters import PRODUCT_STAGES, TARGET_AGENTS
+from .workspace import workspace_path, workspace_root
 
 
 def _print(payload: dict[str, Any]) -> None:
@@ -156,18 +162,66 @@ def _cmd_mruby_check(args: argparse.Namespace) -> int:
 
 def _cmd_request(args: argparse.Namespace) -> int:
     try:
+        workspace = workspace_path(args.workspace or ".", workspace_root())
+        liaison_dir = (
+            workspace_path(args.liaison_dir, workspace)
+            if args.liaison_dir
+            else workspace / "liaison"
+        )
         contract = load_contract(args.contract)
         request = build_request(
             contract,
+            id=args.id,
             target_agent=args.target,
+            stage=args.stage,
             risk=args.risk,
+            purpose=args.purpose,
             rationale=args.rationale,
             requested_changes=args.change,
+            inputs=args.input,
+            expected_deliverables=args.deliverable,
+            acceptance=args.accept,
+            depends_on=args.depends_on,
+            workspace=workspace,
         )
-        path = write_request(request, Path(args.out_dir), args.name)
+        path = write_request(request, liaison_dir, replace=args.replace)
+        liaison_rel = liaison_dir.relative_to(workspace).as_posix()
+        brief = delegation_brief(request, liaison_rel)
     except (OSError, ValueError, ValidationError) as exc:
         return _fail("request", exc)
-    _print({"verdict": PASS, "stage": "request", "request": str(path)})
+    _print(
+        {
+            "verdict": PASS,
+            "stage": "request",
+            "request": str(path),
+            "delegate": brief,
+        }
+    )
+    return 0
+
+
+def _cmd_delegate(args: argparse.Namespace) -> int:
+    try:
+        workspace = workspace_path(args.workspace or ".", workspace_root())
+        liaison_dir = (
+            workspace_path(args.liaison_dir, workspace)
+            if args.liaison_dir
+            else workspace / "liaison"
+        )
+        request_path = workspace_path(liaison_dir / f"{args.request_id}.ux-request.json", workspace)
+        request = load_request(request_path)
+        liaison_rel = liaison_dir.relative_to(workspace).as_posix()
+        brief = delegation_brief(request, liaison_rel)
+    except (OSError, ValueError, ValidationError) as exc:
+        return _fail("delegate", exc)
+    _print(
+        {
+            "verdict": PASS,
+            "stage": "delegate",
+            "request": str(request_path),
+            "delegate": brief,
+        }
+    )
     return 0
 
 
@@ -178,7 +232,15 @@ def _cmd_propose(args: argparse.Namespace) -> int:
             json.loads(Path(args.proposals).read_text(encoding="utf-8"))
         )
         name = Path(args.proposals).stem.removesuffix(".ux-proposals")
-        paths = write_triage(contract, proposals, Path(args.out_dir), name)
+        workspace = workspace_path(args.workspace or ".", workspace_root())
+        paths = write_triage(
+            contract,
+            proposals,
+            Path(args.out_dir),
+            name,
+            contract_path=Path(args.contract),
+            workspace=workspace,
+        )
         blocked = [t.id for t in triage(contract, proposals) if t.status != "auto_send"]
     except (OSError, ValueError, ValidationError) as exc:
         return _fail("propose", exc)
@@ -233,7 +295,13 @@ def _cmd_intake_reconcile(args: argparse.Namespace) -> int:
 
 def _cmd_liaison(args: argparse.Namespace) -> int:
     try:
-        status = liaison_status(Path(args.out_dir), Path(args.out_dir))
+        workspace = workspace_path(args.workspace or ".", workspace_root())
+        liaison_dir = (
+            workspace_path(args.liaison_dir, workspace)
+            if args.liaison_dir
+            else workspace / "liaison"
+        )
+        status = liaison_status(liaison_dir, workspace)
     except (OSError, ValueError) as exc:
         return _fail("liaison", exc)
     payload = status.model_dump()
@@ -243,20 +311,52 @@ def _cmd_liaison(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_record(args: argparse.Namespace) -> int:
+    if args.kind == "status":
+        _print(records_summary())
+        return 0
+    try:
+        payload: Any = json.loads(Path(args.json).read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("record JSON must be an object")
+        result = RECORDERS[args.kind](cast(dict[str, Any], payload))
+    except (OSError, ValueError, ValidationError) as exc:
+        return _fail("record", exc)
+    _print(result)
+    return 0 if result.get("verdict") == PASS else 1
+
+
 def _cmd_produce(args: argparse.Namespace) -> int:
     """Product-level plan: production gates → status projections."""
     try:
         plan_path = Path(args.plan)
         plan = load_plan(plan_path)
-        workspace = Path(args.workspace or ".")
-        liaison_dir = Path(args.liaison_dir) if args.liaison_dir else None
+        workspace = workspace_path(args.workspace or ".", workspace_root())
+        liaison_dir = (
+            workspace_path(args.liaison_dir, workspace)
+            if args.liaison_dir
+            else workspace / "liaison"
+        )
         report = run_production_gates(plan, workspace, liaison_dir)
         name = plan_path.name.removesuffix(".production.json")
-        paths = write_production(plan, report, name, Path(args.out), plan_path)
+        paths = write_production(
+            plan, report, name, Path(args.out), plan_path, workspace, liaison_dir
+        )
+        renders = render_all(Path(args.out), fmts=("svg", "png")) if args.render else []
     except (OSError, ValueError, ValidationError) as exc:
         return _fail("produce", exc)
     payload = report.to_dict(plan, plan_sha256(plan_path))
     payload["written"] = {k: str(p) for k, p in sorted(paths.items())}
+    if args.render:
+        payload["renders"] = [
+            {
+                "source": str(render.source),
+                "output": str(render.output) if render.output else None,
+                "status": render.status,
+                "detail": render.detail,
+            }
+            for render in renders
+        ]
     _print(payload)
     return 0 if report.verdict == PASS else 1
 
@@ -282,17 +382,75 @@ def _cmd_review_reconcile(args: argparse.Namespace) -> int:
 
 def _cmd_review_record(args: argparse.Namespace) -> int:
     try:
-        path = write_visual_review(
-            Path(args.image),
-            args.checklist,
-            args.summary,
-            [],
-            model=args.model,
+        root = workspace_root()
+        image = workspace_path(args.image, root)
+        if args.not_applicable:
+            if args.finding:
+                raise ValueError(
+                    "--finding cannot be used when the visual review is not applicable"
+                )
+            path = write_visual_review_not_applicable(image, args.checklist, args.summary)
+            _print(
+                {
+                    "verdict": PASS,
+                    "stage": "review-record",
+                    "status": "not_applicable",
+                    "record": str(path),
+                }
+            )
+            return 0
+        findings = [_parse_review_finding(spec) for spec in args.finding]
+        model = args.model.strip() or "unspecified"
+        severity_map = {"info": "info", "minor": "warning", "major": "error"}
+        record = record_vision_review(
+            {
+                "image_path": image.relative_to(root).as_posix(),
+                "model": model,
+                "checklist": args.checklist.replace("_", "-"),
+                "findings": [
+                    {
+                        "category": finding.category,
+                        "severity": severity_map[finding.severity],
+                        "note": (
+                            f"{finding.observation} @ {finding.where}"
+                            if finding.where
+                            else finding.observation
+                        ),
+                    }
+                    for finding in findings
+                ],
+                "impression": args.summary,
+            },
+            root=root,
         )
+        path = write_visual_review(image, args.checklist, args.summary, findings, model=model)
     except (OSError, ValueError, ValidationError) as exc:
         return _fail("review-record", exc)
-    _print({"verdict": PASS, "stage": "review-record", "record": str(path)})
+    _print(
+        {
+            "verdict": PASS,
+            "stage": "review-record",
+            "record": str(path),
+            "vision_record": record["path"],
+        }
+    )
     return 0
+
+
+def _parse_review_finding(value: str) -> VisualFinding:
+    category, first_sep, remaining = value.partition(":")
+    severity, second_sep, remaining = remaining.partition(":")
+    where, third_sep, observation = remaining.partition(":")
+    if not first_sep or not second_sep or not third_sep:
+        raise ValueError(f"--finding expects CATEGORY:SEVERITY:WHERE:OBSERVATION, got {value!r}")
+    return VisualFinding.model_validate(
+        {
+            "category": category,
+            "severity": severity,
+            "where": where,
+            "observation": observation,
+        }
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -340,18 +498,33 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("request", help="write a ux-request.json for a sibling agent")
     p.add_argument("contract")
-    p.add_argument("--target", required=True)
+    p.add_argument("--id", required=True)
+    p.add_argument("--target", required=True, choices=TARGET_AGENTS)
+    p.add_argument("--stage", required=True, choices=PRODUCT_STAGES)
     p.add_argument("--risk", required=True, choices=["low", "high"])
+    p.add_argument("--purpose", required=True)
     p.add_argument("--rationale", default="")
     p.add_argument("--change", action="append", required=True)
-    p.add_argument("--out-dir", required=True)
-    p.add_argument("--name", default="ux-request")
+    p.add_argument("--input", action="append", default=[])
+    p.add_argument("--deliverable", action="append", required=True)
+    p.add_argument("--accept", action="append", required=True)
+    p.add_argument("--depends-on", action="append", default=[])
+    p.add_argument("--workspace")
+    p.add_argument("--liaison-dir")
+    p.add_argument("--replace", action="store_true")
     p.set_defaults(func=_cmd_request)
+
+    p = sub.add_parser("delegate", help="print the task-tool brief for a request")
+    p.add_argument("request_id")
+    p.add_argument("--workspace")
+    p.add_argument("--liaison-dir")
+    p.set_defaults(func=_cmd_delegate)
 
     p = sub.add_parser("propose", help="QCD-triage a ux-proposals.json into ux-requests")
     p.add_argument("--contract", required=True)
     p.add_argument("--proposals", required=True)
     p.add_argument("--out-dir", required=True)
+    p.add_argument("--workspace")
     p.set_defaults(func=_cmd_propose)
 
     p = sub.add_parser("review-record", help="write a review-visual advisory record")
@@ -359,10 +532,30 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument(
         "--checklist",
         required=True,
-        choices=["journey_map", "statechart", "wireframe", "intake_image"],
+        choices=[
+            "journey_map",
+            "statechart",
+            "wireframe",
+            "intake_image",
+            "service_blueprint",
+            "emotion_curve",
+            "production_plan",
+            "sister_artifact",
+        ],
     )
     p.add_argument("--summary", required=True)
     p.add_argument("--model", default="")
+    p.add_argument(
+        "--not-applicable",
+        action="store_true",
+        help="record that the image did not reach a vision-capable model",
+    )
+    p.add_argument(
+        "--finding",
+        action="append",
+        default=[],
+        help="CATEGORY:SEVERITY:WHERE:OBSERVATION (repeatable)",
+    )
     p.set_defaults(func=_cmd_review_record)
 
     p = sub.add_parser(
@@ -374,7 +567,8 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=_cmd_review_reconcile)
 
     p = sub.add_parser("liaison", help="report ux-request/ux-response liaison status")
-    p.add_argument("--out-dir", required=True)
+    p.add_argument("--workspace")
+    p.add_argument("--liaison-dir")
     p.set_defaults(func=_cmd_liaison)
 
     p = sub.add_parser("produce", help="product-level plan gates + production status")
@@ -382,6 +576,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out", required=True)
     p.add_argument("--workspace", default=None)
     p.add_argument("--liaison-dir", default=None, help="dir holding ux-request/ux-response files")
+    p.add_argument("--render", action="store_true", help="render the production Mermaid plan")
     p.set_defaults(func=_cmd_produce)
 
     p = sub.add_parser("intake-record", help="write an intake-touchpoints advisory record")
@@ -401,7 +596,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out-dir", required=True)
     p.set_defaults(func=_cmd_intake_reconcile)
 
+    p = sub.add_parser("record", help="append a VibeBB Record Protocol record")
+    p.add_argument("kind", choices=["decision", "impression", "vision-review", "status"])
+    p.add_argument("--json", default=None, help="JSON object file with the record fields")
+    p.set_defaults(func=_cmd_record)
+
     args = parser.parse_args(argv)
+    if args.command == "record" and args.kind != "status" and not args.json:
+        parser.error("record decision|impression|vision-review requires --json")
     try:
         if args.command == "doctor" and getattr(args, "warn", False):
             report = run_doctor()

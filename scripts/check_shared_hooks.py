@@ -17,12 +17,30 @@ _EXPECTED_PROVENANCE_NORMALIZED_AST_SHA256 = (
 _EXPECTED_SAFETY_RAIL_NORMALIZED_AST_SHA256 = (
     "1a9f3f72fec383f046db2ca8805a7190c33daa86daf42f06c3cd27e3f8be245b"
 )
+_EXPECTED_RECORDS_NORMALIZED_AST_SHA256 = (
+    "f793baeb1f3194b3e519ddc86c01928439a84a5531925303593b11dc473b65ad"
+)
+_EXPECTED_REQUIRE_RECORDS_NORMALIZED_AST_SHA256 = (
+    "f16ef9a9e8a53a3228d386246bb81564bb94ccf7cbfe4ac694f1ff03098680cf"
+)
+_EXPECTED_RECORDS_SOURCE_SHA256 = "962f76adc4fe54782e5ec4efe8b0b3b8fe4cde6f6d6b2df86b1fd32d2ec7dfcf"
+_EXPECTED_REQUIRE_RECORDS_SOURCE_SHA256 = (
+    "a597d449eb3b152d868af055e38e8c41782ef1a7de58e93046a78cd77138c041"
+)
 EXPECTED: dict[str, str] = {
     "ensure_llm_profiles.py": _EXPECTED_ENSURE_LLM_PROFILES_NORMALIZED_AST_SHA256,
     "_provenance.py": _EXPECTED_PROVENANCE_NORMALIZED_AST_SHA256,
     "safety_rail.py": _EXPECTED_SAFETY_RAIL_NORMALIZED_AST_SHA256,
+    "_records.py": _EXPECTED_RECORDS_NORMALIZED_AST_SHA256,
+    "require_records.py": _EXPECTED_REQUIRE_RECORDS_NORMALIZED_AST_SHA256,
 }
-REQUIRED = frozenset({"ensure_llm_profiles.py", "safety_rail.py"})
+RAW_SHA256_EXPECTED: dict[str, str] = {
+    "_records.py": _EXPECTED_RECORDS_SOURCE_SHA256,
+    "require_records.py": _EXPECTED_REQUIRE_RECORDS_SOURCE_SHA256,
+}
+REQUIRED = frozenset(
+    {"ensure_llm_profiles.py", "safety_rail.py", "_records.py", "require_records.py"}
+)
 _DOCSTRING_NODE_TYPES = (
     ast.Module,
     ast.ClassDef,
@@ -86,6 +104,14 @@ def main() -> int:
                 f"{filename}: expected {expected}, got {actual}; compare with "
                 "the wire canonical and update all copies and EXPECTED together"
             )
+        source_expected = RAW_SHA256_EXPECTED.get(filename)
+        if source_expected is not None:
+            source_actual = hashlib.sha256(path.read_bytes()).hexdigest()
+            if source_actual != source_expected:
+                failures.append(
+                    f"{filename}: source SHA256 expected {source_expected}, got "
+                    f"{source_actual}; copy the wire canonical byte-for-byte"
+                )
 
     if failures:
         print("\n".join(failures), file=sys.stderr)

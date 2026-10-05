@@ -72,6 +72,24 @@ def test_hooks_config() -> None:
             for hook in group["hooks"]:
                 assert hook["type"] == "command"
                 assert hook["command"]
+    stop_hooks = [hook["name"] for group in data["stop"] for hook in group["hooks"]]
+    assert stop_hooks[0] == "require-records"
+    assert any(
+        'require_records.py" session-start' in hook["command"]
+        for group in data["session_start"]
+        for hook in group["hooks"]
+    )
+
+
+def test_records_policy_uses_ux_artifacts_and_ignores_sister_responses() -> None:
+    data = json.loads((PLUGIN_ROOT / "hooks" / "records-policy.json").read_text(encoding="utf-8"))
+    assert data["plugin"] == "ux"
+    assert data["records_dir"] == "observations/ux"
+    assert "**/*.ux-response.json" not in data["artifact_globs"]
+    assert {"examples/**", "tests/**", "observations/**"}.issubset(data["ignore_globs"])
+    assert {"**/*.ux.json", "**/*.production.json", "**/*.journey.mmd"}.issubset(
+        data["artifact_globs"]
+    )
 
 
 def test_skill_frontmatter() -> None:

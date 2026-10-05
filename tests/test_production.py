@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 
+from ux_creator import cli
 from ux_creator.production import (
     ProductionPlan,
     load_plan,
@@ -16,6 +17,7 @@ from ux_creator.production import (
     run_production_gates,
     write_production,
 )
+from ux_creator.render import RenderResult
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PRODUCT = REPO_ROOT / "examples" / "smart-kettle-product"
@@ -49,6 +51,9 @@ def test_example_plan_passes() -> None:
         "production.blockers_explained",
         "production.done_has_artifacts",
         "production.requests_answered",
+        "production.request_owner",
+        "production.liaison_integrity",
+        "production.sister_records",
         "production.evidence_loop",
         "production.ux_contract",
     }
@@ -57,17 +62,21 @@ def test_example_plan_passes() -> None:
 def test_status_projection(tmp_path: Path) -> None:
     plan = load_plan(PLAN)
     report = run_production_gates(plan, PRODUCT, PRODUCT / "requests")
-    status = production_status(plan, report)
+    status = production_status(plan, report, PRODUCT, PRODUCT / "requests")
     assert status["current_stage"] == "design"
     assert [a["id"] for a in status["next_actions"]] == ["user_manual"]  # type: ignore[index]
     assert status["blocked"] == [{"id": "pcb_order", "holds": ["decision pcb_vendor"]}]
-    paths = write_production(plan, report, "smart-kettle", tmp_path, PLAN)
+    paths = write_production(
+        plan, report, "smart-kettle", tmp_path, PLAN, PRODUCT, PRODUCT / "requests"
+    )
     assert set(paths) == {
         "smart-kettle.production.mmd",
         "smart-kettle.production-status.json",
         "smart-kettle.production-status.md",
     }
-    again = write_production(plan, report, "smart-kettle", tmp_path / "again", PLAN)
+    again = write_production(
+        plan, report, "smart-kettle", tmp_path / "again", PLAN, PRODUCT, PRODUCT / "requests"
+    )
     for name, path in paths.items():
         assert again[name].read_bytes() == path.read_bytes()
     mmd = paths["smart-kettle.production.mmd"].read_text(encoding="utf-8")
@@ -147,6 +156,7 @@ def test_open_blocker_explains_block(plan_dict: dict[str, Any]) -> None:
 
 
 def test_done_with_open_blocker_fails(plan_dict: dict[str, Any]) -> None:
+    _ws(plan_dict, "sound_cues")["status"] = "done"
     plan_dict["blockers"] = [
         {"id": "late", "workstream": "sound_cues", "description": "piezo too quiet"}
     ]
@@ -154,11 +164,13 @@ def test_done_with_open_blocker_fails(plan_dict: dict[str, Any]) -> None:
 
 
 def test_done_without_artifacts_fails(plan_dict: dict[str, Any]) -> None:
+    _ws(plan_dict, "sound_cues")["status"] = "done"
     _ws(plan_dict, "sound_cues")["artifacts"] = []
     assert _statuses(plan_dict)["production.done_has_artifacts"] == "fail"
 
 
 def test_done_with_missing_artifact_fails(plan_dict: dict[str, Any]) -> None:
+    _ws(plan_dict, "sound_cues")["status"] = "done"
     _ws(plan_dict, "sound_cues")["artifacts"] = ["cues/none.json"]
     assert _statuses(plan_dict)["production.done_has_artifacts"] == "fail"
 
@@ -184,6 +196,9 @@ def test_no_liaison_dir_is_unknown(plan_dict: dict[str, Any]) -> None:
 
 def _evaluated(plan: dict[str, Any], workspace: Path) -> dict[str, Any]:
     for w in plan["workstreams"]:
+        if w["id"] == "sound_cues":
+            w["status"] = "done"
+            w["request"] = ""
         if w["id"] in {"circuit_rev_a", "mech_enclosure", "firmware_feedback", "pcb_order"}:
             w["status"] = "done"
             w["artifacts"] = ["smart-kettle.ux.json"]
@@ -224,7 +239,9 @@ def test_evidence_feeds_revision(plan_dict: dict[str, Any], workspace: Path) -> 
         ProductionPlan.model_validate(plan), workspace, workspace / "requests"
     )
     assert report.verdict == "pass", [c for c in report.checks if c.status != "pass"]
-    status = production_status(ProductionPlan.model_validate(plan), report)
+    status = production_status(
+        ProductionPlan.model_validate(plan), report, workspace, workspace / "requests"
+    )
     assert status["current_stage"] == "manufacturing_handoff"  # user_manual still todo
     assert [a["id"] for a in status["next_actions"]] == ["user_manual", "rev_b_plan"]  # type: ignore[index]
 
@@ -299,6 +316,43 @@ def test_cli_produce(tmp_path: Path) -> None:
     assert payload["verdict"] == "pass"
     assert payload["plan"]["sha256"].startswith("sha256:")
     assert (tmp_path / "smart-kettle.production-status.md").is_file()
+
+
+def test_cli_produce_render_returns_rendered_plan(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def fake_render_all(out_dir: Path, **_kwargs: object) -> list[RenderResult]:
+        assert _kwargs == {"fmts": ("svg", "png")}
+        image = out_dir / "smart-kettle.production.png"
+        image.write_bytes(b"rendered-plan")
+        return [RenderResult(out_dir / "smart-kettle.production.mmd", image, "ok", "")]
+
+    monkeypatch.setattr(cli, "render_all", fake_render_all)
+
+    result = cli.main(
+        [
+            "produce",
+            str(PLAN),
+            "--out",
+            str(tmp_path),
+            "--workspace",
+            str(PRODUCT),
+            "--liaison-dir",
+            str(PRODUCT / "requests"),
+            "--render",
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["renders"] == [
+        {
+            "source": str(tmp_path / "smart-kettle.production.mmd"),
+            "output": str(tmp_path / "smart-kettle.production.png"),
+            "status": "ok",
+            "detail": "",
+        }
+    ]
 
 
 def test_cli_produce_fails_closed_without_liaison(tmp_path: Path) -> None:

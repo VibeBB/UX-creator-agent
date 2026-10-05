@@ -1,10 +1,27 @@
 {
-  "rationale": "job boil: button must be findable by touch",
+  "acceptance": [
+    "boil key can be found by touch"
+  ],
+  "created_at": "2026-10-05T17:16:01.865855+00:00",
+  "depends_on": [],
+  "expected_deliverables": [
+    "updated enclosure with raised boil key"
+  ],
+  "id": "smart-kettle-boil-key",
+  "inputs": [
+    {
+      "path": "smart-kettle.ux.json",
+      "sha256": "4f1bd6d4b2a1a09383b15bd6a4a1c73160706d7e2954973d5b3477b7fa9a53c9"
+    }
+  ],
+  "purpose": "Improve tactile access to the kettle boil key",
+  "rationale": "job boil requires a tactile key",
   "requested_changes": [
     "raise boil_key 1.5 mm above the shell with a satin TPE cap"
   ],
   "risk": "high",
-  "schema_version": 1,
+  "schema_version": 2,
+  "stage": "design",
   "system": "ux-creator",
   "target_agent": "mech"
 }

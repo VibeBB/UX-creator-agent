@@ -1,0 +1,17 @@
+{
+  "artifacts": [],
+  "decision_refs": [],
+  "gate_verdicts": [],
+  "impression_refs": [],
+  "input_hashes": {
+    "examples/smart-kettle/smart-kettle.ux.json": "62fbd00f8211195c9599a0a15c377479252eca31e76809432c638503ef23b38c"
+  },
+  "questions_for_user": [],
+  "reason": "60% duty on the status LED during keep_warm fits the current driver",
+  "request": "smart-kettle-led-brightness",
+  "responder": "circuit",
+  "responded_at": "2026-10-05T17:16:03.000000+00:00",
+  "schema_version": 2,
+  "status": "accepted",
+  "system": "ux-creator"
+}

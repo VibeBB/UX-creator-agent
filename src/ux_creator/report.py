@@ -16,7 +16,7 @@ from .advisory import (
 from .contract import UXContract
 from .gates import GateReport, stage_job_coverage
 from .render import RenderResult
-from .responses import liaison_status
+from .responses import ALL_STATES, ALL_STATUSES, liaison_status
 
 _REVIEW_IMAGE_SUFFIXES = {".svg", ".png"}
 
@@ -79,13 +79,10 @@ def review_lens(contract: UXContract, gate_report: GateReport, out_dir: Path) ->
 def liaison_lens(out_dir: Path) -> dict[str, Any]:
     """Measured sister-agent response coverage; informational only."""
     status = liaison_status(out_dir, out_dir)
-    by_status: dict[str, int] = {
-        "accepted": 0,
-        "rejected": 0,
-        "deferred": 0,
-        "needs_info": 0,
-    }
+    by_state = {state: 0 for state in ALL_STATES}
+    by_status = {response_status: 0 for response_status in ALL_STATUSES}
     for entry in status.entries:
+        by_state[entry.state] += 1
         if entry.response_status is not None:
             by_status[entry.response_status] += 1
     return {
@@ -93,12 +90,14 @@ def liaison_lens(out_dir: Path) -> dict[str, Any]:
         "answered": sum(1 for e in status.entries if e.state == "answered"),
         "open": sum(1 for e in status.entries if e.state == "open"),
         "mismatched": sum(1 for e in status.entries if e.state == "mismatched"),
+        "by_state": by_state,
         "by_status": by_status,
         "rejected_high_risk": [
             e.request
             for e in status.entries
             if e.risk == "high" and e.response_status in ("rejected", "deferred")
         ],
+        "open_user_questions": sum(len(e.questions_for_user) for e in status.entries),
         "orphans": status.orphans,
         "malformed": status.malformed,
     }
@@ -297,8 +296,10 @@ def render_markdown(report: dict[str, Any]) -> str:
             f"- requests: {liaison['requests']} "
             f"(answered {liaison['answered']}, open {liaison['open']}, "
             f"mismatched {liaison['mismatched']})",
+            f"- states: {', '.join(f'{k}={v}' for k, v in liaison['by_state'].items())}",
             f"- response statuses: "
             f"{', '.join(f'{k}={v}' for k, v in liaison['by_status'].items())}",
+            f"- open user questions: {liaison['open_user_questions']}",
             f"- rejected/deferred high-risk requests: "
             f"{', '.join(liaison['rejected_high_risk']) or 'none'}",
             f"- orphan responses: {len(liaison['orphans'])}, "

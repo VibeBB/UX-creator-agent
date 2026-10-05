@@ -1,10 +1,27 @@
 {
-  "rationale": "done/press cues for job boil",
+  "acceptance": [
+    "each cue maps to a declared kettle state"
+  ],
+  "created_at": "2026-10-05T17:16:02.064110+00:00",
+  "depends_on": [],
+  "expected_deliverables": [
+    "updated kettle cue set"
+  ],
+  "id": "smart-kettle-cues",
+  "inputs": [
+    {
+      "path": "smart-kettle.ux.json",
+      "sha256": "4f1bd6d4b2a1a09383b15bd6a4a1c73160706d7e2954973d5b3477b7fa9a53c9"
+    }
+  ],
+  "purpose": "Coordinate distinct cues for the kettle workflow",
+  "rationale": "job boil needs distinct audible feedback",
   "requested_changes": [
     "render startup/done/warning/confirm cues for the piezo buzzer"
   ],
   "risk": "low",
-  "schema_version": 1,
+  "schema_version": 2,
+  "stage": "design",
   "system": "ux-creator",
   "target_agent": "bard"
 }

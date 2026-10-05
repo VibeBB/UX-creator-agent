@@ -4,6 +4,8 @@ import asyncio
 import base64
 import hashlib
 import json
+import shutil
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 
@@ -11,7 +13,11 @@ import pytest
 from mcp import types
 
 from ux_creator import mcp_server
+from ux_creator.contract import load_contract
+from ux_creator.records import tree_sha256
 from ux_creator.render import RenderResult
+from ux_creator.requests import build_request, write_request
+from ux_creator.responses import ArtifactRef, UXResponse
 
 EXAMPLE = Path(__file__).resolve().parents[1] / "examples/smart-kettle/smart-kettle.ux.json"
 
@@ -105,4 +111,109 @@ def test_author_render_returns_text_and_inline_png(
         }
     ]
     assert len(images) == 1
+    assert base64.b64decode(images[0].data) == image_bytes
+
+
+def test_produce_render_attaches_production_plan_image(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    source = Path(__file__).resolve().parents[1] / "examples" / "smart-kettle-product"
+    workspace = tmp_path / "product"
+    shutil.copytree(source, workspace)
+    plan_path = workspace / "smart-kettle.production.json"
+    out_dir = workspace / "production-out"
+    image_bytes = b"production-plan-png"
+
+    def fake_render_all(out: Path, **_kwargs: Any) -> list[RenderResult]:
+        assert _kwargs == {"fmts": ("svg", "png")}
+        image = out / "smart-kettle.production.png"
+        image.write_bytes(image_bytes)
+        return [RenderResult(out / "smart-kettle.production.mmd", image, "ok", "")]
+
+    monkeypatch.setattr(mcp_server, "render_all", fake_render_all)
+
+    result = asyncio.run(
+        _call_tool(
+            "ux_produce",
+            {
+                "plan_path": str(plan_path),
+                "out_dir": str(out_dir),
+                "workspace": str(workspace),
+                "liaison_dir": str(workspace / "requests"),
+                "render": True,
+            },
+        )
+    )
+
+    payload, content = _content_payload(result)
+    images = [block for block in content if isinstance(block, types.ImageContent)]
+    assert payload["verdict"] == "pass"
+    assert payload["renders"][0]["status"] == "ok"
+    assert payload["inline_images"][0]["attached"] is True
+    assert len(images) == 1
+    assert base64.b64decode(images[0].data) == image_bytes
+
+
+def test_liaison_status_attaches_answered_image_artifacts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    liaison = tmp_path / "liaison"
+    liaison.mkdir()
+    image = tmp_path / "deliverables" / "assembly.JPG"
+    image.parent.mkdir()
+    image_bytes = b"sister-image"
+    image.write_bytes(image_bytes)
+    request = build_request(
+        load_contract(EXAMPLE),
+        id="request-1",
+        target_agent="mech",
+        stage="design",
+        risk="low",
+        purpose="Review access around the enclosure assembly",
+        rationale="",
+        requested_changes=["review enclosure access"],
+        inputs=[],
+        expected_deliverables=["enclosure access review"],
+        acceptance=["the assembly can be accessed safely"],
+        workspace=tmp_path,
+    )
+    write_request(request, liaison)
+    response = UXResponse(
+        request="request-1",
+        responder="mech",
+        status="accepted",
+        reason="The enclosure update is ready for review.",
+        artifacts=[ArtifactRef(path="deliverables/assembly.JPG", sha256=tree_sha256(image))],
+        responded_at=datetime.now(UTC).isoformat(),
+    )
+    (liaison / "request-1.ux-response.json").write_text(
+        json.dumps(response.model_dump(), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    result = asyncio.run(
+        _call_tool(
+            "ux_liaison_status",
+            {
+                "workspace": str(tmp_path),
+                "liaison_dir": str(liaison),
+                "attach_images": True,
+            },
+        )
+    )
+
+    payload, content = _content_payload(result)
+    images = [block for block in content if isinstance(block, types.ImageContent)]
+    assert payload["entries"][0]["state"] == "answered"
+    assert payload["inline_images"] == [
+        {
+            "path": str(image),
+            "sha256": hashlib.sha256(image_bytes).hexdigest(),
+            "attached": True,
+        }
+    ]
+    assert len(images) == 1
+    assert images[0].mimeType == "image/jpeg"
     assert base64.b64decode(images[0].data) == image_bytes

@@ -14,28 +14,11 @@ from pathlib import Path
 
 SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
-VERSION_FILES = [
-    "plugins/ux/.plugin/plugin.json",
-    "pyproject.toml",
-    "plugins/ux/skills/ux-diagrams/SKILL.md",
-    "plugins/ux/skills/ux-jtbd/SKILL.md",
-    "plugins/ux/skills/ux-persona/SKILL.md",
-    "plugins/ux/skills/ux-ruby-style/SKILL.md",
-    "plugins/ux/skills/ux-sibling-cooperation/SKILL.md",
-    "plugins/ux/skills/ux-theory-lenses/SKILL.md",
-    "plugins/ux/skills/ux-workflow/SKILL.md",
-]
-
-_PATTERNS = {
-    "plugins/ux/.plugin/plugin.json": re.compile(r'"version":\s*"([^"]+)"'),
+PLUGIN_VERSION_FILE = "plugins/ux/.plugin/plugin.json"
+SKILLS_DIR = Path("plugins/ux/skills")
+_BASE_PATTERNS = {
+    PLUGIN_VERSION_FILE: re.compile(r'"version":\s*"([^"]+)"'),
     "pyproject.toml": re.compile(r'(?m)^version = "([^"]+)"'),
-    "plugins/ux/skills/ux-diagrams/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
-    "plugins/ux/skills/ux-jtbd/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
-    "plugins/ux/skills/ux-persona/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
-    "plugins/ux/skills/ux-ruby-style/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
-    "plugins/ux/skills/ux-sibling-cooperation/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
-    "plugins/ux/skills/ux-theory-lenses/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
-    "plugins/ux/skills/ux-workflow/SKILL.md": re.compile(r"(?m)^version: (.+)$"),
 }
 
 UV_LOCK = "uv.lock"
@@ -46,9 +29,23 @@ class BumpError(Exception):
     pass
 
 
-def _read_versions(root: Path) -> dict[str, str]:
+def _version_patterns(root: Path) -> dict[str, re.Pattern[str]]:
+    patterns = dict(_BASE_PATTERNS)
+    skills_dir = root / SKILLS_DIR
+    if not skills_dir.is_dir():
+        raise BumpError(f"{SKILLS_DIR.as_posix()}: directory not found")
+    skill_files = sorted(skills_dir.glob("*/SKILL.md"))
+    if not skill_files:
+        raise BumpError(f"{SKILLS_DIR.as_posix()}: no SKILL.md files found")
+    for path in skill_files:
+        relative = path.relative_to(root).as_posix()
+        patterns[relative] = re.compile(r"(?m)^version: (.+)$")
+    return patterns
+
+
+def _read_versions(root: Path, patterns: dict[str, re.Pattern[str]]) -> dict[str, str]:
     versions: dict[str, str] = {}
-    for rel, pattern in _PATTERNS.items():
+    for rel, pattern in patterns.items():
         path = root / rel
         if not path.is_file():
             raise BumpError(f"{rel}: file not found")
@@ -60,7 +57,7 @@ def _read_versions(root: Path) -> dict[str, str]:
 
 
 def _check_consistent(versions: dict[str, str]) -> str:
-    current = versions[VERSION_FILES[0]]
+    current = versions[PLUGIN_VERSION_FILE]
     mismatch = {rel: v for rel, v in versions.items() if v != current}
     if mismatch:
         details = "; ".join(f"{rel}={v}" for rel, v in versions.items())
@@ -90,8 +87,8 @@ def _gt(a: str, b: str) -> bool:
     return _parse(a) > _parse(b)
 
 
-def _apply(root: Path, old: str, new: str) -> None:
-    for rel, pattern in _PATTERNS.items():
+def _apply(root: Path, new: str, patterns: dict[str, re.Pattern[str]]) -> None:
+    for rel, pattern in patterns.items():
         path = root / rel
         text = path.read_text(encoding="utf-8")
         replaced = pattern.sub(lambda m, v=new: m.group(0).replace(m.group(1), v), text, count=1)
@@ -121,7 +118,8 @@ def main(argv: list[str] | None = None) -> int:
 
     root = Path(args.root)
     try:
-        current = _check_consistent(_read_versions(root))
+        patterns = _version_patterns(root)
+        current = _check_consistent(_read_versions(root, patterns))
         if args.set_version:
             new = args.set_version.lstrip("v")
             if not SEMVER_RE.match(new):
@@ -131,7 +129,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             new = _bumped(current, args.bump)
         if not args.dry_run:
-            _apply(root, current, new)
+            _apply(root, new, patterns)
     except BumpError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

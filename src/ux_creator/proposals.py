@@ -9,6 +9,7 @@ contract and assigns a deterministic status:
 - `needs_theory_break`      — bold but no `theory_break` named
 - `bold_without_opportunity`— bold but none of its jobs is underserved
 - `no_target`               — no sibling agent exists for that layer
+- `no_job`                  — no declared user job grounds the proposal
 - `unknown_job`             — cites a job id that is not in the contract
 - `unknown_surface`         — references a surface not in the contract
 
@@ -23,13 +24,16 @@ must argue from a job (ADR-0006).
 from __future__ import annotations
 
 import json
+import re
+from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from .contract import QCDDelivery, QCDLevel, SurfaceLayer, UXContract, contract_sha256
-from .requests import JOB_ID, TARGET_AGENTS, build_request, write_request
+from .requests import JOB_ID, build_request, write_request
+from .sisters import TARGET_AGENTS, TargetAgent
 
 SCHEMA_VERSION = 1
 SYSTEM = "ux-creator"
@@ -41,6 +45,7 @@ ProposalStatus = Literal[
     "needs_theory_break",
     "bold_without_opportunity",
     "no_target",
+    "no_job",
     "unknown_job",
     "unknown_surface",
 ]
@@ -49,16 +54,16 @@ HIGH_RISK_LAYERS: frozenset[SurfaceLayer] = frozenset(
     {"hardware", "mechanism", "industrial_design", "circuit", "firmware"}
 )
 
-LAYER_TARGETS: dict[SurfaceLayer, tuple[str, ...]] = {
+LAYER_TARGETS: dict[SurfaceLayer, tuple[TargetAgent, ...]] = {
     "hardware": ("mech",),
     "mechanism": ("mech",),
     "industrial_design": ("mech",),
     "circuit": ("circuit", "wire"),
-    "firmware": (),
-    "cloud_backend": (),
-    "web_ui": (),
-    "smartphone_app": (),
-    "pc_app": (),
+    "firmware": ("firmware",),
+    "cloud_backend": ("dashboard",),
+    "web_ui": ("dashboard",),
+    "smartphone_app": ("dashboard",),
+    "pc_app": ("dashboard",),
 }
 
 
@@ -141,6 +146,11 @@ def triage(contract: UXContract, proposals: ProposalSet) -> list[TriagedProposal
         elif unknown_jobs:
             status = "unknown_job"
             reasons.append(f"unknown job ids: {unknown_jobs}")
+        elif not prop.jobs:
+            status = "no_job"
+            reasons.append(
+                "proposal must cite at least one declared job before it can be auto-sent"
+            )
         elif not target:
             status = "no_target"
             reasons.append(f"no sibling agent exists for layer {layer!r}")
@@ -182,6 +192,10 @@ def write_triage(
     proposals: ProposalSet,
     out_dir: Path,
     name: str = "ux-proposals",
+    *,
+    contract_path: Path | None = None,
+    workspace: Path | None = None,
+    now: datetime | None = None,
 ) -> dict[str, Path]:
     triaged = triage(contract, proposals)
     by_id = {p.id: p for p in proposals.proposals}
@@ -203,6 +217,13 @@ def write_triage(
         encoding="utf-8",
     )
     paths["triage"] = triage_path
+    root = workspace or Path(".")
+    contract_input: list[str] = []
+    if contract_path is not None:
+        try:
+            contract_input = [contract_path.resolve().relative_to(root.resolve()).as_posix()]
+        except (OSError, ValueError):
+            contract_input = []
     for t in triaged:
         if t.status != "auto_send":
             continue
@@ -210,12 +231,30 @@ def write_triage(
         rationale = prop.rationale or prop.summary
         if prop.bold:
             rationale = f"[bold] breaks: {prop.theory_break} — {rationale}"
+        request_id = _proposal_request_id(name, prop.id)
+        cited_jobs = sorted(set(prop.jobs))
+        acceptance = [f"Responds with status done and an artifact that realizes {prop.summary}"]
+        acceptance.extend(f"job {job_id} remains served" for job_id in cited_jobs)
+        purpose = f"UX proposal {request_id}: {prop.summary}"
         request = build_request(
             contract,
+            id=request_id,
             target_agent=t.target_agent,
+            stage="design",
             risk=t.risk,
+            purpose=purpose,
             rationale=rationale,
             requested_changes=[prop.summary],
+            inputs=contract_input,
+            expected_deliverables=[f"{prop.surface} change implementing: {prop.summary}"],
+            acceptance=acceptance,
+            workspace=root,
+            now=now,
         )
-        paths[t.id] = write_request(request, out_dir, f"{name}-{t.id}")
+        paths[t.id] = write_request(request, out_dir)
     return paths
+
+
+def _proposal_request_id(name: str, proposal_id: str) -> str:
+    slug = re.sub(r"[^a-z0-9.-]+", "-", f"{name}-{proposal_id}".lower()).strip("-.")
+    return slug[:64].rstrip("-.") or "ux-proposal"

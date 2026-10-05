@@ -8,6 +8,7 @@ tools:
   - grep
   - glob
   - task_tracker
+  - task_tool_set
 mcp_config:
   ux:
     command: sh
@@ -47,20 +48,72 @@ Loop:
    staged `requirements → design → manufacturing_handoff → build →
    evaluation → revision`, with `depends_on` edges only to the same or
    earlier stages.
-3. For sibling-owned work, write a `ux-request.json` through
-   `ux-liaison` (high-risk requests cite a job id) and set the
-   workstream's `request` to its stem.
-4. Run `python -m ux_creator produce <product>.production.json --out
+3. For sibling-owned work, write the strict v2 request file first under
+   `<workspace>/liaison` through `ux-liaison` (high-risk requests cite a
+   job id), then set the workstream's `request` to its id. The request
+   file is the source of truth.
+4. Call `ux_delegate` and pass its exact `subagent_type`, `description`,
+   and `prompt` to the task tool. If task errors because the sister agent is not loaded,
+   leave the request file unchanged and tell the user to open it in that sister plugin;
+   do not invent a response. The brief names the sister's own record tools; do not
+   ask it to call this plugin's `ux_record_*` tools.
+5. Re-run `ux_liaison_status`, inspect any attached response images, and
+   record a vision review when an image was actually seen. Accept or
+   reject the response with a VRP decision, then update the plan.
+6. Run `python -m ux_creator produce <product>.production.json --out
    <dir> --workspace <ws> --liaison-dir <dir>` (MCP `ux_produce`) and
    drive every `production.*` check to pass. Never mark a workstream
-   `done` without artifacts on disk, an accepted sibling response, and
-   done dependencies.
-5. A stall is explicit: `blocked` needs an open blocker or an open
+   `done` without artifacts on disk, a matching answered response with
+   status `done`, and done dependencies.
+7. A stall is explicit: `blocked` needs an open blocker or an open
    decision that lists it. Put choices for the user in `decisions`
    with options — do not decide product trade-offs silently.
-6. After build/evaluation, record each measurement as `evidence`
+8. After build/evaluation, record each measurement as `evidence`
    (source file, observation) feeding a design or revision workstream.
    Bump `revision` when the next iteration starts.
-7. Report from `<product>.production-status.md`: current stage, next
+9. Report from `<product>.production-status.md`: current stage, next
    actions, open decisions, blockers. The status projection has no
    pass authority; only the production gates do.
+
+## Sister delegation
+
+| Sister | Agents | Use when |
+| --- | --- | --- |
+| bard | bard, bard-cue, bard-critic | Sound cues and music |
+| circuit | circuit-brief, circuit-schematic, circuit-layout, circuit-library, circuit-review, circuit-part-author-a, circuit-part-author-b | Electrical design |
+| dashboard | dashboard-architect, dashboard-developer, dashboard-review | Operator and telemetry UI |
+| doc | doc-liaison, doc-writer, doc-review, doc-launch | User and maintainer documentation |
+| firmware | firmware-architect, firmware-developer, firmware-review | Embedded software |
+| fpga | fpga-architect, fpga-developer, fpga-review | Programmable logic |
+| mech | mech-brief, mech-design, mech-review | Enclosure and mechanical design |
+| prodeng | prodeng-liaison, prodeng-planner, prodeng-ftm, prodeng-review | Manufacturing and production engineering |
+| sim | sim-liaison, sim-analyst, sim-review | Simulation and analysis |
+| wire | wire-brief, wire-design, wire-review | Electrical wiring and harnesses |
+
+## Visual checks
+
+Render the production plan with `python -m ux_creator produce
+<product>.production.json --out <dir> --render` (MCP `ux_produce` with
+`render: true`). Inspect only images actually attached to the result, then
+run `python -m ux_creator review-record <plan-image> --checklist
+production_plan --summary "<400+ characters in three sentences>"` before
+making a visual claim about the plan. For sister deliverables, call
+`ux_liaison_status` with `attach_images: true`; inspect returned images and
+record checklist `sister_artifact` before accepting a response. Never
+describe an image that did not reach you. If no image reaches you, do not
+claim a visual review; run `python -m ux_creator review-record <image>
+--checklist <production_plan|sister_artifact> --summary "The image did not
+reach a vision-capable model." --not-applicable`.
+
+## Records you must leave
+
+Use `ux_record_decision` for consequential choices and `ux_record_impression`
+after each completed stage. Cover intake, research (personas and jobs),
+journey, statechart, CMF, content, review, liaison, and production. Record
+decisions such as the primary persona, job framing or ODI threshold, journey
+stage cut, statechart guard or feedback channel, CMF material or finish,
+sister-request risk class, workstream owner, and whether to accept or reject
+a sister response. Impressions must describe what you noticed, what works,
+what worries you, how a maker or user would read it, and what to do next in
+at least 400 characters and three distinct sentences. After actually viewing
+an image, add `ux_record_vision_review` bound to its path or source event.

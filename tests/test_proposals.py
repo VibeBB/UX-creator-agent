@@ -49,16 +49,23 @@ def test_unknown_job(contract_dict: dict[str, Any]) -> None:
     assert triaged[0].status == "unknown_job"
 
 
-def test_no_target_on_unserved_layer(example_contract: UXContract) -> None:
+def test_dashboard_handles_app_layers(example_contract: UXContract) -> None:
     triaged = triage(
         example_contract,
-        _props({"id": "p", "surface": "mobile_app", "summary": "x"}),
+        _props(
+            {
+                "id": "p",
+                "surface": "mobile_app",
+                "summary": "x",
+                "jobs": ["boil"],
+            }
+        ),
     )
     t = triaged[0]
-    assert t.status == "no_target"
+    assert t.status == "auto_send"
     assert t.layer == "smartphone_app"
     assert t.risk == "low"
-    assert t.target_agent == ""
+    assert t.target_agent == "dashboard"
 
 
 def test_needs_rationale_high_risk(example_contract: UXContract) -> None:
@@ -190,6 +197,8 @@ def test_write_triage_writes_requests_only_for_auto_send(
     assert triage_doc["schema_version"] == 1
     assert triage_doc["contract_sha256"].startswith("sha256:")
     assert len(triage_doc["triaged"]) == 3
+    triaged = {item["id"]: item for item in triage_doc["triaged"]}
+    assert triaged["unserved"]["status"] == "no_job"
     request = json.loads(paths["sent"].read_text(encoding="utf-8"))
     assert request["system"] == "ux-creator"
     assert request["target_agent"] == "circuit"
@@ -200,7 +209,8 @@ def test_write_triage_writes_requests_only_for_auto_send(
 def test_example_proposals_file_statuses(example_contract: UXContract) -> None:
     proposals = ProposalSet.model_validate(json.loads(Path(PROPOSALS).read_text(encoding="utf-8")))
     statuses = _by_id(triage(example_contract, proposals))
-    assert statuses["app_onboard_tour"].status == "no_target"
+    assert statuses["app_onboard_tour"].status == "auto_send"
+    assert statuses["app_onboard_tour"].target_agent == "dashboard"
     assert statuses["led_brightness"].status == "auto_send"
     assert statuses["led_brightness"].target_agent == "circuit"
     assert statuses["capacitive_button"].status == "needs_rationale"
@@ -229,14 +239,10 @@ def test_cli_propose_round_trip(tmp_path: Path) -> None:
     payload = json.loads(proc.stdout)
     assert payload["verdict"] == "pass"
     assert payload["stage"] == "propose"
-    assert payload["blocked"] == [
-        "app_onboard_tour",
-        "capacitive_button",
-        "no_button_boil",
-    ]
+    assert payload["blocked"] == ["capacitive_button", "no_button_boil"]
     written = {Path(p).name for p in payload["written"].values()}
     assert "smart-kettle.triage.json" in written
-    assert "smart-kettle-led_brightness.ux-request.json" in written
+    assert "smart-kettle-led-brightness.ux-request.json" in written
 
 
 def test_cli_propose_fail_closed(tmp_path: Path) -> None:
