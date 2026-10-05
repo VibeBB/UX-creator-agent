@@ -1,7 +1,9 @@
 # Improvement notes
 
-This list records issues found during the VibeBB family refactor, what this
-repository now addresses, and remaining cross-repository or product gaps.
+This list is for UX designers and maintainers. It records why particular
+changes were made, what this repository now addresses, and which follow-ups
+remain. "Remaining" means the gap is visible and should be planned; it does
+not mean the plugin has quietly accepted or solved it.
 
 ## Addressed in UX-creator-agent
 

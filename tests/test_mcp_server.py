@@ -63,7 +63,7 @@ def test_path_escape_is_a_transport_error(monkeypatch: pytest.MonkeyPatch, tmp_p
     assert "outside the workspace" in payload["detail"]
 
 
-def test_record_tools_are_declared_append_only_and_read_only() -> None:
+def test_record_tools_are_declared_append_only() -> None:
     tools = {tool.name: tool for tool in mcp_server.tool_specs()}
     append_tools = {
         "ux_record_decision",
@@ -84,6 +84,11 @@ def test_record_tools_are_declared_append_only_and_read_only() -> None:
     assert delegate_annotations is not None
     assert delegate_annotations.readOnlyHint is True
     assert delegate_annotations.destructiveHint is False
+    render_annotations = tools["ux_render"].annotations
+    assert render_annotations is not None
+    assert render_annotations.readOnlyHint is False
+    assert render_annotations.destructiveHint is False
+    assert render_annotations.idempotentHint is True
 
 
 def test_mcp_tools_have_explicit_descriptions() -> None:

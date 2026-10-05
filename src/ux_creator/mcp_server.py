@@ -239,6 +239,7 @@ _WRITE_TOOLS = {
     "ux_propose",
     "ux_from_ruby",
     "ux_produce",
+    "ux_render",
     "ux_record_decision",
     "ux_record_impression",
     "ux_record_vision_review",

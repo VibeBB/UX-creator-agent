@@ -1,12 +1,25 @@
 # ux-creator-agent documentation
 
-Specifications and operating policy for the UX design agent. The README is
-the product overview; this directory holds the authoritative
-specifications and design decisions.
+Documentation for the VibeBB UX design plugin. The root README is the
+product overview; this directory contains the architecture, user workflow,
+protocols, operations, and accepted design decisions.
 
-## Guides
+## Product and technical guides
 
-- [Operations](operations.md) — release, dependency-update, and CI policy
+- [Architecture](architecture.md) — system boundaries, execution flow, and core entry points
+- [Workflow](workflow.md) — brief-to-contract, gates, review, evidence, and handoff
+- [Agents](agents.md) — all UX specialist agents and their boundaries
+- [Skills](skills.md) — all UX knowledge skills and when to use them
+- [Commands](commands.md) — CLI and OpenHands slash commands
+- [MCP](mcp.md) — tools, schemas, effects, outputs, and errors
+- [Hooks](hooks.md) — lifecycle events, scripts, and record policy
+- [Contracts](contracts.md) — UX, SLP v2, production, VRP, and advisory formats
+- [Records and vision](records-and-vision.md) — decision, impression, image, and review evidence
+- [Sister cooperation](sister-cooperation.md) — ten registered targets and hash-bound exchange
+- [Performance and limits](performance-and-limits.md) — timeouts, inline image caps, and known gaps
+- [Development](development.md) — checkout setup and prescribed verification
+- [Improvement notes](improvement-notes.md) — resolved findings and maintainer follow-ups
+- [Operations](operations.md) — releases, dependency updates, Docker image, and CI policy
 - [Dependency updates](dependency-updates.md) — pinned versions, sources, and adoption decisions
 
 ## Research
@@ -39,3 +52,4 @@ specifications and design decisions.
 - [ADR-0016](adr/0016-png-renders-and-inline-images.md) — PNG renders and inline image observations
 - [ADR-0017](adr/0017-development-coverage-gate.md) — development-only coverage gate
 - [ADR-0018](adr/0018-attest-published-tools-images.md) — attest published tools images
+- [ADR-0019](adr/0019-hash-bound-slp-v2-and-liaison-gates.md) — hash-bound SLP v2 and deterministic liaison reconciliation
