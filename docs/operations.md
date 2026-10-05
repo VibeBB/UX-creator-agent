@@ -25,6 +25,29 @@ stay below the 16 MiB limit.
   `check_ruby_dsl.py` inside the image
 - `ruby` — Ruby DSL parity/lint/minitest inside the image only
 
+### Partial runs and local image builds
+
+`--list` dumps each stage's commands as JSON; `--group` (`lint`, `unit`,
+`docker`), `--match <substr>`, and `--shard K/N` select a subset of a stage:
+
+```bash
+uv run python scripts/verify_all.py --stage fast --group lint
+uv run python scripts/verify_all.py --stage fast --match test_contract
+```
+
+CI uses the same flags for its matrix legs, so a local partial run reproduces
+a failing check exactly. Run the full `fast` stage before submitting.
+
+Local `ux-tools` builds can reuse the CI-warmed registry buildcache; it is a
+public `buildcache` tag, so no GHCR login is needed:
+
+```bash
+docker buildx build --load \
+  -f docker/ux-tools.Dockerfile -t ux-tools:local \
+  --cache-from type=registry,ref=ghcr.io/vibebb/ux-tools:buildcache \
+  .
+```
+
 ## Dependency updates
 
 `scripts/check_dependency_updates.py` polls the external sources below;
