@@ -1,5 +1,6 @@
 """Tests for scripts/bump_version.py."""
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -9,20 +10,9 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "scripts" / "bump_version.py"
 
-SKILLS = [
-    "ux-diagrams",
-    "ux-jtbd",
-    "ux-persona",
-    "ux-ruby-style",
-    "ux-sibling-cooperation",
-    "ux-theory-lenses",
-    "ux-workflow",
-]
-
-FILES = [
+BASE_FILES = [
     "plugins/ux/.plugin/plugin.json",
     "pyproject.toml",
-    *[f"plugins/ux/skills/{skill}/SKILL.md" for skill in SKILLS],
     "uv.lock",
 ]
 
@@ -38,7 +28,7 @@ def _make_repo(tmp_path: Path, version: str = "0.1.0") -> Path:
         '[tool.ruff]\ntarget-version = "py312"\n',
         encoding="utf-8",
     )
-    for skill in SKILLS:
+    for skill in ("ux-workflow", "ux-producer"):
         skill_dir = tmp_path / f"plugins/ux/skills/{skill}"
         skill_dir.mkdir(parents=True)
         (skill_dir / "SKILL.md").write_text(
@@ -64,11 +54,15 @@ def _run(*args: str) -> subprocess.CompletedProcess[str]:
 
 
 def _versions(tmp_path: Path) -> list[str]:
-    import re
-
-    texts = [(tmp_path / rel).read_text(encoding="utf-8") for rel in FILES]
+    skill_files = sorted((tmp_path / "plugins/ux/skills").glob("*/SKILL.md"))
+    files = [
+        *BASE_FILES[:2],
+        *(path.relative_to(tmp_path).as_posix() for path in skill_files),
+        "uv.lock",
+    ]
+    texts = [(tmp_path / rel).read_text(encoding="utf-8") for rel in files]
     found: list[str] = []
-    for rel, text in zip(FILES, texts, strict=True):
+    for rel, text in zip(files, texts, strict=True):
         if rel.endswith("plugin.json"):
             m = re.search(r'"version": "([^"]+)"', text)
         elif rel == "pyproject.toml":
@@ -82,6 +76,12 @@ def _versions(tmp_path: Path) -> list[str]:
     return found
 
 
+def _assert_all_versions(root: Path, expected: str) -> None:
+    versions = _versions(root)
+    assert versions
+    assert set(versions) == {expected}
+
+
 @pytest.mark.parametrize(
     ("bump", "expected"),
     [("patch", "0.1.1"), ("minor", "0.2.0"), ("major", "1.0.0")],
@@ -91,7 +91,7 @@ def test_bump(tmp_path: Path, bump: str, expected: str) -> None:
     proc = _run("--bump", bump, "--root", str(root))
     assert proc.returncode == 0
     assert proc.stdout.strip() == expected
-    assert _versions(root) == [expected] * 10
+    _assert_all_versions(root, expected)
 
 
 def test_set_version(tmp_path: Path) -> None:
@@ -99,7 +99,7 @@ def test_set_version(tmp_path: Path) -> None:
     proc = _run("--set", "2.5.0", "--root", str(root))
     assert proc.returncode == 0
     assert proc.stdout.strip() == "2.5.0"
-    assert _versions(root) == ["2.5.0"] * 10
+    _assert_all_versions(root, "2.5.0")
 
 
 def test_set_rejects_lower(tmp_path: Path) -> None:
@@ -107,7 +107,7 @@ def test_set_rejects_lower(tmp_path: Path) -> None:
     proc = _run("--set", "0.1.0", "--root", str(root))
     assert proc.returncode == 1
     assert "must be greater than" in proc.stderr
-    assert _versions(root) == ["0.1.0"] * 10
+    _assert_all_versions(root, "0.1.0")
 
 
 def test_inconsistent_rejected(tmp_path: Path) -> None:
@@ -124,7 +124,21 @@ def test_dry_run_leaves_files(tmp_path: Path) -> None:
     proc = _run("--bump", "minor", "--dry-run", "--root", str(root))
     assert proc.returncode == 0
     assert proc.stdout.strip() == "0.2.0"
-    assert _versions(root) == ["0.1.0"] * 10
+    _assert_all_versions(root, "0.1.0")
+
+
+def test_bump_discovers_new_skill_directory(tmp_path: Path) -> None:
+    root = _make_repo(tmp_path)
+    skill = root / "plugins/ux/skills/ux-late-added/SKILL.md"
+    skill.parent.mkdir()
+    skill.write_text(
+        "---\nname: ux-late-added\nversion: 0.1.0\n---\n",
+        encoding="utf-8",
+    )
+    proc = _run("--bump", "patch", "--root", str(root))
+    assert proc.returncode == 0
+    assert proc.stdout.strip() == "0.1.1"
+    _assert_all_versions(root, "0.1.1")
 
 
 def test_uv_lock_other_versions_untouched(tmp_path: Path) -> None:

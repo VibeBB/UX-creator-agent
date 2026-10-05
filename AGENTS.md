@@ -1,12 +1,25 @@
 # AGENTS.md — VibeBB UX-creator-agent
 
 Guidance for AI agents and humans working on this repository. It is the
-**VibeBB UX design sibling** in a family of OpenHands plugins
-(`bard-agent`, `wire-agent`, `mechanical-agent`, `electrical-circuit-agent`)
-that share the same contracts, hooks, and release pipelines.
+**VibeBB UX design sibling** in a family of 11 OpenHands plugin
+repositories. UX-creator coordinates the ten sister plugins below through
+workspace contracts and liaison records.
 UX-creator orchestrates UX *contracts* — personas, JTBD jobs, journeys,
 service blueprints, statecharts, QCD — and projects them into diagrams
 (Mermaid, PlantUML, XState, SCXML, Storybook).
+
+| Sister repository | Target | Primary contribution |
+| --- | --- | --- |
+| `bard-agent` | `bard` | Sound cues and music |
+| `electrical-circuit-agent` | `circuit` | Electrical design |
+| `dashboard-agent` | `dashboard` | Operator and telemetry UI |
+| `document-agent` | `doc` | User and maintainer documentation |
+| `firmware-agent` | `firmware` | Embedded software |
+| `fpga-agent` | `fpga` | Programmable logic |
+| `mechanical-agent` | `mech` | Enclosure and mechanical design |
+| `production-engineering-agent` | `prodeng` | Manufacturing and production engineering |
+| `simulation-agent` | `sim` | Simulation and analysis |
+| `wire-agent` | `wire` | Electrical wiring and harnesses |
 
 ## Authoring rules
 
@@ -21,13 +34,19 @@ service blueprints, statecharts, QCD — and projects them into diagrams
   put logic in them; every executable step delegates to
   `python -m ux_creator` inside the `ux-tools` container image.
 - UX output files are `{product}.ux.json`, `*.ux-proposals.json` +
-  `*.triage.json`/`*.ux-request.json`/`*.ux-response.json` liaison files, `out/<name>/` projections
+  `*.triage.json`, hash-bound SLP v2 `*.ux-request.json` and
+  `*.ux-response.json` liaison files, `out/<name>/` projections
   (`*.journey.mmd`, `*.statechart.{mmd,puml,xstate.json,scxml}`,
   `*.wireframe.puml`, `*.blueprint.puml`, `*.emotion.mmd`/`*.emotion.json`, `*.mindmap.mmd`,
   `*.sequence.puml`, `*.wbs.puml`,
   `*.stories.json`, `*.odi.csv`, `manifest.json`,
   `provenance.json`, `ux-report.json/.md`), `*.ux-request.json`, and
   `*.ux-vision.jsonl` advisory records.
+- VRP decisions, impressions, and vision reviews are JSONL records under
+  `observations/<plugin>/` and `impressions/<plugin>/`. Sister request and
+  response files are strict v2 records with workspace-relative SHA-256
+  input/artifact references, timezone-aware timestamps, and explicit
+  responder and gate evidence.
 - **Do not mutate an authored contract** — it is re-derived from the
   Ruby DSL or the `author`/`import` entry points; the gates gate, not
   post-edits.
@@ -130,8 +149,12 @@ stage across jobs; `--list` dumps the tagged command table.
   `scripts/check_shared_hooks.py`.
 - `intake_attachments.py`, `protect_generated.py`, `report_ux_status.py`,
   `record_*`, and `ux_doctor.py` hooks are intentionally repo-specific.
-- High-risk sibling requests (`ux-request.json`) must cite a job id —
-  enforced in `requests.py` and the `ux-liaison` skill.
+- High-risk SLP v2 sibling requests must cite a declared job id —
+  enforced in `requests.py` and the `ux-liaison` agent/skill. Reconcile
+  request lifecycle states through `python -m ux_creator liaison`; the
+  states are `open`, `answered`, `mismatched`, `stale`, `broken`,
+  `blocked`, and `circular`. Production gates consume request completion,
+  request ownership, liaison integrity, and sister-record evidence.
 - Vision observations are typed L2 advisory records only — never
   verdicts, never gate inputs.
 
