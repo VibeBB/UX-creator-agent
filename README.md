@@ -15,7 +15,7 @@ It is the UX design member of the VibeBB sister-plugin family
 (`wire-agent`, `mechanical-agent`, `electrical-circuit-agent`,
 `bard-agent`).
 
-- **Target**: OpenHands Software Agent SDK **v1.51.0**, Python 3.12+
+- **Target**: OpenHands Software Agent SDK **v1.52.0**, Python 3.12+
 - **Contract**: `{product}.ux.json` (`schema_version: 1`,
   `system: "ux-creator"`) — personas, jobs (ODI), journeys (typed
   stages with job links), service blueprint, statecharts
@@ -165,7 +165,7 @@ Storybook ストーリー要件に投影され、決定論的ゲート・sha256 
 VibeBB 姉妹プラグインファミリー（`wire-agent`、`mechanical-agent`、
 `electrical-circuit-agent`、`bard-agent`）の UX デザイン担当です。
 
-- **対象**: OpenHands Software Agent SDK **v1.51.0**、Python 3.12+
+- **対象**: OpenHands Software Agent SDK **v1.52.0**、Python 3.12+
 - **コントラクト**: `{product}.ux.json`（`schema_version: 1`、
   `system: "ux-creator"`）— ペルソナ、ジョブ（ODI）、ジャーニー（種別付き
   ステージ）、サービスブループリント、ステートチャート
