@@ -1,11 +1,22 @@
 {
   "artifacts": [
-    "cues/smart-kettle/cues.json"
+    {
+      "path": "cues/smart-kettle/cues.json",
+      "sha256": "095f957d4d3c49cceacd2d12d647d1498387c3db7cd068605e678075268f6d04"
+    }
   ],
-  "reason": "rendered boot/done/overheat/press cues for the piezo buzzer",
+  "decision_refs": [],
+  "gate_verdicts": [],
+  "impression_refs": [],
+  "input_hashes": {
+    "smart-kettle.ux.json": "4f1bd6d4b2a1a09383b15bd6a4a1c73160706d7e2954973d5b3477b7fa9a53c9"
+  },
+  "questions_for_user": [],
+  "reason": "Rendered boot/done/overheat/press cues for the piezo buzzer.",
   "request": "smart-kettle-cues",
   "responder": "bard",
-  "schema_version": 1,
+  "responded_at": "2026-10-05T17:16:03.000000+00:00",
+  "schema_version": 2,
   "status": "accepted",
   "system": "ux-creator"
 }

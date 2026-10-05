@@ -8,6 +8,7 @@ tools:
   - grep
   - glob
   - task_tracker
+  - task_tool_set
 mcp_config:
   ux:
     command: sh
@@ -47,23 +48,46 @@ Loop:
    staged `requirements → design → manufacturing_handoff → build →
    evaluation → revision`, with `depends_on` edges only to the same or
    earlier stages.
-3. For sibling-owned work, write a `ux-request.json` through
-   `ux-liaison` (high-risk requests cite a job id) and set the
-   workstream's `request` to its stem.
-4. Run `python -m ux_creator produce <product>.production.json --out
+3. For sibling-owned work, write the strict v2 request file first under
+   `<workspace>/liaison` through `ux-liaison` (high-risk requests cite a
+   job id), then set the workstream's `request` to its id. The request
+   file is the source of truth.
+4. Call `ux_delegate` and pass its exact `subagent_type`, `description`,
+   and `prompt` to the task tool. If task errors because the sister agent
+   is not loaded, leave the request file unchanged and tell the user to
+   open it in that sister plugin; do not invent a response.
+5. Re-run `ux_liaison_status`, inspect any attached response images, and
+   record a vision review when an image was actually seen. Accept or
+   reject the response with a VRP decision, then update the plan.
+6. Run `python -m ux_creator produce <product>.production.json --out
    <dir> --workspace <ws> --liaison-dir <dir>` (MCP `ux_produce`) and
    drive every `production.*` check to pass. Never mark a workstream
-   `done` without artifacts on disk, an accepted sibling response, and
-   done dependencies.
-5. A stall is explicit: `blocked` needs an open blocker or an open
+   `done` without artifacts on disk, a matching answered response with
+   status `done`, and done dependencies.
+7. A stall is explicit: `blocked` needs an open blocker or an open
    decision that lists it. Put choices for the user in `decisions`
    with options — do not decide product trade-offs silently.
-6. After build/evaluation, record each measurement as `evidence`
+8. After build/evaluation, record each measurement as `evidence`
    (source file, observation) feeding a design or revision workstream.
    Bump `revision` when the next iteration starts.
-7. Report from `<product>.production-status.md`: current stage, next
+9. Report from `<product>.production-status.md`: current stage, next
    actions, open decisions, blockers. The status projection has no
    pass authority; only the production gates do.
+
+## Sister delegation
+
+| Sister | Agents | Use when |
+| --- | --- | --- |
+| bard | bard, bard-cue, bard-critic | Sound cues and music |
+| circuit | circuit-brief, circuit-schematic, circuit-layout, circuit-library, circuit-review, circuit-part-author-a, circuit-part-author-b | Electrical design |
+| dashboard | dashboard-architect, dashboard-developer, dashboard-review | Operator and telemetry UI |
+| doc | doc-liaison, doc-writer, doc-review, doc-launch | User and maintainer documentation |
+| firmware | firmware-architect, firmware-developer, firmware-review | Embedded software |
+| fpga | fpga-architect, fpga-developer, fpga-review | Programmable logic |
+| mech | mech-brief, mech-design, mech-review | Enclosure and mechanical design |
+| prodeng | prodeng-liaison, prodeng-planner, prodeng-ftm, prodeng-review | Manufacturing and production engineering |
+| sim | sim-liaison, sim-analyst, sim-review | Simulation and analysis |
+| wire | wire-brief, wire-design, wire-review | Electrical wiring and harnesses |
 
 ## Visual checks
 

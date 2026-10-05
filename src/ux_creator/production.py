@@ -17,40 +17,21 @@ import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .contract import load_contract
 from .gates import FAIL, PASS, UNKNOWN, CheckStatus, GateCheck, Verdict, run_gates
-from .responses import liaison_status
+from .observations import collect_records, records_to_dict
+from .responses import LiaisonStatus, liaison_status, load_response_records
+from .sisters import PRODUCT_STAGES, ProductStage, TargetAgent
 
 ARTIFACT_KIND: Final = "ux_production_plan"
 STATUS_KIND: Final = "ux_production_status"
 
-ProductStage = Literal[
-    "requirements", "design", "manufacturing_handoff", "build", "evaluation", "revision"
-]
-STAGES: tuple[ProductStage, ...] = (
-    "requirements",
-    "design",
-    "manufacturing_handoff",
-    "build",
-    "evaluation",
-    "revision",
-)
-Owner = Literal[
-    "ux",
-    "wire",
-    "mech",
-    "circuit",
-    "bard",
-    "doc",
-    "simulation",
-    "production-engineering",
-    "firmware",
-    "user",
-]
+STAGES: tuple[ProductStage, ...] = PRODUCT_STAGES
+Owner = Literal["ux", "user"] | TargetAgent
 WorkStatus = Literal["todo", "in_progress", "blocked", "done"]
 _ID = r"^[a-z][a-z0-9_]{0,47}$"
 
@@ -65,7 +46,7 @@ class Workstream(BaseModel):
     depends_on: list[str] = Field(default_factory=list[str])
     status: WorkStatus = "todo"
     artifacts: list[str] = Field(default_factory=list[str])
-    request: str = ""  # <stem> of a <stem>.ux-request.json in the liaison dir
+    request: str = Field(default="", pattern=r"^(?:[a-z0-9][a-z0-9._-]{0,63})?$")
     notes: str = ""
 
 
@@ -304,7 +285,15 @@ def run_production_gates(
         )
     )
 
-    checks.append(_request_check(plan, liaison_dir))
+    liaison = liaison_status(liaison_dir, workspace) if liaison_dir is not None else None
+    checks.extend(
+        [
+            _request_check(plan, liaison_dir, liaison),
+            _request_owner_check(plan, liaison_dir, liaison),
+            _liaison_integrity_check(plan, liaison_dir, liaison),
+            _sister_records_check(plan, liaison_dir, liaison),
+        ]
+    )
 
     eval_done = [w.id for w in plan.workstreams if w.stage == "evaluation" and w.status == "done"]
     loop_bad = sorted(
@@ -329,7 +318,9 @@ def run_production_gates(
     return ProductionReport(checks=checks, verdict=verdict)
 
 
-def _request_check(plan: ProductionPlan, liaison_dir: Path | None) -> GateCheck:
+def _request_check(
+    plan: ProductionPlan, liaison_dir: Path | None, liaison: LiaisonStatus | None
+) -> GateCheck:
     linked = [w for w in plan.workstreams if w.request]
     if not linked:
         return GateCheck("production.requests_answered", "production", PASS, detail="no requests")
@@ -340,7 +331,7 @@ def _request_check(plan: ProductionPlan, liaison_dir: Path | None) -> GateCheck:
             UNKNOWN,
             detail="workstreams cite ux-requests but no liaison directory was given",
         )
-    entries = {e.request: e for e in liaison_status(liaison_dir, liaison_dir).entries}
+    entries = {entry.request: entry for entry in liaison.entries} if liaison else {}
     bad: list[str] = []
     unknown: list[str] = []
     for w in linked:
@@ -348,19 +339,132 @@ def _request_check(plan: ProductionPlan, liaison_dir: Path | None) -> GateCheck:
         if entry is None:
             unknown.append(f"{w.id}:{w.request} not found")
         elif w.status == "done" and not (
-            entry.state == "answered" and entry.response_status == "accepted"
+            entry.state == "answered" and entry.response_status == "done"
         ):
             bad.append(f"{w.id}:{entry.state}/{entry.response_status or '-'}")
     status: CheckStatus = FAIL if bad else UNKNOWN if unknown else PASS
     detail = "; ".join(
         part
         for part in (
-            f"done without an accepted response: {', '.join(bad)}" if bad else "",
+            f"done without a done response: {', '.join(bad)}" if bad else "",
             f"missing requests: {', '.join(unknown)}" if unknown else "",
         )
         if part
     )
     return GateCheck("production.requests_answered", "production", status, detail=detail)
+
+
+def _request_owner_check(
+    plan: ProductionPlan, liaison_dir: Path | None, liaison: LiaisonStatus | None
+) -> GateCheck:
+    linked = [workstream for workstream in plan.workstreams if workstream.request]
+    if not linked:
+        return GateCheck("production.request_owner", "production", PASS, detail="no requests")
+    if liaison_dir is None or not liaison_dir.is_dir():
+        return GateCheck(
+            "production.request_owner",
+            "production",
+            UNKNOWN,
+            detail="liaison directory unavailable",
+        )
+    entries = {entry.request: entry for entry in liaison.entries} if liaison else {}
+    mismatches: list[str] = []
+    missing: list[str] = []
+    for workstream in linked:
+        entry = entries.get(workstream.request)
+        if entry is None:
+            missing.append(f"{workstream.id}:{workstream.request}")
+        elif entry.target_agent != workstream.owner:
+            mismatches.append(
+                f"{workstream.id}:{entry.target_agent} does not match owner {workstream.owner}"
+            )
+    status: CheckStatus = FAIL if mismatches else UNKNOWN if missing else PASS
+    detail = "; ".join(
+        part
+        for part in (
+            f"request owner mismatches: {', '.join(mismatches)}" if mismatches else "",
+            f"missing requests: {', '.join(missing)}" if missing else "",
+        )
+        if part
+    )
+    return GateCheck("production.request_owner", "production", status, detail=detail)
+
+
+def _liaison_integrity_check(
+    plan: ProductionPlan, liaison_dir: Path | None, liaison: LiaisonStatus | None
+) -> GateCheck:
+    linked = [workstream for workstream in plan.workstreams if workstream.request]
+    if liaison_dir is None or not liaison_dir.is_dir():
+        if linked:
+            return GateCheck(
+                "production.liaison_integrity",
+                "production",
+                UNKNOWN,
+                detail="liaison directory unavailable",
+            )
+        return GateCheck("production.liaison_integrity", "production", PASS)
+    entries = {entry.request: entry for entry in liaison.entries} if liaison else {}
+    bad: list[str] = []
+    unknown: list[str] = []
+    for workstream in linked:
+        entry = entries.get(workstream.request)
+        if entry is None:
+            unknown.append(f"{workstream.id}:{workstream.request} not found")
+        elif entry.state in ("circular", "mismatched", "broken"):
+            bad.append(f"{workstream.request}:{entry.state}")
+        elif workstream.status == "done" and entry.state == "stale":
+            bad.append(f"{workstream.request}:stale for done workstream")
+    malformed = liaison.malformed if liaison else []
+    problems = [*bad, *(f"malformed: {item}" for item in malformed)]
+    status: CheckStatus = FAIL if problems else UNKNOWN if unknown else PASS
+    detail = "; ".join(
+        part
+        for part in (
+            f"liaison problems: {', '.join(problems)}" if problems else "",
+            f"missing requests: {', '.join(unknown)}" if unknown else "",
+        )
+        if part
+    )
+    return GateCheck("production.liaison_integrity", "production", status, detail=detail)
+
+
+def _sister_records_check(
+    plan: ProductionPlan, liaison_dir: Path | None, liaison: LiaisonStatus | None
+) -> GateCheck:
+    linked = [workstream for workstream in plan.workstreams if workstream.request]
+    if not linked:
+        return GateCheck("production.sister_records", "production", PASS, detail="no requests")
+    if liaison_dir is None or not liaison_dir.is_dir():
+        return GateCheck(
+            "production.sister_records",
+            "production",
+            UNKNOWN,
+            detail="liaison directory unavailable",
+        )
+    entries = {entry.request: entry for entry in liaison.entries} if liaison else {}
+    missing_records: list[str] = []
+    missing_responses: list[str] = []
+    for workstream in linked:
+        entry = entries.get(workstream.request)
+        if entry is None:
+            missing_responses.append(f"{workstream.id}:{workstream.request}")
+        elif entry.response_status == "done":
+            if not entry.decision_refs:
+                missing_records.append(f"{workstream.request}:no decision_ref")
+            if not entry.impression_refs:
+                missing_records.append(f"{workstream.request}:no impression_ref")
+    status: CheckStatus = FAIL if missing_records else UNKNOWN if missing_responses else PASS
+    detail = "; ".join(
+        part
+        for part in (
+            f"done responses missing records: {', '.join(missing_records)}"
+            if missing_records
+            else "",
+            f"missing responses: {', '.join(missing_responses)}" if missing_responses else "",
+        )
+        if part
+    )
+    return GateCheck("production.sister_records", "production", status, detail=detail)
 
 
 def _contract_check(plan: ProductionPlan, workspace: Path) -> GateCheck:
@@ -422,10 +526,18 @@ def stage_rows(plan: ProductionPlan) -> list[StageRow]:
     return rows
 
 
-def production_status(plan: ProductionPlan, report: ProductionReport) -> dict[str, object]:
+def production_status(
+    plan: ProductionPlan,
+    report: ProductionReport,
+    workspace: Path,
+    liaison_dir: Path | None = None,
+) -> dict[str, object]:
     ws = plan.by_id()
     holds = _open_holds(plan)
     rows = stage_rows(plan)
+    liaison_path = liaison_dir if liaison_dir is not None else workspace / "liaison"
+    liaison_status_report = liaison_status(liaison_path, workspace)
+    liaison_entries = {entry.request: entry for entry in liaison_status_report.entries}
     current = next((r.stage for r in rows if r.state not in ("done", "empty")), "complete")
     stages = [
         {
@@ -446,6 +558,38 @@ def production_status(plan: ProductionPlan, report: ProductionReport) -> dict[st
         and w.id not in holds
         and all(ws[d].status == "done" for d in w.depends_on)
     ]
+    liaison_rows = []
+    for workstream in plan.workstreams:
+        entry = liaison_entries.get(workstream.request) if workstream.request else None
+        liaison_rows.append(
+            {
+                "workstream": workstream.id,
+                "id": workstream.request or None,
+                "target": entry.target_agent if entry else workstream.owner,
+                "stage": workstream.stage,
+                "state": entry.state if entry else ("missing" if workstream.request else "unlinked"),
+                "response_status": entry.response_status if entry else None,
+                "problems": (
+                    entry.problems
+                    if entry
+                    else (["request file is missing"] if workstream.request else [])
+                ),
+            }
+        )
+    questions = [
+        {
+            "request": response.request,
+            "responder": response.responder,
+            "question": question,
+        }
+        for _path, response in load_response_records(liaison_path, workspace)
+        for question in response.questions_for_user
+    ]
+    questions.extend(
+        {"decision": decision.id, "question": decision.question}
+        for decision in plan.decisions
+        if decision.status == "open"
+    )
     return {
         "schema_version": 1,
         "system": "ux-creator",
@@ -466,6 +610,9 @@ def production_status(plan: ProductionPlan, report: ProductionReport) -> dict[st
             for d in plan.decisions
             if d.status == "open"
         ],
+        "open_user_questions": questions,
+        "liaison": liaison_rows,
+        "sister_records": records_to_dict(collect_records(workspace)),
         "evidence": [
             {"id": e.id, "from": e.workstream, "feeds": e.feeds, "observation": e.observation}
             for e in plan.evidence
@@ -542,6 +689,47 @@ def _status_markdown(status: dict[str, object], plan: ProductionPlan) -> str:
             f"- `{e.id}` from `{e.workstream}` → {', '.join(e.feeds)}: {e.observation} ({e.source})"
             for e in plan.evidence
         ]
+    records = cast("dict[str, dict[str, object]]", status["sister_records"])
+    lines += [
+        "",
+        "## Sister records",
+        "",
+        "| Plugin | Present | Decisions | Impressions | Vision reviews | Malformed lines | Last stop |",
+        "| --- | --- | ---: | ---: | ---: | ---: | --- |",
+    ]
+    for plugin, record in sorted(records.items()):
+        counts = cast("dict[str, int]", record["counts"])
+        lines.append(
+            f"| {plugin} | {record['present']} | {counts['decisions']} | "
+            f"{counts['impressions']} | {counts['vision_reviews']} | "
+            f"{record['malformed_line_count']} | {record['last_stop_verdict'] or '—'} |"
+        )
+    questions = cast("list[dict[str, object]]", status["open_user_questions"])
+    lines += ["", "## Open questions for the user", ""]
+    if questions:
+        for question in questions:
+            if "request" in question:
+                lines.append(
+                    f"- `{question['request']}` ({question['responder']}): {question['question']}"
+                )
+            else:
+                lines.append(f"- `{question['decision']}`: {question['question']}")
+    else:
+        lines.append("- None")
+    liaison_rows = cast("list[dict[str, object]]", status["liaison"])
+    lines += [
+        "",
+        "## Liaison",
+        "",
+        "| Request | Target | Stage | State | Response | Problems |",
+        "| --- | --- | --- | --- | --- | --- |",
+    ]
+    for entry in liaison_rows:
+        problems = "; ".join(cast("list[str]", entry["problems"]))
+        lines.append(
+            f"| {entry['id'] or '—'} | {entry['target']} | {entry['stage']} | "
+            f"{entry['state']} | {entry['response_status'] or '—'} | {problems or '—'} |"
+        )
     lines += ["", "Status is a projection of the plan; only `production.*` checks are verdicts."]
     return "\n".join(lines) + "\n"
 
@@ -552,9 +740,11 @@ def write_production(
     name: str,
     out_dir: Path,
     plan_path: Path,
+    workspace: Path,
+    liaison_dir: Path | None = None,
 ) -> dict[str, Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
-    status = production_status(plan, report)
+    status = production_status(plan, report, workspace, liaison_dir)
     sha = plan_sha256(plan_path)
     status["plan_sha256"] = sha
     status["report"] = report.to_dict(plan, sha)

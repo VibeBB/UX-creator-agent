@@ -9,6 +9,7 @@ import pytest
 from mcp import types
 
 from ux_creator import mcp_server
+from ux_creator.sisters import SISTERS
 
 
 async def _call_tool(name: str, arguments: dict[str, Any]) -> object:
@@ -79,6 +80,63 @@ def test_record_tools_are_declared_append_only_and_read_only() -> None:
     status_annotations = tools["ux_records_status"].annotations
     assert status_annotations is not None
     assert status_annotations.readOnlyHint is True
+    delegate_annotations = tools["ux_delegate"].annotations
+    assert delegate_annotations is not None
+    assert delegate_annotations.readOnlyHint is True
+    assert delegate_annotations.destructiveHint is False
+
+
+def test_mcp_tools_have_explicit_descriptions() -> None:
+    for tool in mcp_server.tool_specs():
+        assert tool.description
+        assert tool.description.strip() != tool.name.replace("_", " ")
+
+
+def test_mcp_request_and_delegate_round_trip(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    contract_path = tmp_path / "smart-kettle.ux.json"
+    contract_path.write_bytes(
+        (
+            Path(__file__).resolve().parents[1]
+            / "examples/smart-kettle/smart-kettle.ux.json"
+        ).read_bytes()
+    )
+    request = asyncio.run(
+        mcp_server.dispatch_tool(
+            "ux_request",
+            {
+                "contract_path": str(contract_path),
+                "id": "circuit-request",
+                "target_agent": "circuit",
+                "stage": "design",
+                "risk": "high",
+                "purpose": "Coordinate the status LED hardware change",
+                "rationale": "job boil requires a readable status LED",
+                "requested_changes": ["review the status LED driver"],
+                "expected_deliverables": ["updated circuit design"],
+                "acceptance": ["status remains visible during keep warm"],
+                "workspace": str(tmp_path),
+                "liaison_dir": "liaison",
+            },
+        )
+    )
+    assert request["verdict"] == "pass"
+    delegated = asyncio.run(
+        mcp_server.dispatch_tool(
+            "ux_delegate",
+            {
+                "request_id": "circuit-request",
+                "workspace": str(tmp_path),
+                "liaison_dir": "liaison",
+            },
+        )
+    )
+    assert delegated["verdict"] == "pass"
+    assert delegated["delegate"]["subagent_type"] == SISTERS["circuit"].liaison_agent
+    assert "task_tool_set" not in delegated["delegate"]
+    assert "ux_record_decision" in delegated["delegate"]["prompt"]
 
 
 def test_records_status_mcp_tool_uses_current_workspace(

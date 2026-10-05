@@ -5,6 +5,7 @@ import base64
 import hashlib
 import json
 import shutil
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 
@@ -12,7 +13,11 @@ import pytest
 from mcp import types
 
 from ux_creator import mcp_server
+from ux_creator.contract import load_contract
+from ux_creator.records import tree_sha256
 from ux_creator.render import RenderResult
+from ux_creator.requests import build_request, write_request
+from ux_creator.responses import UXResponse
 
 EXAMPLE = Path(__file__).resolve().parents[1] / "examples/smart-kettle/smart-kettle.ux.json"
 
@@ -160,38 +165,44 @@ def test_liaison_status_attaches_answered_image_artifacts(
     image.parent.mkdir()
     image_bytes = b"sister-image"
     image.write_bytes(image_bytes)
-    (liaison / "request-1.ux-request.json").write_text(
-        json.dumps(
-            {
-                "schema_version": 1,
-                "system": "ux-creator",
-                "target_agent": "mech",
-                "risk": "low",
-                "rationale": "",
-                "requested_changes": ["review enclosure access"],
-            }
-        ),
-        encoding="utf-8",
+    request = build_request(
+        load_contract(EXAMPLE),
+        id="request-1",
+        target_agent="mech",
+        stage="design",
+        risk="low",
+        purpose="Review access around the enclosure assembly",
+        rationale="",
+        requested_changes=["review enclosure access"],
+        inputs=[],
+        expected_deliverables=["enclosure access review"],
+        acceptance=["the assembly can be accessed safely"],
+        workspace=tmp_path,
+    )
+    write_request(request, liaison)
+    response = UXResponse(
+        request="request-1",
+        responder="mech",
+        status="accepted",
+        reason="The enclosure update is ready for review.",
+        artifacts=[
+            {"path": "deliverables/assembly.JPG", "sha256": tree_sha256(image)}
+        ],
+        responded_at=datetime.now(UTC).isoformat(),
     )
     (liaison / "request-1.ux-response.json").write_text(
-        json.dumps(
-            {
-                "schema_version": 1,
-                "system": "ux-creator",
-                "request": "request-1",
-                "responder": "mech",
-                "status": "accepted",
-                "reason": "enclosure update is ready",
-                "artifacts": ["deliverables/assembly.JPG"],
-            }
-        ),
+        json.dumps(response.model_dump(), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
 
     result = asyncio.run(
         _call_tool(
             "ux_liaison_status",
-            {"out_dir": str(liaison), "attach_images": True},
+            {
+                "workspace": str(tmp_path),
+                "liaison_dir": str(liaison),
+                "attach_images": True,
+            },
         )
     )
 

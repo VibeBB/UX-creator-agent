@@ -2,7 +2,7 @@
 
 Subcommands: doctor, gates, author, render, import, from-ruby, mruby-check,
 request, propose, review-record, review-reconcile, liaison, produce,
-intake-record, intake-reconcile, record.
+delegate, intake-record, intake-reconcile, record.
 
 Every subcommand prints a JSON verdict object and exits 0 only on
 "pass"/"ok"; fail-closed throughout.
@@ -31,6 +31,7 @@ from .advisory import (
     write_visual_review_not_applicable,
 )
 from .contract import load_contract
+from .delegation import delegation_brief
 from .doctor import run_doctor
 from .gates import FAIL, PASS, run_gates
 from .imports import import_source
@@ -40,9 +41,10 @@ from .proposals import ProposalSet, triage, write_triage
 from .records import RECORDERS, record_vision_review, records_summary
 from .render import render_all
 from .report import write_report
-from .requests import build_request, write_request
+from .requests import build_request, load_request, write_request
 from .responses import liaison_status
 from .ruby_bridge import contract_from_ruby, mruby_check
+from .sisters import PRODUCT_STAGES, TARGET_AGENTS
 from .workspace import workspace_path, workspace_root
 
 
@@ -160,18 +162,68 @@ def _cmd_mruby_check(args: argparse.Namespace) -> int:
 
 def _cmd_request(args: argparse.Namespace) -> int:
     try:
+        workspace = workspace_path(args.workspace or ".", workspace_root())
+        liaison_dir = (
+            workspace_path(args.liaison_dir, workspace)
+            if args.liaison_dir
+            else workspace / "liaison"
+        )
         contract = load_contract(args.contract)
         request = build_request(
             contract,
+            id=args.id,
             target_agent=args.target,
+            stage=args.stage,
             risk=args.risk,
+            purpose=args.purpose,
             rationale=args.rationale,
             requested_changes=args.change,
+            inputs=args.input,
+            expected_deliverables=args.deliverable,
+            acceptance=args.accept,
+            depends_on=args.depends_on,
+            workspace=workspace,
         )
-        path = write_request(request, Path(args.out_dir), args.name)
+        path = write_request(request, liaison_dir, replace=args.replace)
+        liaison_rel = liaison_dir.relative_to(workspace).as_posix()
+        brief = delegation_brief(request, liaison_rel)
     except (OSError, ValueError, ValidationError) as exc:
         return _fail("request", exc)
-    _print({"verdict": PASS, "stage": "request", "request": str(path)})
+    _print(
+        {
+            "verdict": PASS,
+            "stage": "request",
+            "request": str(path),
+            "delegate": brief,
+        }
+    )
+    return 0
+
+
+def _cmd_delegate(args: argparse.Namespace) -> int:
+    try:
+        workspace = workspace_path(args.workspace or ".", workspace_root())
+        liaison_dir = (
+            workspace_path(args.liaison_dir, workspace)
+            if args.liaison_dir
+            else workspace / "liaison"
+        )
+        request_path = workspace_path(
+            liaison_dir / f"{args.request_id}.ux-request.json", workspace
+        )
+        request = load_request(request_path)
+        liaison_rel = liaison_dir.relative_to(workspace).as_posix()
+        brief = delegation_brief(request, liaison_rel)
+    except (OSError, ValueError, ValidationError) as exc:
+        return _fail("delegate", exc)
+    _print(
+        {
+            "verdict": PASS,
+            "stage": "delegate",
+            "request": str(request_path),
+            "delegate": brief,
+        }
+    )
     return 0
 
 
@@ -182,7 +234,15 @@ def _cmd_propose(args: argparse.Namespace) -> int:
             json.loads(Path(args.proposals).read_text(encoding="utf-8"))
         )
         name = Path(args.proposals).stem.removesuffix(".ux-proposals")
-        paths = write_triage(contract, proposals, Path(args.out_dir), name)
+        workspace = workspace_path(args.workspace or ".", workspace_root())
+        paths = write_triage(
+            contract,
+            proposals,
+            Path(args.out_dir),
+            name,
+            contract_path=Path(args.contract),
+            workspace=workspace,
+        )
         blocked = [t.id for t in triage(contract, proposals) if t.status != "auto_send"]
     except (OSError, ValueError, ValidationError) as exc:
         return _fail("propose", exc)
@@ -237,7 +297,13 @@ def _cmd_intake_reconcile(args: argparse.Namespace) -> int:
 
 def _cmd_liaison(args: argparse.Namespace) -> int:
     try:
-        status = liaison_status(Path(args.out_dir), Path(args.out_dir))
+        workspace = workspace_path(args.workspace or ".", workspace_root())
+        liaison_dir = (
+            workspace_path(args.liaison_dir, workspace)
+            if args.liaison_dir
+            else workspace / "liaison"
+        )
+        status = liaison_status(liaison_dir, workspace)
     except (OSError, ValueError) as exc:
         return _fail("liaison", exc)
     payload = status.model_dump()
@@ -267,11 +333,17 @@ def _cmd_produce(args: argparse.Namespace) -> int:
     try:
         plan_path = Path(args.plan)
         plan = load_plan(plan_path)
-        workspace = Path(args.workspace or ".")
-        liaison_dir = Path(args.liaison_dir) if args.liaison_dir else None
+        workspace = workspace_path(args.workspace or ".", workspace_root())
+        liaison_dir = (
+            workspace_path(args.liaison_dir, workspace)
+            if args.liaison_dir
+            else workspace / "liaison"
+        )
         report = run_production_gates(plan, workspace, liaison_dir)
         name = plan_path.name.removesuffix(".production.json")
-        paths = write_production(plan, report, name, Path(args.out), plan_path)
+        paths = write_production(
+            plan, report, name, Path(args.out), plan_path, workspace, liaison_dir
+        )
         renders = render_all(Path(args.out), fmts=("svg", "png")) if args.render else []
     except (OSError, ValueError, ValidationError) as exc:
         return _fail("produce", exc)
@@ -429,18 +501,33 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("request", help="write a ux-request.json for a sibling agent")
     p.add_argument("contract")
-    p.add_argument("--target", required=True)
+    p.add_argument("--id", required=True)
+    p.add_argument("--target", required=True, choices=TARGET_AGENTS)
+    p.add_argument("--stage", required=True, choices=PRODUCT_STAGES)
     p.add_argument("--risk", required=True, choices=["low", "high"])
+    p.add_argument("--purpose", required=True)
     p.add_argument("--rationale", default="")
     p.add_argument("--change", action="append", required=True)
-    p.add_argument("--out-dir", required=True)
-    p.add_argument("--name", default="ux-request")
+    p.add_argument("--input", action="append", default=[])
+    p.add_argument("--deliverable", action="append", required=True)
+    p.add_argument("--accept", action="append", required=True)
+    p.add_argument("--depends-on", action="append", default=[])
+    p.add_argument("--workspace")
+    p.add_argument("--liaison-dir")
+    p.add_argument("--replace", action="store_true")
     p.set_defaults(func=_cmd_request)
+
+    p = sub.add_parser("delegate", help="print the task-tool brief for a request")
+    p.add_argument("request_id")
+    p.add_argument("--workspace")
+    p.add_argument("--liaison-dir")
+    p.set_defaults(func=_cmd_delegate)
 
     p = sub.add_parser("propose", help="QCD-triage a ux-proposals.json into ux-requests")
     p.add_argument("--contract", required=True)
     p.add_argument("--proposals", required=True)
     p.add_argument("--out-dir", required=True)
+    p.add_argument("--workspace")
     p.set_defaults(func=_cmd_propose)
 
     p = sub.add_parser("review-record", help="write a review-visual advisory record")
@@ -483,7 +570,8 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=_cmd_review_reconcile)
 
     p = sub.add_parser("liaison", help="report ux-request/ux-response liaison status")
-    p.add_argument("--out-dir", required=True)
+    p.add_argument("--workspace")
+    p.add_argument("--liaison-dir")
     p.set_defaults(func=_cmd_liaison)
 
     p = sub.add_parser("produce", help="product-level plan gates + production status")

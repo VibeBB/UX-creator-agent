@@ -29,6 +29,7 @@ from .advisory import (
     reconcile_intake,
 )
 from .contract import UXContract, load_contract
+from .delegation import delegation_brief
 from .doctor import run_doctor
 from .gates import FAIL, PASS, run_gates
 from .imports import import_source
@@ -46,9 +47,10 @@ from .records import (
 )
 from .render import RenderResult, render_all
 from .report import write_report
-from .requests import build_request, write_request
+from .requests import build_request, load_request, write_request
 from .responses import LiaisonStatus, liaison_status
 from .ruby_bridge import contract_from_ruby, mruby_check
+from .sisters import PRODUCT_STAGES, TARGET_AGENTS
 from .workspace import workspace_path
 
 server: Server = Server(f"ux-mcp/{__version__}")
@@ -105,13 +107,42 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
         "type": "object",
         "properties": {
             "contract_path": {"type": "string"},
-            "target_agent": {"type": "string"},
+            "id": {"type": "string"},
+            "target_agent": {"type": "string", "enum": list(TARGET_AGENTS)},
+            "stage": {"type": "string", "enum": list(PRODUCT_STAGES)},
             "risk": {"type": "string", "enum": ["low", "high"]},
+            "purpose": {"type": "string"},
             "rationale": {"type": "string"},
             "requested_changes": {"type": "array", "items": {"type": "string"}},
-            "out_dir": {"type": "string"},
+            "inputs": {"type": "array", "items": {"type": "string"}},
+            "expected_deliverables": {"type": "array", "items": {"type": "string"}},
+            "acceptance": {"type": "array", "items": {"type": "string"}},
+            "depends_on": {"type": "array", "items": {"type": "string"}},
+            "workspace": {"type": "string"},
+            "liaison_dir": {"type": "string"},
+            "replace": {"type": "boolean"},
         },
-        "required": ["contract_path", "target_agent", "risk", "requested_changes", "out_dir"],
+        "required": [
+            "contract_path",
+            "id",
+            "target_agent",
+            "stage",
+            "risk",
+            "purpose",
+            "requested_changes",
+            "expected_deliverables",
+            "acceptance",
+        ],
+        "additionalProperties": False,
+    },
+    "ux_delegate": {
+        "type": "object",
+        "properties": {
+            "request_id": {"type": "string"},
+            "workspace": {"type": "string"},
+            "liaison_dir": {"type": "string"},
+        },
+        "required": ["request_id"],
         "additionalProperties": False,
     },
     "ux_propose": {
@@ -155,10 +186,11 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
     "ux_liaison_status": {
         "type": "object",
         "properties": {
-            "out_dir": {"type": "string"},
+            "workspace": {"type": "string"},
+            "liaison_dir": {"type": "string"},
             "attach_images": {"type": "boolean"},
         },
-        "required": ["out_dir"],
+        "required": [],
         "additionalProperties": False,
     },
     "ux_intake_reconcile": {
@@ -176,6 +208,28 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
         "required": ["dir"],
         "additionalProperties": False,
     },
+}
+
+_DESCRIPTIONS = {
+    "ux_record_decision": "Append a validated, evidence-bound UX decision record.",
+    "ux_record_impression": "Append a long-form impression for a completed UX stage.",
+    "ux_record_vision_review": "Append a vision review bound to an image or source event.",
+    "ux_records_status": "Summarize VRP record counts and the latest stop-hook verdict.",
+    "ux_doctor": "Check whether the local UX authoring environment is ready.",
+    "ux_validate_contract": "Validate a UX contract against the strict contract schema.",
+    "ux_gates": "Run deterministic UX contract gates in a workspace.",
+    "ux_author": "Run contract gates and write UX projections and a report.",
+    "ux_from_ruby": "Compile a UX Ruby DSL source file into contract JSON.",
+    "ux_import": "Import a sibling artifact as provenance-bound UX touchpoints.",
+    "ux_request": "Write a hash-bound SLP v2 request for a sister agent.",
+    "ux_delegate": "Create the deterministic task-tool brief for a request.",
+    "ux_propose": "Triage UX proposals and write eligible SLP v2 requests.",
+    "ux_mruby_check": "Check Ruby source syntax with the pinned mruby tool.",
+    "ux_review_reconcile": "Reconcile vision-review advisories with contract gates.",
+    "ux_produce": "Run production-plan gates and write status projections.",
+    "ux_liaison_status": "Reconcile SLP v2 requests, responses, dependencies, and artifacts.",
+    "ux_intake_reconcile": "Reconcile image-intake touchpoints against a UX contract.",
+    "ux_render": "Render Mermaid and PlantUML sources under a workspace directory.",
 }
 
 _WRITE_TOOLS = {
@@ -309,7 +363,7 @@ def tool_specs() -> list[types.Tool]:
         specs.append(
             types.Tool(
                 name=name,
-                description=name.replace("_", " "),
+                description=_DESCRIPTIONS[name],
                 inputSchema=schema,
                 annotations=types.ToolAnnotations(
                     title=name,
@@ -385,32 +439,72 @@ async def dispatch_tool(
         )
         return {"verdict": PASS, "imports": [r.model_dump() for r in contract.imports]}
     if name == "ux_request":
-        contract_path = _path_arg(arguments, "contract_path")
-        out_dir = _path_arg(arguments, "out_dir")
+        workspace = _workspace_arg(arguments)
+        contract_path = workspace_path(arguments["contract_path"], workspace)
+        liaison_dir = (
+            workspace_path(arguments["liaison_dir"], workspace)
+            if arguments.get("liaison_dir")
+            else workspace / "liaison"
+        )
         try:
             contract = load_contract(contract_path)
             request = build_request(
                 contract,
+                id=arguments["id"],
                 target_agent=arguments["target_agent"],
+                stage=arguments["stage"],
                 risk=arguments["risk"],
+                purpose=arguments["purpose"],
                 rationale=arguments.get("rationale", ""),
                 requested_changes=arguments["requested_changes"],
+                inputs=arguments.get("inputs", []),
+                expected_deliverables=arguments["expected_deliverables"],
+                acceptance=arguments["acceptance"],
+                depends_on=arguments.get("depends_on", []),
+                workspace=workspace,
             )
-            path = write_request(request, out_dir)
+            path = write_request(request, liaison_dir, replace=arguments.get("replace", False))
+            liaison_rel = liaison_dir.relative_to(workspace).as_posix()
+            brief = delegation_brief(request, liaison_rel)
         except (OSError, ValueError, ValidationError) as exc:
             return {"verdict": FAIL, "stage": "request", "detail": str(exc)}
-        return {"verdict": PASS, "request": str(path)}
+        return {"verdict": PASS, "request": str(path), "delegate": brief}
+    if name == "ux_delegate":
+        workspace = _workspace_arg(arguments)
+        liaison_dir = (
+            workspace_path(arguments["liaison_dir"], workspace)
+            if arguments.get("liaison_dir")
+            else workspace / "liaison"
+        )
+        try:
+            request_path = workspace_path(
+                liaison_dir / f"{arguments['request_id']}.ux-request.json", workspace
+            )
+            request = load_request(request_path)
+            liaison_rel = liaison_dir.relative_to(workspace).as_posix()
+            brief = delegation_brief(request, liaison_rel)
+        except (OSError, ValueError, ValidationError) as exc:
+            return {"verdict": FAIL, "stage": "delegate", "detail": str(exc)}
+        return {"verdict": PASS, "request": str(request_path), "delegate": brief}
     if name == "ux_propose":
-        contract_path = _path_arg(arguments, "contract_path")
-        proposals_path = _path_arg(arguments, "proposals_path")
-        out_dir = _path_arg(arguments, "out_dir")
+        workspace = _workspace_arg(arguments)
+        contract_path = workspace_path(arguments["contract_path"], workspace)
+        proposals_path = workspace_path(arguments["proposals_path"], workspace)
+        out_dir = workspace_path(arguments["out_dir"], workspace)
         try:
             contract = load_contract(contract_path)
             proposals = ProposalSet.model_validate(
                 json.loads(proposals_path.read_text(encoding="utf-8"))
             )
             name_stem = proposals_path.stem.removesuffix(".ux-proposals")
-            paths = write_triage(contract, proposals, out_dir, name_stem)
+            paths = write_triage(
+                contract,
+                proposals,
+                out_dir,
+                name_stem,
+                contract_path=contract_path,
+                workspace=workspace,
+            )
             blocked = [t.id for t in triage(contract, proposals) if t.status != "auto_send"]
         except (OSError, ValueError, ValidationError) as exc:
             return {"verdict": FAIL, "stage": "propose", "detail": str(exc)}
@@ -441,10 +535,14 @@ async def dispatch_tool(
             "malformed": [str(p) for p in malformed],
         }
     if name == "ux_produce":
-        plan_path = _path_arg(arguments, "plan_path")
         workspace = _workspace_arg(arguments)
-        liaison = _path_arg(arguments, "liaison_dir") if arguments.get("liaison_dir") else None
-        out_dir = _path_arg(arguments, "out_dir")
+        plan_path = workspace_path(arguments["plan_path"], workspace)
+        liaison = (
+            workspace_path(arguments["liaison_dir"], workspace)
+            if arguments.get("liaison_dir")
+            else workspace / "liaison"
+        )
+        out_dir = workspace_path(arguments["out_dir"], workspace)
         try:
             plan = load_plan(plan_path)
             report = run_production_gates(
@@ -458,6 +556,8 @@ async def dispatch_tool(
                 plan_path.name.removesuffix(".production.json"),
                 out_dir,
                 plan_path,
+                workspace,
+                liaison,
             )
             renders = (
                 render_all(out_dir, fmts=("svg", "png")) if arguments.get("render") else []
@@ -479,10 +579,14 @@ async def dispatch_tool(
             return _render_content(payload, renders)
         return payload
     if name == "ux_liaison_status":
-        out_dir = _path_arg(arguments, "out_dir")
         workspace = _workspace_arg(arguments)
+        liaison_dir = (
+            workspace_path(arguments["liaison_dir"], workspace)
+            if arguments.get("liaison_dir")
+            else workspace / "liaison"
+        )
         try:
-            status = liaison_status(out_dir, out_dir)
+            status = liaison_status(liaison_dir, workspace)
             renders = (
                 _liaison_image_renders(status, workspace)
                 if arguments.get("attach_images")

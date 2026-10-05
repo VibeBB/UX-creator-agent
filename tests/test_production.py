@@ -51,6 +51,9 @@ def test_example_plan_passes() -> None:
         "production.blockers_explained",
         "production.done_has_artifacts",
         "production.requests_answered",
+        "production.request_owner",
+        "production.liaison_integrity",
+        "production.sister_records",
         "production.evidence_loop",
         "production.ux_contract",
     }
@@ -59,17 +62,21 @@ def test_example_plan_passes() -> None:
 def test_status_projection(tmp_path: Path) -> None:
     plan = load_plan(PLAN)
     report = run_production_gates(plan, PRODUCT, PRODUCT / "requests")
-    status = production_status(plan, report)
+    status = production_status(plan, report, PRODUCT, PRODUCT / "requests")
     assert status["current_stage"] == "design"
     assert [a["id"] for a in status["next_actions"]] == ["user_manual"]  # type: ignore[index]
     assert status["blocked"] == [{"id": "pcb_order", "holds": ["decision pcb_vendor"]}]
-    paths = write_production(plan, report, "smart-kettle", tmp_path, PLAN)
+    paths = write_production(
+        plan, report, "smart-kettle", tmp_path, PLAN, PRODUCT, PRODUCT / "requests"
+    )
     assert set(paths) == {
         "smart-kettle.production.mmd",
         "smart-kettle.production-status.json",
         "smart-kettle.production-status.md",
     }
-    again = write_production(plan, report, "smart-kettle", tmp_path / "again", PLAN)
+    again = write_production(
+        plan, report, "smart-kettle", tmp_path / "again", PLAN, PRODUCT, PRODUCT / "requests"
+    )
     for name, path in paths.items():
         assert again[name].read_bytes() == path.read_bytes()
     mmd = paths["smart-kettle.production.mmd"].read_text(encoding="utf-8")
@@ -149,6 +156,7 @@ def test_open_blocker_explains_block(plan_dict: dict[str, Any]) -> None:
 
 
 def test_done_with_open_blocker_fails(plan_dict: dict[str, Any]) -> None:
+    _ws(plan_dict, "sound_cues")["status"] = "done"
     plan_dict["blockers"] = [
         {"id": "late", "workstream": "sound_cues", "description": "piezo too quiet"}
     ]
@@ -156,11 +164,13 @@ def test_done_with_open_blocker_fails(plan_dict: dict[str, Any]) -> None:
 
 
 def test_done_without_artifacts_fails(plan_dict: dict[str, Any]) -> None:
+    _ws(plan_dict, "sound_cues")["status"] = "done"
     _ws(plan_dict, "sound_cues")["artifacts"] = []
     assert _statuses(plan_dict)["production.done_has_artifacts"] == "fail"
 
 
 def test_done_with_missing_artifact_fails(plan_dict: dict[str, Any]) -> None:
+    _ws(plan_dict, "sound_cues")["status"] = "done"
     _ws(plan_dict, "sound_cues")["artifacts"] = ["cues/none.json"]
     assert _statuses(plan_dict)["production.done_has_artifacts"] == "fail"
 
@@ -226,7 +236,9 @@ def test_evidence_feeds_revision(plan_dict: dict[str, Any], workspace: Path) -> 
         ProductionPlan.model_validate(plan), workspace, workspace / "requests"
     )
     assert report.verdict == "pass", [c for c in report.checks if c.status != "pass"]
-    status = production_status(ProductionPlan.model_validate(plan), report)
+    status = production_status(
+        ProductionPlan.model_validate(plan), report, workspace, workspace / "requests"
+    )
     assert status["current_stage"] == "manufacturing_handoff"  # user_manual still todo
     assert [a["id"] for a in status["next_actions"]] == ["user_manual", "rev_b_plan"]  # type: ignore[index]
 

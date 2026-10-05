@@ -1,0 +1,28 @@
+{
+  "acceptance": [
+    "Responds with status done and an artifact that realizes drive the status LED at 60% duty during keep_warm",
+    "job keep_warm remains served"
+  ],
+  "created_at": "2026-10-05T17:16:01.610055+00:00",
+  "depends_on": [],
+  "expected_deliverables": [
+    "status_led change implementing: drive the status LED at 60% duty during keep_warm"
+  ],
+  "id": "smart-kettle-led-brightness",
+  "inputs": [
+    {
+      "path": "examples/smart-kettle/smart-kettle.ux.json",
+      "sha256": "62fbd00f8211195c9599a0a15c377479252eca31e76809432c638503ef23b38c"
+    }
+  ],
+  "purpose": "UX proposal smart-kettle-led-brightness: drive the status LED at 60% duty during keep_warm",
+  "rationale": "keep_warm users need ambient feedback they can read across the kitchen",
+  "requested_changes": [
+    "drive the status LED at 60% duty during keep_warm"
+  ],
+  "risk": "high",
+  "schema_version": 2,
+  "stage": "design",
+  "system": "ux-creator",
+  "target_agent": "circuit"
+}

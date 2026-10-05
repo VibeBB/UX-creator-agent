@@ -1,0 +1,74 @@
+{
+  "contract_sha256": "sha256:c9c39043c1fd8e7369618eb3d077566dafe311f996f97a17d661ebfd48751c6d",
+  "schema_version": 1,
+  "system": "ux-creator",
+  "triaged": [
+    {
+      "bold": false,
+      "id": "app_onboard_tour",
+      "layer": "smartphone_app",
+      "opportunity": 14.0,
+      "reasons": [
+        "auto-sent to dashboard (low risk)"
+      ],
+      "risk": "low",
+      "served": {
+        "boil": "appropriate"
+      },
+      "status": "auto_send",
+      "surface": "mobile_app",
+      "target_agent": "dashboard"
+    },
+    {
+      "bold": false,
+      "id": "capacitive_button",
+      "layer": "hardware",
+      "opportunity": 14.0,
+      "reasons": [
+        "high risk: layer 'hardware'/cost/delivery escalation",
+        "high-risk proposal must cite at least one of its job ids (['boil']) in the rationale"
+      ],
+      "risk": "high",
+      "served": {
+        "boil": "appropriate"
+      },
+      "status": "needs_rationale",
+      "surface": "hardware_button",
+      "target_agent": "mech"
+    },
+    {
+      "bold": true,
+      "id": "no_button_boil",
+      "layer": "industrial_design",
+      "opportunity": 14.0,
+      "reasons": [
+        "high risk: layer 'industrial_design'/cost/delivery escalation",
+        "bold proposals must serve at least one underserved job"
+      ],
+      "risk": "high",
+      "served": {
+        "boil": "appropriate"
+      },
+      "status": "bold_without_opportunity",
+      "surface": "kettle_body",
+      "target_agent": "mech"
+    },
+    {
+      "bold": false,
+      "id": "led_brightness",
+      "layer": "circuit",
+      "opportunity": 7.0,
+      "reasons": [
+        "high risk: layer 'circuit'/cost/delivery escalation",
+        "auto-sent to circuit (high risk)"
+      ],
+      "risk": "high",
+      "served": {
+        "keep_warm": "overserved"
+      },
+      "status": "auto_send",
+      "surface": "status_led",
+      "target_agent": "circuit"
+    }
+  ]
+}
