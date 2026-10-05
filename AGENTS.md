@@ -95,6 +95,10 @@ uv run python scripts/verify_all.py --stage standard # + locked-image e2e + plug
 uv run --group sdk-check python scripts/check_plugin_load.py
 ```
 
+`verify_all.py` also accepts `--group` (lint/unit/docker), `--match`, and
+`--shard K/N` to run a subset of a stage's commands so CI can spread one
+stage across jobs; `--list` dumps the tagged command table.
+
 - Lint: `uv run ruff check` (E,F,I,UP,B,SIM,RET,RUF,PTH,C4,DTZ,ASYNC,
   ISC,ICN,COM818,PLR0911,PLR0912,PLR0915), line length 100.
 - Types: `uv run pyright` on `src` + `scripts` — strict mode.
