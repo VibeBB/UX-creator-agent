@@ -43,7 +43,8 @@ service blueprints, statecharts, QCD — and projects them into diagrams
   `provenance.json`, `ux-report.json/.md`), `*.ux-request.json`, and
   `*.ux-vision.jsonl` advisory records.
 - VRP decisions, impressions, and vision reviews are JSONL records under
-  `observations/<plugin>/` and `impressions/<plugin>/`. Sister request and
+  `observations/<plugin>/` (`decisions.jsonl`, `impressions.jsonl`,
+  `vision-reviews.jsonl`). Sister request and
   response files are strict v2 records with workspace-relative SHA-256
   input/artifact references, timezone-aware timestamps, and explicit
   responder and gate evidence.
