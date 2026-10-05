@@ -10,7 +10,7 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import cast
+from typing import Literal, cast
 
 import pytest
 
@@ -20,7 +20,14 @@ from ux_creator.observations import collect_records
 from ux_creator.production import ProductionPlan, production_status, run_production_gates
 from ux_creator.records import tree_sha256
 from ux_creator.requests import UXRequest, build_request, write_request
-from ux_creator.responses import UXResponse, liaison_status
+from ux_creator.responses import (
+    ArtifactRef,
+    GateVerdict,
+    ResponseStatus,
+    UXResponse,
+    liaison_status,
+)
+from ux_creator.sisters import ProductStage, TargetAgent
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = REPO_ROOT / "examples/smart-kettle/smart-kettle.ux.json"
@@ -54,9 +61,9 @@ def _request(
     request = build_request(
         contract,
         id=request_id,
-        target_agent=target,
-        stage="design",
-        risk=risk,
+        target_agent=cast(TargetAgent, target),
+        stage=cast(ProductStage, "design"),
+        risk=cast(Literal["low", "high"], risk),
         purpose=f"Coordinate {request_id} with its sister agent",
         rationale=rationale,
         requested_changes=["review the requested design change"],
@@ -91,12 +98,12 @@ def _response(
     )
     response = UXResponse(
         request=request_id,
-        responder=responder,
-        status=status,
+        responder=cast(TargetAgent, responder),
+        status=cast(ResponseStatus, status),
         reason="The requested work has a clear and documented outcome.",
         input_hashes=input_hashes,
-        artifacts=artifacts or [],
-        gate_verdicts=gate_verdicts or [],
+        artifacts=[ArtifactRef.model_validate(artifact) for artifact in artifacts or []],
+        gate_verdicts=[GateVerdict.model_validate(verdict) for verdict in gate_verdicts or []],
         decision_refs=decision_refs or [],
         impression_refs=impression_refs or [],
         questions_for_user=questions_for_user or [],
@@ -110,9 +117,7 @@ def _response(
     return response
 
 
-def _append_vrp_event(
-    workspace: Path, plugin: str, kind: str, body: dict[str, object]
-) -> str:
+def _append_vrp_event(workspace: Path, plugin: str, kind: str, body: dict[str, object]) -> str:
     filenames = {
         "decision": "decisions.jsonl",
         "stage_impression": "impressions.jsonl",
@@ -335,9 +340,7 @@ def _populate_fixture(workspace: Path) -> ProductionPlan:
     decision_ref = _append_vrp_event(workspace, "mech", "decision", decision_body)
     impression_body: dict[str, object] = {
         "stage": "design",
-        "artifacts": [
-            {"path": "deliverables/mech.txt", "sha256": tree_sha256(artifact)}
-        ],
+        "artifacts": [{"path": "deliverables/mech.txt", "sha256": tree_sha256(artifact)}],
         "impression": (
             "The raised key creates a clear tactile landmark on the enclosure. Its position "
             "keeps the interaction distinct from the neighboring controls. The current "
@@ -346,9 +349,7 @@ def _populate_fixture(workspace: Path) -> ProductionPlan:
             "cleanability and the visual relationship to the status light."
         ),
     }
-    impression_ref = _append_vrp_event(
-        workspace, "mech", "stage_impression", impression_body
-    )
+    impression_ref = _append_vrp_event(workspace, "mech", "stage_impression", impression_body)
     _append_vrp_event(
         workspace,
         "mech",
@@ -401,9 +402,7 @@ def _populate_fixture(workspace: Path) -> ProductionPlan:
     )
     _response(workspace, "orphan-one", "sim")
 
-    (workspace / "liaison" / "bad-response.ux-response.json").write_text(
-        "{oops", encoding="utf-8"
-    )
+    (workspace / "liaison" / "bad-response.ux-response.json").write_text("{oops", encoding="utf-8")
     invalid_done = _response(
         workspace,
         "bad-done",
@@ -422,9 +421,7 @@ def _populate_fixture(workspace: Path) -> ProductionPlan:
     return _plan(workspace)
 
 
-def test_liaison_e2e(
-    workspace: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_liaison_e2e(workspace: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
     plan = _populate_fixture(workspace)
     status = liaison_status(workspace / "liaison", workspace)
@@ -481,7 +478,14 @@ def test_liaison_e2e(
     focused_data["contract"] = ""
     focused_data["workstreams"] = focused_data["workstreams"][:2]
     focused_plan = ProductionPlan.model_validate(focused_data)
-    focused_report = run_production_gates(focused_plan, workspace, workspace / "liaison")
+    focused_liaison = workspace / "focused-liaison"
+    focused_liaison.mkdir()
+    for suffix in (".ux-request.json", ".ux-response.json"):
+        shutil.copyfile(
+            workspace / "liaison" / f"mech-done{suffix}",
+            focused_liaison / f"mech-done{suffix}",
+        )
+    focused_report = run_production_gates(focused_plan, workspace, focused_liaison)
     focused_gates = {check.id: check.status for check in focused_report.checks}
     assert focused_gates["production.requests_answered"] == "pass"
     assert focused_gates["production.request_owner"] == "pass"
@@ -495,9 +499,7 @@ def test_liaison_e2e(
     links = {row["workstream"]: row for row in liaison_rows}
     assert links["unlinked"]["state"] == "unlinked"
     assert links["doc_cycle"]["state"] == "circular"
-    sister_projection = cast(
-        dict[str, dict[str, object]], projected["sister_records"]
-    )
+    sister_projection = cast(dict[str, dict[str, object]], projected["sister_records"])
     assert sister_projection["mech"]["counts"] == {
         "decisions": 1,
         "impressions": 1,
@@ -519,9 +521,7 @@ def test_liaison_e2e(
 
     owner_mismatch = plan.model_copy(deep=True)
     owner_mismatch.workstreams[3].owner = "wire"
-    owner_report = run_production_gates(
-        owner_mismatch, workspace, workspace / "liaison"
-    )
+    owner_report = run_production_gates(owner_mismatch, workspace, workspace / "liaison")
     owner_gates = {check.id: check.status for check in owner_report.checks}
     assert owner_gates["production.request_owner"] == "fail"
 
@@ -539,9 +539,7 @@ def test_liaison_e2e(
     )
     _request(workspace, "sim-done-no-records", "sim")
     _response(workspace, "sim-done-no-records", "sim", status="done")
-    records_report = run_production_gates(
-        incomplete_records, workspace, workspace / "liaison"
-    )
+    records_report = run_production_gates(incomplete_records, workspace, workspace / "liaison")
     records_gates = {check.id: check.status for check in records_report.checks}
     assert records_gates["production.sister_records"] == "fail"
 
@@ -560,7 +558,9 @@ def test_liaison_e2e(
             next(entry for entry in status.entries if entry.request == "mech-done").decision_refs[0]
         ],
         impression_refs=[
-            next(entry for entry in status.entries if entry.request == "mech-done").impression_refs[0]
+            next(entry for entry in status.entries if entry.request == "mech-done").impression_refs[
+                0
+            ]
         ],
     )
     assert accepted_mech.status == "accepted"
@@ -618,5 +618,6 @@ def test_liaison_e2e(
             {"workspace": str(workspace), "liaison_dir": "liaison"},
         )
     )
+    assert isinstance(mcp_status, dict)
     assert mcp_status["summary"] == final_status.summary
     assert mcp_status["verdict"] == "pass"

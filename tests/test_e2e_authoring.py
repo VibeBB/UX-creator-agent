@@ -39,7 +39,5 @@ def test_e2e_authoring_reconciles_v2_example_files(tmp_path: Path) -> None:
     assert liaison["orphans"] == []
     assert (out_dir / "smart-kettle-led-brightness.ux-request.json").is_file()
     assert (out_dir / "smart-kettle-led-brightness.ux-response.json").is_file()
-    triage = json.loads(
-        (out_dir / "smart-kettle.triage.json").read_text(encoding="utf-8")
-    )
+    triage = json.loads((out_dir / "smart-kettle.triage.json").read_text(encoding="utf-8"))
     assert triage["schema_version"] == 1

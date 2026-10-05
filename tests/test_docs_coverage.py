@@ -30,12 +30,8 @@ def _missing(document: str, names: set[str]) -> list[str]:
 
 def test_docs_cover_current_plugin_and_tool_inventory() -> None:
     agents = {path.stem for path in (ROOT / "plugins/ux/agents").glob("*.md")}
-    skills = {
-        path.parent.name for path in (ROOT / "plugins/ux/skills").glob("*/SKILL.md")
-    }
-    plugin_commands = {
-        path.stem for path in (ROOT / "plugins/ux/commands").glob("*.md")
-    }
+    skills = {path.parent.name for path in (ROOT / "plugins/ux/skills").glob("*/SKILL.md")}
+    plugin_commands = {path.stem for path in (ROOT / "plugins/ux/commands").glob("*.md")}
     hooks = json.loads((ROOT / "plugins/ux/hooks/hooks.json").read_text(encoding="utf-8"))
     hook_names = {
         hook["name"]
@@ -43,9 +39,7 @@ def test_docs_cover_current_plugin_and_tool_inventory() -> None:
         for group in event_groups
         for hook in group["hooks"]
     }
-    hook_scripts = {
-        path.name for path in (ROOT / "plugins/ux/hooks/scripts").glob("*.py")
-    }
+    hook_scripts = {path.name for path in (ROOT / "plugins/ux/hooks/scripts").glob("*.py")}
     mcp_tools = {tool.name for tool in tool_specs()}
     cli = _cli_commands()
 

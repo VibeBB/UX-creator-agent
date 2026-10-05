@@ -17,26 +17,16 @@ def test_smart_kettle_example_requests_and_responses_reconcile() -> None:
             ROOT / "examples/smart-kettle-product/requests",
         ),
     )
-    statuses = [
-        liaison_status(liaison_dir, workspace)
-        for workspace, liaison_dir in examples
-    ]
+    statuses = [liaison_status(liaison_dir, workspace) for workspace, liaison_dir in examples]
     for status in statuses:
         assert status.malformed == []
         assert status.orphans == []
-        assert all(
-            entry.state not in ("stale", "broken", "mismatched")
-            for entry in status.entries
-        )
-    assert {
-        entry.request: entry.state for entry in statuses[0].entries
-    } == {
+        assert all(entry.state not in ("stale", "broken", "mismatched") for entry in status.entries)
+    assert {entry.request: entry.state for entry in statuses[0].entries} == {
         "smart-kettle-app-onboard-tour": "open",
         "smart-kettle-led-brightness": "answered",
     }
-    assert {
-        entry.request: entry.state for entry in statuses[1].entries
-    } == {
+    assert {entry.request: entry.state for entry in statuses[1].entries} == {
         "smart-kettle-boil-key": "open",
         "smart-kettle-cues": "answered",
     }

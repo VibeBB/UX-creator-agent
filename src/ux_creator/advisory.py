@@ -122,7 +122,9 @@ def write_visual_review(
     return path
 
 
-def write_visual_review_not_applicable(image: Path, checklist: VisualChecklist, summary: str) -> Path:
+def write_visual_review_not_applicable(
+    image: Path, checklist: VisualChecklist, summary: str
+) -> Path:
     """Record that no vision-capable review could be performed on an image."""
     if not image.is_file():
         raise FileNotFoundError(f"image artifact does not exist: {image}")

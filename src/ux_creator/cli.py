@@ -208,9 +208,7 @@ def _cmd_delegate(args: argparse.Namespace) -> int:
             if args.liaison_dir
             else workspace / "liaison"
         )
-        request_path = workspace_path(
-            liaison_dir / f"{args.request_id}.ux-request.json", workspace
-        )
+        request_path = workspace_path(liaison_dir / f"{args.request_id}.ux-request.json", workspace)
         request = load_request(request_path)
         liaison_rel = liaison_dir.relative_to(workspace).as_posix()
         brief = delegation_brief(request, liaison_rel)
@@ -388,10 +386,10 @@ def _cmd_review_record(args: argparse.Namespace) -> int:
         image = workspace_path(args.image, root)
         if args.not_applicable:
             if args.finding:
-                raise ValueError("--finding cannot be used when the visual review is not applicable")
-            path = write_visual_review_not_applicable(
-                image, args.checklist, args.summary
-            )
+                raise ValueError(
+                    "--finding cannot be used when the visual review is not applicable"
+                )
+            path = write_visual_review_not_applicable(image, args.checklist, args.summary)
             _print(
                 {
                     "verdict": PASS,
@@ -444,15 +442,14 @@ def _parse_review_finding(value: str) -> VisualFinding:
     severity, second_sep, remaining = remaining.partition(":")
     where, third_sep, observation = remaining.partition(":")
     if not first_sep or not second_sep or not third_sep:
-        raise ValueError(
-            "--finding expects CATEGORY:SEVERITY:WHERE:OBSERVATION, "
-            f"got {value!r}"
-        )
-    return VisualFinding(
-        category=category,
-        severity=severity,
-        where=where,
-        observation=observation,
+        raise ValueError(f"--finding expects CATEGORY:SEVERITY:WHERE:OBSERVATION, got {value!r}")
+    return VisualFinding.model_validate(
+        {
+            "category": category,
+            "severity": severity,
+            "where": where,
+            "observation": observation,
+        }
     )
 
 
@@ -602,6 +599,7 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("record", help="append a VibeBB Record Protocol record")
     p.add_argument("kind", choices=["decision", "impression", "vision-review", "status"])
     p.add_argument("--json", default=None, help="JSON object file with the record fields")
+    p.set_defaults(func=_cmd_record)
 
     args = parser.parse_args(argv)
     if args.command == "record" and args.kind != "status" and not args.json:

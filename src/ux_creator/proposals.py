@@ -9,6 +9,7 @@ contract and assigns a deterministic status:
 - `needs_theory_break`      — bold but no `theory_break` named
 - `bold_without_opportunity`— bold but none of its jobs is underserved
 - `no_target`               — no sibling agent exists for that layer
+- `no_job`                  — no declared user job grounds the proposal
 - `unknown_job`             — cites a job id that is not in the contract
 - `unknown_surface`         — references a surface not in the contract
 
@@ -44,6 +45,7 @@ ProposalStatus = Literal[
     "needs_theory_break",
     "bold_without_opportunity",
     "no_target",
+    "no_job",
     "unknown_job",
     "unknown_surface",
 ]
@@ -144,6 +146,11 @@ def triage(contract: UXContract, proposals: ProposalSet) -> list[TriagedProposal
         elif unknown_jobs:
             status = "unknown_job"
             reasons.append(f"unknown job ids: {unknown_jobs}")
+        elif not prop.jobs:
+            status = "no_job"
+            reasons.append(
+                "proposal must cite at least one declared job before it can be auto-sent"
+            )
         elif not target:
             status = "no_target"
             reasons.append(f"no sibling agent exists for layer {layer!r}")

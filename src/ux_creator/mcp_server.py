@@ -12,7 +12,7 @@ import base64
 import hashlib
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from mcp import types
 from mcp.server import Server
@@ -341,15 +341,16 @@ def _liaison_image_renders(status: LiaisonStatus, workspace: Path) -> list[Rende
         response: object = json.loads(response_path.read_text(encoding="utf-8"))
         if not isinstance(response, dict):
             continue
-        artifacts = response.get("artifacts")
+        response_data = cast(dict[str, object], response)
+        artifacts = response_data.get("artifacts")
         if not isinstance(artifacts, list):
             continue
-        for artifact in artifacts:
-            value = (
-                artifact.get("path")
-                if isinstance(artifact, dict)
-                else artifact
-            )
+        for artifact in cast(list[object], artifacts):
+            if isinstance(artifact, dict):
+                artifact_data = cast(dict[str, object], artifact)
+                value: object = artifact_data.get("path")
+            else:
+                value = artifact
             if not isinstance(value, str):
                 continue
             image = workspace_path(value, workspace)
@@ -560,9 +561,7 @@ async def dispatch_tool(
                 workspace,
                 liaison,
             )
-            renders = (
-                render_all(out_dir, fmts=("svg", "png")) if arguments.get("render") else []
-            )
+            renders = render_all(out_dir, fmts=("svg", "png")) if arguments.get("render") else []
         except (OSError, ValueError, ValidationError) as exc:
             return {"verdict": FAIL, "stage": "produce", "detail": str(exc)}
         payload = report.to_dict(plan, plan_sha256(plan_path))
@@ -589,20 +588,14 @@ async def dispatch_tool(
         try:
             status = liaison_status(liaison_dir, workspace)
             renders = (
-                _liaison_image_renders(status, workspace)
-                if arguments.get("attach_images")
-                else []
+                _liaison_image_renders(status, workspace) if arguments.get("attach_images") else []
             )
         except (OSError, ValueError) as exc:
             return {"verdict": FAIL, "stage": "liaison", "detail": str(exc)}
         payload = status.model_dump()
         payload["verdict"] = PASS
         payload["stage"] = "liaison"
-        return (
-            _render_content(payload, renders)
-            if arguments.get("attach_images")
-            else payload
-        )
+        return _render_content(payload, renders) if arguments.get("attach_images") else payload
     if name == "ux_intake_reconcile":
         contract_path = _path_arg(arguments, "contract_path")
         out_dir = _path_arg(arguments, "out_dir")

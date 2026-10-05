@@ -196,6 +196,9 @@ def test_no_liaison_dir_is_unknown(plan_dict: dict[str, Any]) -> None:
 
 def _evaluated(plan: dict[str, Any], workspace: Path) -> dict[str, Any]:
     for w in plan["workstreams"]:
+        if w["id"] == "sound_cues":
+            w["status"] = "done"
+            w["request"] = ""
         if w["id"] in {"circuit_rev_a", "mech_enclosure", "firmware_feedback", "pcb_order"}:
             w["status"] = "done"
             w["artifacts"] = ["smart-kettle.ux.json"]

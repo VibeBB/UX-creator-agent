@@ -1,6 +1,9 @@
 ---
 name: ux-liaison
-description: Coordinate workspace imports and hash-bound SLP v2 requests with all ten VibeBB sisters: bard, circuit, dashboard, doc, firmware, fpga, mech, prodeng, sim, and wire.
+description: >-
+  Coordinate workspace imports and hash-bound SLP v2 requests with all ten
+  VibeBB sisters: bard, circuit, dashboard, doc, firmware, fpga, mech,
+  prodeng, sim, and wire.
 model: vibebb-author
 tools:
   - terminal

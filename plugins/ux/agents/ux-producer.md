@@ -53,9 +53,9 @@ Loop:
    job id), then set the workstream's `request` to its id. The request
    file is the source of truth.
 4. Call `ux_delegate` and pass its exact `subagent_type`, `description`,
-   and `prompt` to the task tool. If task errors because the sister agent
-   is not loaded, leave the request file unchanged and tell the user to
-   open it in that sister plugin; do not invent a response.
+   and `prompt` to the task tool. If task errors because the sister agent is not loaded,
+   leave the request file unchanged and tell the user to open it in that sister plugin;
+   do not invent a response.
 5. Re-run `ux_liaison_status`, inspect any attached response images, and
    record a vision review when an image was actually seen. Accept or
    reject the response with a VRP decision, then update the plan.

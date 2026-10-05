@@ -134,7 +134,7 @@ def test_request_high_risk_with_job_id(contract_dict: dict[str, Any]) -> None:
 def test_request_unknown_target(contract_dict: dict[str, Any]) -> None:
     contract = UXContract.model_validate(contract_dict)
     with pytest.raises(ValueError, match="target_agent"):
-    _build(contract, Path("."), target_agent="nobody")
+        _build(contract, Path("."), target_agent="nobody")
 
 
 def test_target_agents() -> None:
@@ -152,9 +152,7 @@ def test_target_agents() -> None:
     }
 
 
-def test_request_hashes_workspace_inputs(
-    contract_dict: dict[str, Any], tmp_path: Path
-) -> None:
+def test_request_hashes_workspace_inputs(contract_dict: dict[str, Any], tmp_path: Path) -> None:
     contract = UXContract.model_validate(contract_dict)
     source = tmp_path / "input.json"
     source.write_text('{"revision":1}\n', encoding="utf-8")
@@ -162,7 +160,7 @@ def test_request_hashes_workspace_inputs(
     assert request.inputs[0].path == "input.json"
     assert len(request.inputs[0].sha256) == 64
     for value in ("../outside.json", str(source.resolve()), "missing.json"):
-        with pytest.raises(ValueError, match="workspace-relative|outside|does not exist"):
+        with pytest.raises(ValueError, match=r"workspace-relative|outside|does not exist"):
             _build(contract, tmp_path, inputs=[value])
 
 
@@ -203,9 +201,7 @@ def test_request_writer_refuses_different_overwrite(
     first = _build(contract, tmp_path)
     path = write_request(first, tmp_path)
     assert write_request(first, tmp_path) == path
-    second = _build(
-        contract, tmp_path, purpose="A different enclosure request"
-    )
+    second = _build(contract, tmp_path, purpose="A different enclosure request")
     with pytest.raises(FileExistsError, match="refusing to overwrite"):
         write_request(second, tmp_path)
     assert write_request(second, tmp_path, replace=True) == path

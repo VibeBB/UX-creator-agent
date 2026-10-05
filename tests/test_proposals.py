@@ -52,7 +52,14 @@ def test_unknown_job(contract_dict: dict[str, Any]) -> None:
 def test_dashboard_handles_app_layers(example_contract: UXContract) -> None:
     triaged = triage(
         example_contract,
-        _props({"id": "p", "surface": "mobile_app", "summary": "x"}),
+        _props(
+            {
+                "id": "p",
+                "surface": "mobile_app",
+                "summary": "x",
+                "jobs": ["boil"],
+            }
+        ),
     )
     t = triaged[0]
     assert t.status == "auto_send"
@@ -190,6 +197,8 @@ def test_write_triage_writes_requests_only_for_auto_send(
     assert triage_doc["schema_version"] == 1
     assert triage_doc["contract_sha256"].startswith("sha256:")
     assert len(triage_doc["triaged"]) == 3
+    triaged = {item["id"]: item for item in triage_doc["triaged"]}
+    assert triaged["unserved"]["status"] == "no_job"
     request = json.loads(paths["sent"].read_text(encoding="utf-8"))
     assert request["system"] == "ux-creator"
     assert request["target_agent"] == "circuit"

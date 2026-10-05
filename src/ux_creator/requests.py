@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Sequence
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Literal
 
@@ -98,7 +98,7 @@ class UXRequest(BaseModel):
             if not SLUG.fullmatch(dependency):
                 raise ValueError(f"invalid dependency id {dependency!r}")
             if dependency == self.id:
-                raise ValueError("a request cannot depend on itself")
+                raise ValueError("depends_on cannot include the request's own id")
         return self
 
 
@@ -131,7 +131,7 @@ def build_request(
                 "high-risk requests must cite at least one job id in the rationale "
                 f"(declared jobs: {sorted(job_ids)})"
             )
-    moment = now or datetime.now(timezone.utc)
+    moment = now or datetime.now(UTC)
     if moment.tzinfo is None or moment.utcoffset() is None:
         raise ValueError("created_at must include a timezone")
     refs: list[InputRef] = []

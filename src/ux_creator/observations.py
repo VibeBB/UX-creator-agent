@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 from .records import tree_sha256
 from .sisters import SHA256, TARGET_AGENTS
@@ -50,14 +50,15 @@ def _read_jsonl(path: Path, workspace: Path) -> tuple[list[dict[str, object]], i
         except ValueError:
             malformed += 1
             continue
-        if (
-            not isinstance(value, dict)
-            or not isinstance(value.get("event_id"), str)
-            or not SHA256.fullmatch(value["event_id"])
-        ):
+        if not isinstance(value, dict):
             malformed += 1
             continue
-        records.append(value)
+        record = cast(dict[str, object], value)
+        event_id = record.get("event_id")
+        if not isinstance(event_id, str) or not SHA256.fullmatch(event_id):
+            malformed += 1
+            continue
+        records.append(record)
     return records, malformed
 
 
@@ -77,11 +78,12 @@ def _latest(records: list[dict[str, object]]) -> list[dict[str, object]]:
 def _fresh_artifacts(artifacts: object, workspace: Path) -> bool:
     if not isinstance(artifacts, list):
         return False
-    for artifact in artifacts:
+    for artifact in cast(list[object], artifacts):
         if not isinstance(artifact, dict):
             return False
-        path_value = artifact.get("path")
-        digest = artifact.get("sha256")
+        artifact_record = cast(dict[str, object], artifact)
+        path_value = artifact_record.get("path")
+        digest = artifact_record.get("sha256")
         if not isinstance(path_value, str) or not isinstance(digest, str):
             return False
         try:
@@ -108,9 +110,7 @@ def _decisions(records: list[dict[str, object]]) -> list[dict[str, object]]:
     ]
 
 
-def _impressions(
-    records: list[dict[str, object]], workspace: Path
-) -> list[dict[str, object]]:
+def _impressions(records: list[dict[str, object]], workspace: Path) -> list[dict[str, object]]:
     return [
         {
             "event_id": record.get("event_id"),
@@ -130,9 +130,9 @@ def _vision_reviews(records: list[dict[str, object]]) -> list[dict[str, object]]
         findings = record.get("findings")
         counts = {"info": 0, "warning": 0, "error": 0}
         if isinstance(findings, list):
-            for finding in findings:
+            for finding in cast(list[object], findings):
                 if isinstance(finding, dict):
-                    severity = finding.get("severity")
+                    severity = cast(dict[str, object], finding).get("severity")
                     if isinstance(severity, str) and severity in counts:
                         counts[severity] += 1
         result.append(
@@ -159,8 +159,10 @@ def _stop_verdict(directory: Path, workspace: Path) -> str | None:
         payload: object = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return "unknown"
-    if isinstance(payload, dict) and isinstance(payload.get("verdict"), str):
-        return payload["verdict"]
+    if isinstance(payload, dict):
+        verdict = cast(dict[str, object], payload).get("verdict")
+        if isinstance(verdict, str):
+            return verdict
     return "unknown"
 
 

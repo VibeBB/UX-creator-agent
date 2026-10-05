@@ -17,7 +17,7 @@ from ux_creator.contract import load_contract
 from ux_creator.records import tree_sha256
 from ux_creator.render import RenderResult
 from ux_creator.requests import build_request, write_request
-from ux_creator.responses import UXResponse
+from ux_creator.responses import ArtifactRef, UXResponse
 
 EXAMPLE = Path(__file__).resolve().parents[1] / "examples/smart-kettle/smart-kettle.ux.json"
 
@@ -122,7 +122,7 @@ def test_produce_render_attaches_production_plan_image(
     workspace = tmp_path / "product"
     shutil.copytree(source, workspace)
     plan_path = workspace / "smart-kettle.production.json"
-    out_dir = tmp_path / "production-out"
+    out_dir = workspace / "production-out"
     image_bytes = b"production-plan-png"
 
     def fake_render_all(out: Path, **_kwargs: Any) -> list[RenderResult]:
@@ -185,9 +185,7 @@ def test_liaison_status_attaches_answered_image_artifacts(
         responder="mech",
         status="accepted",
         reason="The enclosure update is ready for review.",
-        artifacts=[
-            {"path": "deliverables/assembly.JPG", "sha256": tree_sha256(image)}
-        ],
+        artifacts=[ArtifactRef(path="deliverables/assembly.JPG", sha256=tree_sha256(image))],
         responded_at=datetime.now(UTC).isoformat(),
     )
     (liaison / "request-1.ux-response.json").write_text(

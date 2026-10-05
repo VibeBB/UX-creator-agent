@@ -41,6 +41,7 @@ IMPRESSION_JA = (
     "サポート担当者は引き継ぎ後の文脈を失う恐れがあり、共有情報を明記したい。"
     "スマートフォンの狭い画面でも、状態と次の操作が順序立てて示されている。"
     "最後に、復旧が完了した後の確認メッセージを追加し、利用者が結果を理解できるようにしたい。"
+    "操作が中断された場合にどの地点から再開できるかも示せば、初めての利用者が安心して次の手順へ進める。"
 )
 
 
@@ -67,7 +68,11 @@ def _decision(evidence_path: str) -> dict[str, Any]:
         ],
         "options": [
             {"name": "first-time-owner", "pros": ["clear onboarding"], "cons": ["more guidance"]},
-            {"name": "experienced-owner", "pros": ["shorter flow"], "cons": ["higher learning cost"]},
+            {
+                "name": "experienced-owner",
+                "pros": ["shorter flow"],
+                "cons": ["higher learning cost"],
+            },
         ],
         "chosen": "first-time-owner",
         "rationale": (
@@ -88,8 +93,11 @@ def _decision(evidence_path: str) -> dict[str, Any]:
 def workspace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
     (tmp_path / "out").mkdir()
-    (tmp_path / "out" / "smart-kettle.ux.json").write_text('{"schema_version": 1}', encoding="utf-8")
+    (tmp_path / "out" / "smart-kettle.ux.json").write_text(
+        '{"schema_version": 1}', encoding="utf-8"
+    )
     (tmp_path / "out" / "journey.png").write_bytes(b"\x89PNG fake")
+    (tmp_path / "out" / "harness-diagram.png").write_bytes(b"\x89PNG fake")
     return tmp_path
 
 
@@ -134,7 +142,7 @@ def test_record_decision_requires_principled_choice(workspace: Path) -> None:
     record = result["record"]
     digest = hashlib.sha256((workspace / "out" / "smart-kettle.ux.json").read_bytes()).hexdigest()
     assert record["evidence"][0] == {"path": "out/smart-kettle.ux.json", "sha256": digest}
-    assert record["evidence"][1]["reference"].startswith("IPC")
+    assert record["evidence"][1]["reference"].startswith("UX")
     assert HOOK_RECORDS.record_errors("decision", record) == []
     for key, value in (
         ("options", _decision("out/smart-kettle.ux.json")["options"][:1]),
@@ -271,7 +279,9 @@ def test_stop_enforces_records(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
     assert passed.returncode == 0, passed.stdout
     assert _status(tmp_path)["verdict"] == "pass"
 
-    (out / "smart-kettle.ux.json").write_text('{"schema_version": 1, "changed": true}', encoding="utf-8")
+    (out / "smart-kettle.ux.json").write_text(
+        '{"schema_version": 1, "changed": true}', encoding="utf-8"
+    )
     stale = _hook("stop", tmp_path)
     assert stale.returncode == 2
     assert "no fresh stage_impression" in json.loads(stale.stdout)["reason"]
@@ -343,9 +353,7 @@ def test_records_policy_matches_core() -> None:
     for event, mode in (("session_start", "session-start"), ("stop", "stop")):
         commands = [h["command"] for g in hooks[event] for h in g["hooks"]]
         assert any(f'require_records.py" {mode}' in c for c in commands)
-    stop_hooks = [
-        hook["name"] for group in hooks["stop"] for hook in group["hooks"]
-    ]
+    stop_hooks = [hook["name"] for group in hooks["stop"] for hook in group["hooks"]]
     assert stop_hooks[0] == "require-records"
 
 

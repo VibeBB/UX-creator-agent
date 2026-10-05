@@ -24,6 +24,9 @@ branching on evaluation results (低リスクは自動送信、高リスクは�
   surface is `unknown_surface` with `risk: high` and produces no
   request; unknown job ids report `unknown_job`. Guessing a target for
   something the contract doesn't describe is worse than holding it.
+- **Ground every request in a job.** Proposals without a declared job
+  link are `no_job` and produce no request; low-risk does not mean
+  ungrounded in a user outcome.
 - **Only `auto_send` writes files.** `needs_rationale` (high-risk with
   no job id cited) and `no_target` (no sibling agent for that layer)
   produce triage records but no ux-request — the file list is exactly

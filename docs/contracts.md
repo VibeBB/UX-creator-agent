@@ -42,8 +42,9 @@ SVG and PNG render outputs.
 
 - `{name}.ux-proposals.json` contains candidate changes, which deterministic
   QCD triage turns into a `.triage.json` result and eligible requests.
-  High-risk items require a rationale citing a declared job ID; bold
-  proposals also need a named theory break and underserved opportunity.
+  Proposals must cite a declared job before a request is eligible. High-risk
+  items require a rationale citing a declared job ID; bold proposals also
+  need a named theory break and underserved opportunity.
 - `{product}.production.json` has `schema_version: 1`,
   `system: "ux-creator"`, and `artifact_kind: "ux_production_plan"`, plus
   product/revision/goal, optional contract path, workstreams, decisions,

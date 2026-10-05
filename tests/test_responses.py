@@ -7,6 +7,7 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Literal, cast
 
 import pytest
 from pydantic import ValidationError
@@ -16,7 +17,16 @@ from ux_creator.gates import run_gates
 from ux_creator.records import tree_sha256
 from ux_creator.report import build_report
 from ux_creator.requests import UXRequest, build_request, write_request
-from ux_creator.responses import LiaisonEntry, LiaisonStatus, UXResponse, liaison_status
+from ux_creator.responses import (
+    ArtifactRef,
+    GateVerdict,
+    LiaisonEntry,
+    LiaisonStatus,
+    ResponseStatus,
+    UXResponse,
+    liaison_status,
+)
+from ux_creator.sisters import ProductStage, TargetAgent
 
 CONTRACT = Path(__file__).resolve().parents[1] / "examples/smart-kettle/smart-kettle.ux.json"
 FIXED = datetime(2025, 1, 1, tzinfo=UTC)
@@ -36,9 +46,9 @@ def _request(
     request = build_request(
         contract,
         id=request_id,
-        target_agent=target,
-        stage="design",
-        risk=risk,
+        target_agent=cast(TargetAgent, target),
+        stage=cast(ProductStage, "design"),
+        risk=cast(Literal["low", "high"], risk),
         purpose=f"Coordinate {request_id} with its sister agent",
         rationale=rationale,
         requested_changes=["review the requested design change"],
@@ -67,11 +77,11 @@ def _response(
 ) -> Path:
     response = UXResponse(
         request=request_id,
-        responder=responder,
-        status=status,
+        responder=cast(TargetAgent, responder),
+        status=cast(ResponseStatus, status),
         reason="The requested design work has a clear outcome.",
         input_hashes=input_hashes or {},
-        artifacts=artifacts or [],
+        artifacts=[ArtifactRef.model_validate(artifact) for artifact in artifacts or []],
         decision_refs=decision_refs or [],
         impression_refs=impression_refs or [],
         questions_for_user=questions_for_user or [],
@@ -147,13 +157,11 @@ def test_broken_artifact_and_decision_reference(tmp_path: Path) -> None:
     )
     status = liaison_status(tmp_path, tmp_path)
     assert _entry(status, "missing-artifact").state == "broken"
-    assert "artifact missing.bin is missing or changed" in _entry(
-        status, "missing-artifact"
-    ).problems
-    assert _entry(status, "missing-decision").state == "broken"
-    assert "decision refs not found" in " ".join(
-        _entry(status, "missing-decision").problems
+    assert (
+        "artifact missing.bin is missing or changed" in _entry(status, "missing-artifact").problems
     )
+    assert _entry(status, "missing-decision").state == "broken"
+    assert "decision refs not found" in " ".join(_entry(status, "missing-decision").problems)
 
 
 def test_cycles_blocked_open_and_malformed_files(tmp_path: Path) -> None:
@@ -190,9 +198,10 @@ def test_cycles_blocked_open_and_malformed_files(tmp_path: Path) -> None:
     assert _entry(status, "doc-cycle").state == "circular"
     assert _entry(status, "fpga-cycle").state == "circular"
     assert _entry(status, "blocked-one").state == "blocked"
-    assert any("dependency doc-cycle is circular" in problem for problem in _entry(
-        status, "blocked-one"
-    ).problems)
+    assert any(
+        "dependency doc-cycle is circular" in problem
+        for problem in _entry(status, "blocked-one").problems
+    )
     assert _entry(status, "unknown-dependency").state == "blocked"
     assert _entry(status, "plain-open").state == "open"
     assert "bad-response" in " ".join(status.malformed)
@@ -217,7 +226,7 @@ def test_response_schema_rejects_short_reason_and_done_failure(tmp_path: Path) -
             responder="doc",
             status="done",
             reason="The work failed its required gate.",
-            gate_verdicts=[{"gate": "docs", "verdict": "unknown"}],
+            gate_verdicts=[GateVerdict(gate="docs", verdict="unknown")],
             responded_at=FIXED.isoformat(),
         )
     with pytest.raises(ValidationError, match="timezone"):
@@ -232,7 +241,9 @@ def test_response_schema_rejects_short_reason_and_done_failure(tmp_path: Path) -
 def test_malformed_request_and_symlink_are_reported(tmp_path: Path) -> None:
     (tmp_path / "bad.ux-request.json").write_text("[]", encoding="utf-8")
     status = liaison_status(tmp_path, tmp_path)
-    assert status.malformed == [str(tmp_path / "bad.ux-request.json")]
+    assert len(status.malformed) == 1
+    assert status.malformed[0].startswith(f"{tmp_path / 'bad.ux-request.json'}: ")
+    assert "UXRequest" in status.malformed[0]
     outside = tmp_path.parent / f"{tmp_path.name}-outside"
     outside.mkdir()
     (tmp_path / "linked.ux-request.json").symlink_to(outside)

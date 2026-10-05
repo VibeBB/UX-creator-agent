@@ -296,8 +296,7 @@ def render_markdown(report: dict[str, Any]) -> str:
             f"- requests: {liaison['requests']} "
             f"(answered {liaison['answered']}, open {liaison['open']}, "
             f"mismatched {liaison['mismatched']})",
-            f"- states: "
-            f"{', '.join(f'{k}={v}' for k, v in liaison['by_state'].items())}",
+            f"- states: {', '.join(f'{k}={v}' for k, v in liaison['by_state'].items())}",
             f"- response statuses: "
             f"{', '.join(f'{k}={v}' for k, v in liaison['by_status'].items())}",
             f"- open user questions: {liaison['open_user_questions']}",

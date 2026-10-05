@@ -558,7 +558,7 @@ def production_status(
         and w.id not in holds
         and all(ws[d].status == "done" for d in w.depends_on)
     ]
-    liaison_rows = []
+    liaison_rows: list[dict[str, object]] = []
     for workstream in plan.workstreams:
         entry = liaison_entries.get(workstream.request) if workstream.request else None
         liaison_rows.append(
@@ -567,7 +567,9 @@ def production_status(
                 "id": workstream.request or None,
                 "target": entry.target_agent if entry else workstream.owner,
                 "stage": workstream.stage,
-                "state": entry.state if entry else ("missing" if workstream.request else "unlinked"),
+                "state": entry.state
+                if entry
+                else ("missing" if workstream.request else "unlinked"),
                 "response_status": entry.response_status if entry else None,
                 "problems": (
                     entry.problems
@@ -694,7 +696,8 @@ def _status_markdown(status: dict[str, object], plan: ProductionPlan) -> str:
         "",
         "## Sister records",
         "",
-        "| Plugin | Present | Decisions | Impressions | Vision reviews | Malformed lines | Last stop |",
+        "| Plugin | Present | Decisions | Impressions | Vision reviews | "
+        "Malformed lines | Last stop |",
         "| --- | --- | ---: | ---: | ---: | ---: | --- |",
     ]
     for plugin, record in sorted(records.items()):

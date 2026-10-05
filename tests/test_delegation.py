@@ -131,9 +131,7 @@ def test_cli_request_writes_v2_hashes_and_explicitly_replaces(
     request_path = Path(first_payload["request"])
     request_doc = json.loads(request_path.read_text(encoding="utf-8"))
     assert request_doc["schema_version"] == 2
-    assert request_doc["inputs"] == [
-        {"path": "input.txt", "sha256": sha256_file(source)}
-    ]
+    assert request_doc["inputs"] == [{"path": "input.txt", "sha256": sha256_file(source)}]
     replacement = command.copy()
     purpose_index = replacement.index("--purpose") + 1
     replacement[purpose_index] = "Coordinate the revised status LED hardware change"

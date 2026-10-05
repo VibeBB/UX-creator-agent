@@ -81,10 +81,11 @@ production uses the liaison view.
 ## Proposal triage and production
 
 `ux propose` converts candidate changes to deterministic QCD triage. Eligible
-low-risk proposals create requests; high-risk proposals wait for a job-citing
-rationale. Bold proposals must name the theory they break and serve an
-underserved job. Triage does not bypass the explicit request replacement
-policy.
+proposals cite a declared job before they create requests; proposals with no
+job link are held. Low-risk proposals can be sent automatically, while
+high-risk proposals wait for a job-citing rationale. Bold proposals must name
+the theory they break and serve an underserved job. Triage does not bypass
+the explicit request replacement policy.
 
 Production plans can link each workstream to a request. The production gates
 check that linked requests exist, their target matches the workstream owner,

@@ -6,7 +6,7 @@ import json
 from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -15,12 +15,8 @@ from .requests import UXRequest, load_request
 from .sisters import SHA256, SLUG, ProductStage, TargetAgent
 from .workspace import workspace_path
 
-ResponseStatus = Literal[
-    "accepted", "in_progress", "done", "rejected", "deferred", "needs_info"
-]
-LiaisonState = Literal[
-    "open", "answered", "mismatched", "stale", "broken", "blocked", "circular"
-]
+ResponseStatus = Literal["accepted", "in_progress", "done", "rejected", "deferred", "needs_info"]
+LiaisonState = Literal["open", "answered", "mismatched", "stale", "broken", "blocked", "circular"]
 ALL_STATES: tuple[LiaisonState, ...] = (
     "open",
     "answered",
@@ -45,6 +41,7 @@ class ArtifactRef(BaseModel):
 
     path: str = Field(min_length=1)
     sha256: str = Field(pattern=SHA256.pattern)
+
 
 class GateVerdict(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
@@ -163,11 +160,13 @@ def _read_event_ids(workspace: Path, plugin: str, filename: str) -> set[str]:
         return event_ids
     for line in lines:
         try:
-            payload = json.loads(line)
+            payload: object = json.loads(line)
         except ValueError:
             continue
-        if isinstance(payload, Mapping) and isinstance(payload.get("event_id"), str):
-            event_ids.add(payload["event_id"])
+        if isinstance(payload, Mapping):
+            event_id = cast(Mapping[str, object], payload).get("event_id")
+            if isinstance(event_id, str):
+                event_ids.add(event_id)
     return event_ids
 
 
@@ -197,9 +196,7 @@ def _response_problems(response: UXResponse, workspace: Path) -> list[str]:
             current = None
         if current != artifact.sha256:
             broken.append(f"artifact {artifact.path} is missing or changed")
-    decisions = _read_event_ids(
-        workspace, response.responder, "decisions.jsonl"
-    )
+    decisions = _read_event_ids(workspace, response.responder, "decisions.jsonl")
     missing_decisions = sorted(set(response.decision_refs) - decisions)
     if missing_decisions:
         broken.append(f"decision refs not found: {', '.join(missing_decisions)}")
@@ -211,9 +208,7 @@ def _response_problems(response: UXResponse, workspace: Path) -> list[str]:
     return broken
 
 
-def _load_requests(
-    liaison_dir: Path, workspace: Path
-) -> tuple[dict[str, UXRequest], list[str]]:
+def _load_requests(liaison_dir: Path, workspace: Path) -> tuple[dict[str, UXRequest], list[str]]:
     requests: dict[str, UXRequest] = {}
     malformed: list[str] = []
     for path in sorted(liaison_dir.glob("*.ux-request.json")):
@@ -312,7 +307,8 @@ def liaison_status(liaison_dir: Path, workspace: Path) -> LiaisonStatus:
             for dependency in request.depends_on:
                 if dependency in requests:
                     dependency_state = (
-                        "circular" if request_id in cycles and dependency in cycles
+                        "circular"
+                        if request_id in cycles and dependency in cycles
                         else evaluate(dependency)
                     )
                     dependency_states.append((dependency, dependency_state))
@@ -325,8 +321,10 @@ def liaison_status(liaison_dir: Path, workspace: Path) -> LiaisonStatus:
                     problems.append(f"dependency {dependency} is {dependency_state}")
             if request_id in cycles:
                 state: LiaisonState = "circular"
-            elif any(dependency_state is None or dependency_state != "answered"
-                     for _dependency, dependency_state in dependency_states):
+            elif any(
+                dependency_state is None or dependency_state != "answered"
+                for _dependency, dependency_state in dependency_states
+            ):
                 state = "blocked"
             else:
                 state = "open"
@@ -384,7 +382,9 @@ def liaison_status(liaison_dir: Path, workspace: Path) -> LiaisonStatus:
     for request_id in sorted(requests):
         evaluate(request_id)
     entries = [entries_by_id[request_id] for request_id in sorted(entries_by_id)]
-    summary = {state: sum(entry.state == state for entry in entries) for state in ALL_STATES}
+    summary: dict[LiaisonState, int] = {
+        state: sum(entry.state == state for entry in entries) for state in ALL_STATES
+    }
     return LiaisonStatus(
         entries=entries,
         orphans=orphans,
