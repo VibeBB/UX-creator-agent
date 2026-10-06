@@ -99,3 +99,18 @@ find what they missed.
 - **Mutation testing**: a mutant (a flipped comparison, a removed condition)
   that survives the suite marks an assertion that is missing even though the
   line is covered. Mutation runs are advisory evidence, not a CI gate.
+
+## Reference suite
+
+`tests/test_gate_boundaries.py` applies these techniques to the HIG and
+feedback gates in `src/ux_creator/gates.py`, following the family pattern
+set by wire-agent:
+
+- 3-value boundaries (`math.nextafter`) on the 7.8 mm minimum touch target
+  for each axis;
+- decision tables for control kind x declared dimensions, latency band
+  (1 s and 10 s) x progress indicator, and text size x contrast threshold
+  (4.5:1 normal, 3:1 large);
+- properties of the WCAG contrast ratio: symmetric, bounded to 1..21,
+  identity for equal colours, strictly monotone over the grey ramp, and
+  continuous across the sRGB linearisation knee.

@@ -64,9 +64,9 @@ branch = true
 c0 = 86
 c1 = 80
 decision = 75
-c2 = 72
+c2 = 73
 mcdc = 52
-boundary = 42
+boundary = 54
 
 [tool.coverage.report]
-fail_under = 84
+fail_under = 85
