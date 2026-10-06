@@ -6,6 +6,7 @@ on:
     workflows:
       [
         "CI",
+        "Mutation probe",
         "GHCR tag retention",
         "Cache sweep",
         "Container hardening audit",
