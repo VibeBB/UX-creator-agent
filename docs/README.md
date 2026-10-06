@@ -18,6 +18,7 @@ protocols, operations, and accepted design decisions.
 - [Sister cooperation](sister-cooperation.md) — ten registered targets and hash-bound exchange
 - [Performance and limits](performance-and-limits.md) — timeouts, inline image caps, and known gaps
 - [Development](development.md) — checkout setup and prescribed verification
+- [Test coverage and test design](test-coverage.md) — C0/C1/C2/MCC/MC/DC and boundary coverage, floors, test-design techniques
 - [Improvement notes](improvement-notes.md) — resolved findings and maintainer follow-ups
 - [Operations](operations.md) — releases, dependency updates, Docker image, and CI policy
 - [Dependency updates](dependency-updates.md) — pinned versions, sources, and adoption decisions
@@ -53,3 +54,4 @@ protocols, operations, and accepted design decisions.
 - [ADR-0017](adr/0017-development-coverage-gate.md) — development-only coverage gate
 - [ADR-0018](adr/0018-attest-published-tools-images.md) — attest published tools images
 - [ADR-0019](adr/0019-hash-bound-slp-v2-and-liaison-gates.md) — hash-bound SLP v2 and deterministic liaison reconciliation
+- [ADR-0020](adr/0020-structural-coverage.md) — structural coverage gate (C0, C1, C2, MC/DC, boundaries)
