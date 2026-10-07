@@ -19,6 +19,8 @@ jobs:
   check-lock:
     runs-on: ubuntu-26.04
     timeout-minutes: 10
+    # No actions/cache usage: forbid restore and save entirely.
+    cache-mode: none
     permissions:
       contents: read
     outputs:
@@ -139,36 +141,42 @@ jobs:
           python-version: "3.14"
           cache-suffix: locked-image-check
       - run: uv sync --locked
-      - run: uv run python scripts/pull_locked_image.py --entry ux_tools
+      # The image pull and the attestation verifications only need the
+      # lock contents — not each other — so they run as one parallel
+      # group; the pulled image is guaranteed present by the implicit
+      # wait before the smoke below.
+      - parallel:
+          - name: Pull locked image
+            run: uv run python scripts/pull_locked_image.py --entry ux_tools
+          - name: Verify published image provenance
+            if: needs.check-lock.outputs.attestation != ''
+            env:
+              GH_TOKEN: ${{ github.token }}
+              IMAGE: ${{ needs.check-lock.outputs.image }}
+              DIGEST: ${{ needs.check-lock.outputs.digest }}
+            run: |
+              gh attestation verify "oci://${IMAGE}@${DIGEST}" \
+                --repo "$GITHUB_REPOSITORY" \
+                --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-ux-images.yml"
+          - name: Warn when image SBOM attestation is absent
+            if: needs.check-lock.outputs.sbom_attestation == ''
+            run: echo "::warning::ux_tools image lock has no recorded SBOM attestation"
+          - name: Verify published image SBOM attestation
+            if: needs.check-lock.outputs.sbom_attestation != ''
+            env:
+              GH_TOKEN: ${{ github.token }}
+              IMAGE: ${{ needs.check-lock.outputs.image }}
+              DIGEST: ${{ needs.check-lock.outputs.digest }}
+            run: |
+              gh attestation verify "oci://${IMAGE}@${DIGEST}" \
+                --repo "$GITHUB_REPOSITORY" \
+                --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-ux-images.yml" \
+                --predicate-type https://spdx.dev/Document/v2.3
+          - name: Warn when image provenance is absent
+            if: needs.check-lock.outputs.attestation == ''
+            run: echo "::warning::ux_tools image lock has no recorded build-provenance attestation"
       - id: image
         run: echo "ref=$(uv run python scripts/print_locked_image.py --entry ux_tools)" >> "$GITHUB_OUTPUT"
-      - name: Verify published image provenance
-        if: needs.check-lock.outputs.attestation != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-          IMAGE: ${{ needs.check-lock.outputs.image }}
-          DIGEST: ${{ needs.check-lock.outputs.digest }}
-        run: |
-          gh attestation verify "oci://${IMAGE}@${DIGEST}" \
-            --repo "$GITHUB_REPOSITORY" \
-            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-ux-images.yml"
-      - name: Warn when image SBOM attestation is absent
-        if: needs.check-lock.outputs.sbom_attestation == ''
-        run: echo "::warning::ux_tools image lock has no recorded SBOM attestation"
-      - name: Verify published image SBOM attestation
-        if: needs.check-lock.outputs.sbom_attestation != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-          IMAGE: ${{ needs.check-lock.outputs.image }}
-          DIGEST: ${{ needs.check-lock.outputs.digest }}
-        run: |
-          gh attestation verify "oci://${IMAGE}@${DIGEST}" \
-            --repo "$GITHUB_REPOSITORY" \
-            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-ux-images.yml" \
-            --predicate-type https://spdx.dev/Document/v2.3
-      - name: Warn when image provenance is absent
-        if: needs.check-lock.outputs.attestation == ''
-        run: echo "::warning::ux_tools image lock has no recorded build-provenance attestation"
       - name: Smoke locked image
         env:
           GH_TOKEN: ${{ github.token }}

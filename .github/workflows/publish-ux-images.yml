@@ -99,20 +99,77 @@ jobs:
           # imports already degrade to a miss rather than an error, so
           # ignore-error applies to cache-to only.
           cache-to: type=gha,mode=max,ignore-error=true
-      - name: Scan tools image (Trivy JSON)
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+      - name: Resolve tools digest
+        env:
+          BUILT_DIGEST: ${{ steps.tools.outputs.digest }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          if [ "$DRY_RUN" = "true" ]; then
+            # Nothing was pushed: retag the daemon-local image under a
+            # slash-free name the measurement probe accepts, and reference
+            # it everywhere below.
+            docker tag \
+              "ghcr.io/${IMAGE_OWNER}/ux-tools:${GITHUB_SHA}-tools" \
+              "ux-tools:${GITHUB_SHA}-rehearsal"
+            TOOLS_REF="ux-tools:${GITHUB_SHA}-rehearsal"
+            TOOLS_DIGEST="${BUILT_DIGEST:-unpublished}"
+            TOOLS_TAG="${GITHUB_SHA}-tools"
+          else
+            case "$BUILT_DIGEST" in sha256:*) ;; *) echo "invalid tools digest: $BUILT_DIGEST" >&2; exit 1 ;; esac
+            TOOLS_REF="ghcr.io/${IMAGE_OWNER}/ux-tools@${BUILT_DIGEST}"
+            TOOLS_DIGEST="${TOOLS_REF##*@}"
+            TOOLS_TAG="${GITHUB_SHA}-tools"
+          fi
+          printf 'TOOLS_REF=%s\nTOOLS_DIGEST=%s\nTOOLS_TAG=%s\n' "$TOOLS_REF" "$TOOLS_DIGEST" "$TOOLS_TAG" >> "$GITHUB_ENV"
+      # Attestation only needs the pushed digest: run it as a background
+      # step overlapping every post-build leg and join it before the
+      # digest-lock update that reads its attestation-url output.
+      - name: Attest tools image provenance
+        id: attest
+        if: inputs.dry_run != true
+        background: true
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          scan-type: image
-          # Scan the immutable sha tag — the same manifest the pushed
-          # digest addresses on a real run, and the local image under
-          # dry_run.
-          scan-ref: ghcr.io/${{ env.IMAGE_OWNER }}/ux-tools:${{ github.sha }}-tools
-          version: v0.75.0
-          scanners: vuln,secret,misconfig,license
-          ignore-unfixed: false
-          exit-code: '0'
-          format: json
-          output: trivy-image.json
+          subject-name: ghcr.io/vibebb/ux-tools
+          subject-digest: ${{ steps.tools.outputs.digest }}
+          push-to-registry: true
+      # Independent post-build legs run as a parallel group; the implicit
+      # wait at the group end still lands the full JSON scan before the
+      # SARIF gate, so the diagnostic report exists even when the gate
+      # fails — exactly when it is needed.
+      - parallel:
+          - name: Scan tools image (Trivy JSON)
+            uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+            with:
+              scan-type: image
+              # Scan the immutable sha tag — the same manifest the pushed
+              # digest addresses on a real run, and the local image under
+              # dry_run.
+              scan-ref: ghcr.io/${{ env.IMAGE_OWNER }}/ux-tools:${{ github.sha }}-tools
+              version: v0.75.0
+              scanners: vuln,secret,misconfig,license
+              ignore-unfixed: false
+              exit-code: '0'
+              format: json
+              output: trivy-image.json
+          - name: Generate tools SPDX SBOM
+            uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+            env:
+              # dry_run reads the just-built image from the local daemon.
+              SYFT_SOURCE_IMAGE_DEFAULT_PULL_SOURCE: ${{ inputs.dry_run == true && 'docker' || 'registry' }}
+              TMPDIR: ${{ runner.temp }}
+              SYFT_FILE_METADATA_SELECTION: none
+            with:
+              image: ${{ env.TOOLS_REF }}
+              format: spdx-json
+              output-file: ${{ runner.temp }}/ux-tools.full.spdx.json
+              upload-artifact: false
+              upload-release-assets: false
+          - name: Measure published tools
+            env:
+              TOOLS_REF: ${{ env.TOOLS_REF }}
+            run: uv run python scripts/measure_image_tools.py --image-ref "$TOOLS_REF" --out "$RUNNER_TEMP/ux-tools.json"
       # One scan feeds both outputs: the full JSON above is the artifact,
       # and the SARIF + gate below come from a filtered view of it —
       # identical to the old second scan's severity/ignore-unfixed filter,
@@ -144,50 +201,6 @@ jobs:
           name: ux-tools-trivy
           path: trivy-image.json
           retention-days: 90
-      - name: Attest tools image provenance
-        id: attest
-        if: inputs.dry_run != true
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        with:
-          subject-name: ghcr.io/vibebb/ux-tools
-          subject-digest: ${{ steps.tools.outputs.digest }}
-          push-to-registry: true
-      - name: Resolve tools digest
-        env:
-          BUILT_DIGEST: ${{ steps.tools.outputs.digest }}
-          DRY_RUN: ${{ inputs.dry_run }}
-        run: |
-          set -euo pipefail
-          if [ "$DRY_RUN" = "true" ]; then
-            # Nothing was pushed: retag the daemon-local image under a
-            # slash-free name the measurement probe accepts, and reference
-            # it everywhere below.
-            docker tag \
-              "ghcr.io/${IMAGE_OWNER}/ux-tools:${GITHUB_SHA}-tools" \
-              "ux-tools:${GITHUB_SHA}-rehearsal"
-            TOOLS_REF="ux-tools:${GITHUB_SHA}-rehearsal"
-            TOOLS_DIGEST="${BUILT_DIGEST:-unpublished}"
-            TOOLS_TAG="${GITHUB_SHA}-tools"
-          else
-            case "$BUILT_DIGEST" in sha256:*) ;; *) echo "invalid tools digest: $BUILT_DIGEST" >&2; exit 1 ;; esac
-            TOOLS_REF="ghcr.io/${IMAGE_OWNER}/ux-tools@${BUILT_DIGEST}"
-            TOOLS_DIGEST="${TOOLS_REF##*@}"
-            TOOLS_TAG="${GITHUB_SHA}-tools"
-          fi
-          printf 'TOOLS_REF=%s\nTOOLS_DIGEST=%s\nTOOLS_TAG=%s\n' "$TOOLS_REF" "$TOOLS_DIGEST" "$TOOLS_TAG" >> "$GITHUB_ENV"
-      - name: Generate tools SPDX SBOM
-        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
-        env:
-          # dry_run reads the just-built image from the local daemon.
-          SYFT_SOURCE_IMAGE_DEFAULT_PULL_SOURCE: ${{ inputs.dry_run == true && 'docker' || 'registry' }}
-          TMPDIR: ${{ runner.temp }}
-          SYFT_FILE_METADATA_SELECTION: none
-        with:
-          image: ${{ env.TOOLS_REF }}
-          format: spdx-json
-          output-file: ${{ runner.temp }}/ux-tools.full.spdx.json
-          upload-artifact: false
-          upload-release-assets: false
       - name: Package tools SPDX SBOM
         run: |
           python3 scripts/package_level_sbom.py \
@@ -220,6 +233,7 @@ jobs:
       - name: Attest tools SBOM
         id: attest_sbom
         if: inputs.dry_run != true
+        background: true
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-name: ghcr.io/vibebb/ux-tools
@@ -233,10 +247,6 @@ jobs:
           path: ${{ runner.temp }}/ux-tools.full.spdx.json
           retention-days: 90
           if-no-files-found: error
-      - name: Measure published tools
-        env:
-          TOOLS_REF: ${{ env.TOOLS_REF }}
-        run: uv run python scripts/measure_image_tools.py --image-ref "$TOOLS_REF" --out "$RUNNER_TEMP/ux-tools.json"
       # e2e_authoring writes its gate report before returning a failing verdict.
       - name: Verify published tools smoke
         env:
@@ -262,6 +272,8 @@ jobs:
           path: ${{ runner.temp }}/ux-smoke
           if-no-files-found: ignore
           retention-days: 14
+      - name: Wait for attestations
+        wait: [attest, attest_sbom]
       - name: Record published image summary
         run: |
           {
