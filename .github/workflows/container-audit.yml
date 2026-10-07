@@ -87,13 +87,20 @@ jobs:
       - uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
         with:
           version: v0.75.0
-      - name: Warm the Trivy DB for the CIS scan leg
+      - name: Warm the Trivy DB for the raw-trivy scan legs
         env:
           TRIVY_CACHE_DIR: ${{ runner.temp }}/trivy-cache
-        # Populate the raw-trivy CIS leg's cache dir serially so it only
-        # ever reads the DB: concurrent trivy processes in one cache dir
-        # race on db/metadata.json and corrupt it.
-        run: trivy image --download-db-only
+        # Populate the shared seed dir serially; each leg copies it into a
+        # private cache dir first and only ever writes there. Concurrent
+        # trivy processes in one cache dir race on db/metadata.json and
+        # corrupt it.
+        run: |
+          set -euo pipefail
+          mkdir -p "$TRIVY_CACHE_DIR"
+          if [ -d .cache/trivy ]; then
+            cp -a .cache/trivy/. "$TRIVY_CACHE_DIR/"
+          fi
+          trivy image --download-db-only
       # The scans read the same pinned image, each writes a disjoint
       # report path, and each trivy process writes to its own cache dir,
       # so they run as one parallel group (implicit wait at the end).
@@ -103,27 +110,25 @@ jobs:
       # filter, but without re-scanning the same digest.
       - parallel:
           - name: Scan pinned image (Trivy JSON, full)
-            uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-            with:
-              scan-type: image
-              # The digest is frozen; the vulnerability DB is not — this scan
-              # surfaces newly disclosed CVEs against the shipped tools image.
-              scan-ref: ${{ env.PINNED_IMAGE }}
-              version: v0.75.0
-              scanners: vuln,secret,misconfig,license
-              exit-code: '0'
-              format: json
-              output: trivy-image.json
-              cache: 'false'
-              cache-dir: ${{ github.workspace }}/.cache/trivy
-              skip-setup-trivy: true
-          - name: Run Docker CIS compliance report
             env:
-              # Private warmed dir: concurrent use of the JSON leg's
-              # .cache/trivy raced on db/metadata.json once already.
-              TRIVY_CACHE_DIR: ${{ runner.temp }}/trivy-cache
+              TRIVY_CACHE_DIR: ${{ runner.temp }}/trivy-cache-json
+            # The digest is frozen; the vulnerability DB is not — this scan
+            # surfaces newly disclosed CVEs against the shipped tools image.
             run: |
               set -euo pipefail
+              mkdir -p "$TRIVY_CACHE_DIR"
+              cp -a "$RUNNER_TEMP/trivy-cache/." "$TRIVY_CACHE_DIR/"
+              trivy image --scanners vuln,secret,misconfig,license \
+                --format json --output trivy-image.json "$PINNED_IMAGE"
+          - name: Run Docker CIS compliance report
+            env:
+              # Private dir seeded from the warmed copy: concurrent use of
+              # one cache dir raced on db/metadata.json once already.
+              TRIVY_CACHE_DIR: ${{ runner.temp }}/trivy-cache-cis
+            run: |
+              set -euo pipefail
+              mkdir -p "$TRIVY_CACHE_DIR"
+              cp -a "$RUNNER_TEMP/trivy-cache/." "$TRIVY_CACHE_DIR/"
               # The compliance scan occasionally returns exit 0 with an empty
               # MisconfSummary payload (the dead-metric anomaly): key the one
               # retry on the payload content, not the exit code.
