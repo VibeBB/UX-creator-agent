@@ -5,7 +5,8 @@
   `/opt/ux/.venv`, IBM Semeru OpenJ9 JRE 27 (`/opt/jre`), PlantUML MIT jar
   (`/opt/plantuml/plantuml.jar`, `PLANTUML_JAR`), mruby 4.0.0
   (`/opt/mruby/bin`), Node.js 26 (sha256-pinned `nodejs.org` tarball →
-  `/usr/local`) + `@mermaid-js/mermaid-cli` 12 + Debian
+  `/usr/local`, npm vendored deps patched for publish-gate CVEs) +
+  `@mermaid-js/mermaid-cli` 12 + Debian
   Chromium (puppeteer via `docker/puppeteer-config.json`,
   `--no-sandbox`), Graphviz, CJK fonts, rubocop + minitest, non-root
   `ux` (uid 1000). Build-time smoke: doctor, Ruby DSL → contract →

@@ -218,8 +218,13 @@ Other CVE-driven image surgery: the base image's default `json` gem
 ships its gemspec and stdlib copies that shadow updates, so the gem
 layer removes every 2.18.x trace before installing the pinned release;
 base-image Debian packages that carry a released fix (e.g.
-`libpcre2-8-0`) are listed in the apt install layer so they upgrade —
-the digest-pinned base never self-updates.
+`libpcre2-8-0`, the openssl trio) are listed in the apt install layer
+so they upgrade — the digest-pinned base never self-updates. The same
+surgery applies inside the bundled npm's vendored tree: when the
+publish Trivy gate flags a vendored dep that no npm release fixes yet
+(e.g. brace-expansion, undici), the Dockerfile replaces that vendored
+directory from a sha256-pinned registry tarball, pinned at patch level
+within npm's vendored major.
 
 The weekly audit runs Lynis as the image's unprivileged `ux` user —
 `tests/test_workflow_paths.py` requires every workflow `docker run

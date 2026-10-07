@@ -17,6 +17,15 @@ ARG MRUBY_SHA256=e2ea271dbed14e9f2b33df773ae447b747dbc242ce2675022c0a57efea85a7b
 ARG NODE_VERSION=26.11.0
 # sha256 of https://nodejs.org/dist/v26.11.0/node-v26.11.0-linux-x64.tar.xz
 ARG NODE_SHA256=db6342d36ebdb3cbd72103d0ce5ccc528620f6c9df72a11f4ccb384bf1bef678
+# npm 11.20.0 (bundled with Node 26.11.0) vendors vulnerable deps whose
+# fixes no npm release carries yet (npm 12.2.0 ships the same versions);
+# patched in place below from sha256-verified registry tarballs.
+ARG BRACE_EXPANSION_VERSION=5.0.12
+# sha256 of https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.12.tgz
+ARG BRACE_EXPANSION_SHA256=ef8448ec78f20b692f04fa6d01f39b5ab34c66404bea3429f5a39c6c9e0be8b4
+ARG UNDICI_VERSION=6.28.1
+# sha256 of https://registry.npmjs.org/undici/-/undici-6.28.1.tgz
+ARG UNDICI_SHA256=e18191aac9c0ff43dac7fe9b10b7041a22d07addb7b66a6e8ac14a52a5b69b74
 ARG MERMAID_CLI_VERSION=12.0.0
 # sha256 of https://registry.npmjs.org/@mermaid-js/mermaid-cli/-/mermaid-cli-12.0.0.tgz
 ARG MERMAID_CLI_SHA256=b5b43bc60c2e6bc87f7d12ab3e6e78883c799213ea5b015363fecdd5e6363c84
@@ -68,6 +77,11 @@ RUN apt-get -o Acquire::Retries=5 update \
         # Ships in the digest-pinned base image; listed so apt upgrades it to
         # the security build (CVE-2026-103111, fixed in 10.46-1~deb13u3).
         libpcre2-8-0 \
+        # Same pattern for openssl: the pinned base ships 3.5.7-1~deb13u2,
+        # deb13u3 fixes CVE-2026-75804 and CVE-2026-84782.
+        libssl3t64 \
+        openssl \
+        openssl-provider-legacy \
     && rm -rf /var/lib/apt/lists/*
 
 # Node.js official tarball — Debian trixie ships nodejs 20.x, which blocks
@@ -88,6 +102,34 @@ RUN curl --fail --location --silent --show-error \
         "source=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
         "version=v${NODE_VERSION}" \
         > /usr/share/doc/node/SOURCE
+
+# Patch npm's vendored dependencies in place: the bundled npm ships
+# brace-expansion 5.0.9 (CVE-2026-102276, CVE-2026-102278) and undici
+# 6.28.0 (CVE-2026-19534), and the publish Trivy gate counts them as
+# fixable findings. These pins follow npm's bundled tree (patch-level
+# bumps within its vendored majors), not upstream latest — drop this
+# block once NODE_VERSION's npm vendors the fixed versions.
+RUN npm_root=/usr/local/lib/node_modules/npm/node_modules \
+    && curl --fail --location --silent --show-error \
+        --retry 5 --retry-delay 10 --retry-all-errors \
+        --output /tmp/brace-expansion.tgz \
+        "https://registry.npmjs.org/brace-expansion/-/brace-expansion-${BRACE_EXPANSION_VERSION}.tgz" \
+    && echo "${BRACE_EXPANSION_SHA256}  /tmp/brace-expansion.tgz" | sha256sum --check \
+    && rm -rf "${npm_root}/brace-expansion" \
+    && mkdir -p "${npm_root}/brace-expansion" \
+    && tar -xzf /tmp/brace-expansion.tgz -C "${npm_root}/brace-expansion" --strip-components=1 \
+    && curl --fail --location --silent --show-error \
+        --retry 5 --retry-delay 10 --retry-all-errors \
+        --output /tmp/undici.tgz \
+        "https://registry.npmjs.org/undici/-/undici-${UNDICI_VERSION}.tgz" \
+    && echo "${UNDICI_SHA256}  /tmp/undici.tgz" | sha256sum --check \
+    && rm -rf "${npm_root}/undici" \
+    && mkdir -p "${npm_root}/undici" \
+    && tar -xzf /tmp/undici.tgz -C "${npm_root}/undici" --strip-components=1 \
+    && rm -f /tmp/brace-expansion.tgz /tmp/undici.tgz \
+    && grep -F "\"version\": \"${BRACE_EXPANSION_VERSION}\"" "${npm_root}/brace-expansion/package.json" \
+    && grep -F "\"version\": \"${UNDICI_VERSION}\"" "${npm_root}/undici/package.json" \
+    && npm --version
 
 # Install mermaid-cli from the registry tarball so the fetch is
 # sha256-verified like every other external download in this image.
