@@ -29,6 +29,8 @@ concurrency:
 jobs:
   bump-version:
     runs-on: ubuntu-26.04
+    # No actions/cache usage: forbid restore and save entirely.
+    cache-mode: none
     # Covers the slow path: direct-push rejection → bump PR + dispatched
     # checks + merge wait.
     timeout-minutes: 45

@@ -83,24 +83,114 @@ jobs:
           path: ${{ github.workspace }}/.cache/trivy
           key: cache-trivy-week-${{ steps.week.outputs.iso }}
           restore-keys: cache-trivy-week-
+      - uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          version: v0.75.0
+      - name: Warm the Trivy DB before the parallel scans
+        env:
+          TRIVY_CACHE_DIR: ${{ github.workspace }}/.cache/trivy
+        # Populate the shared cache dir serially so the scan legs below
+        # only ever read the DB (concurrent DB downloads in one cache dir
+        # are not safe).
+        run: trivy image --download-db-only
+      # The three scans read the same pinned image and the now-warm shared
+      # vulnerability DB, and each writes a disjoint report path, so they
+      # run as one parallel group (implicit wait at the end).
       # One scan feeds both outputs: the full JSON is the audit artifact,
       # and the SARIF below is `trivy convert`ed from a filtered view of it
       # — identical to the old second scan's severity/ignore-unfixed
       # filter, but without re-scanning the same digest.
-      - name: Scan pinned image (Trivy JSON, full)
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          scan-type: image
-          # The digest is frozen; the vulnerability DB is not — this scan
-          # surfaces newly disclosed CVEs against the shipped tools image.
-          scan-ref: ${{ env.PINNED_IMAGE }}
-          version: v0.75.0
-          scanners: vuln,secret,misconfig,license
-          exit-code: '0'
-          format: json
-          output: trivy-image.json
-          cache: 'false'
-          cache-dir: ${{ github.workspace }}/.cache/trivy
+      - parallel:
+          - name: Scan pinned image (Trivy JSON, full)
+            uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+            with:
+              scan-type: image
+              # The digest is frozen; the vulnerability DB is not — this scan
+              # surfaces newly disclosed CVEs against the shipped tools image.
+              scan-ref: ${{ env.PINNED_IMAGE }}
+              version: v0.75.0
+              scanners: vuln,secret,misconfig,license
+              exit-code: '0'
+              format: json
+              output: trivy-image.json
+              cache: 'false'
+              cache-dir: ${{ github.workspace }}/.cache/trivy
+              skip-setup-trivy: true
+          - name: Run Docker CIS compliance report
+            env:
+              # Reuse the DB restored above instead of re-downloading ~1 GB.
+              TRIVY_CACHE_DIR: ${{ github.workspace }}/.cache/trivy
+            run: |
+              set -euo pipefail
+              # The compliance scan occasionally returns exit 0 with an empty
+              # MisconfSummary payload (the dead-metric anomaly): key the one
+              # retry on the payload content, not the exit code.
+              for attempt in 1 2; do
+                trivy image --compliance docker-cis-1.6.0 --include-non-failures --report all \
+                  --ignorefile /dev/null --format json \
+                  --output "$RUNNER_TEMP/trivy-cis.json" "${PINNED_IMAGE}"
+                if python3 - "$RUNNER_TEMP/trivy-cis.json" <<'PY'
+              import json
+              import sys
+
+              data = json.load(open(sys.argv[1], encoding="utf-8"))
+
+              def _summaries(node):
+                  yield node
+                  for child in node.get("Results") or []:
+                      yield from _summaries(child)
+
+              total = sum(
+                  int((result.get("MisconfSummary") or {}).get(key, 0))
+                  for result in _summaries(data)
+                  for key in ("Successes", "Failures")
+              )
+              sys.exit(0 if total else 1)
+              PY
+                then
+                  break
+                fi
+                if [ "$attempt" = 2 ]; then
+                  echo "::error::CIS scan returned an empty MisconfSummary payload twice" >&2
+                  exit 1
+                fi
+                echo "::warning::CIS scan returned an empty MisconfSummary payload; retrying" >&2
+              done
+          - name: Run informational Lynis audit inside the image
+            id: lynis
+            continue-on-error: true
+            env:
+              LYNIS_OUT: ${{ runner.temp }}/lynis-out
+            run: |
+              set -uo pipefail
+              # Pin the 3.1.7 release commit, not the mutable tag.
+              git clone --depth 1 --branch 3.1.7 \
+                https://github.com/CISOfy/lynis "$RUNNER_TEMP/lynis"
+              git -C "$RUNNER_TEMP/lynis" rev-parse HEAD \
+                | grep -qx 2e99f92265760b73fd6b139868eb8d4116624030
+              # tests/test_workflow_paths.py requires every workflow
+              # `docker run --user` to be the image's `ux` user — Lynis runs
+              # unprivileged here, which is acceptable for a trend-only audit.
+              mkdir -p "$LYNIS_OUT"
+              chmod 777 "$LYNIS_OUT"
+              docker run --rm --user ux \
+                -v "$RUNNER_TEMP/lynis:/lynis:ro" \
+                -v "$GITHUB_WORKSPACE/docker/lynis-container.prf:/container.prf:ro" \
+                -v "$LYNIS_OUT:/out" \
+                --entrypoint /bin/sh "$PINNED_IMAGE" \
+                -c 'cd /lynis && ./lynis audit system --quick --no-colors \
+                    --profile /container.prf \
+                    --report-file /out/lynis-report.dat --logfile /out/lynis.log \
+                    --auditor github-actions </dev/null \
+                    2>&1 | grep -v -E "Press ENTER to continue|NON-PRIVILEGED SCAN MODE|Security check failed"; \
+                    # Lynis writes its outputs with umask 027 (0640 ux-owned):
+                    # loosen them so the runner-side grep below can read them.
+                    chmod 644 /out/lynis-report.dat /out/lynis.log 2>/dev/null' || true
+              index=$(grep '^hardening_index=' "$LYNIS_OUT/lynis-report.dat" \
+                | head -1 | cut -d= -f2 || true)
+              warnings=$(grep -c '^warning\[\]' "$LYNIS_OUT/lynis-report.dat" || true)
+              printf 'hardening_index=%s\nwarnings=%s\n' \
+                "${index:-unknown}" "${warnings:-0}" >> "$GITHUB_OUTPUT"
       - name: Filter findings and convert SARIF
         run: |
           set -euo pipefail
@@ -116,84 +206,6 @@ jobs:
         with:
           sarif_file: trivy-image.sarif
           category: trivy-ux-tools-audit
-      - uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
-        with:
-          version: v0.75.0
-      - name: Run Docker CIS compliance report
-        env:
-          # Reuse the DB restored above instead of re-downloading ~1 GB.
-          TRIVY_CACHE_DIR: ${{ github.workspace }}/.cache/trivy
-        run: |
-          set -euo pipefail
-          # The compliance scan occasionally returns exit 0 with an empty
-          # MisconfSummary payload (the dead-metric anomaly): key the one
-          # retry on the payload content, not the exit code.
-          for attempt in 1 2; do
-            trivy image --compliance docker-cis-1.6.0 --include-non-failures --report all \
-              --ignorefile /dev/null --format json \
-              --output "$RUNNER_TEMP/trivy-cis.json" "${PINNED_IMAGE}"
-            if python3 - "$RUNNER_TEMP/trivy-cis.json" <<'PY'
-          import json
-          import sys
-
-          data = json.load(open(sys.argv[1], encoding="utf-8"))
-
-          def _summaries(node):
-              yield node
-              for child in node.get("Results") or []:
-                  yield from _summaries(child)
-
-          total = sum(
-              int((result.get("MisconfSummary") or {}).get(key, 0))
-              for result in _summaries(data)
-              for key in ("Successes", "Failures")
-          )
-          sys.exit(0 if total else 1)
-          PY
-            then
-              break
-            fi
-            if [ "$attempt" = 2 ]; then
-              echo "::error::CIS scan returned an empty MisconfSummary payload twice" >&2
-              exit 1
-            fi
-            echo "::warning::CIS scan returned an empty MisconfSummary payload; retrying" >&2
-          done
-      - name: Run informational Lynis audit inside the image
-        id: lynis
-        continue-on-error: true
-        env:
-          LYNIS_OUT: ${{ runner.temp }}/lynis-out
-        run: |
-          set -uo pipefail
-          # Pin the 3.1.7 release commit, not the mutable tag.
-          git clone --depth 1 --branch 3.1.7 \
-            https://github.com/CISOfy/lynis "$RUNNER_TEMP/lynis"
-          git -C "$RUNNER_TEMP/lynis" rev-parse HEAD \
-            | grep -qx 2e99f92265760b73fd6b139868eb8d4116624030
-          # tests/test_workflow_paths.py requires every workflow
-          # `docker run --user` to be the image's `ux` user — Lynis runs
-          # unprivileged here, which is acceptable for a trend-only audit.
-          mkdir -p "$LYNIS_OUT"
-          chmod 777 "$LYNIS_OUT"
-          docker run --rm --user ux \
-            -v "$RUNNER_TEMP/lynis:/lynis:ro" \
-            -v "$GITHUB_WORKSPACE/docker/lynis-container.prf:/container.prf:ro" \
-            -v "$LYNIS_OUT:/out" \
-            --entrypoint /bin/sh "$PINNED_IMAGE" \
-            -c 'cd /lynis && ./lynis audit system --quick --no-colors \
-                --profile /container.prf \
-                --report-file /out/lynis-report.dat --logfile /out/lynis.log \
-                --auditor github-actions </dev/null \
-                2>&1 | grep -v -E "Press ENTER to continue|NON-PRIVILEGED SCAN MODE|Security check failed"; \
-                # Lynis writes its outputs with umask 027 (0640 ux-owned):
-                # loosen them so the runner-side grep below can read them.
-                chmod 644 /out/lynis-report.dat /out/lynis.log 2>/dev/null' || true
-          index=$(grep '^hardening_index=' "$LYNIS_OUT/lynis-report.dat" \
-            | head -1 | cut -d= -f2 || true)
-          warnings=$(grep -c '^warning\[\]' "$LYNIS_OUT/lynis-report.dat" || true)
-          printf 'hardening_index=%s\nwarnings=%s\n' \
-            "${index:-unknown}" "${warnings:-0}" >> "$GITHUB_OUTPUT"
       - name: Compute container-hardening report
         env:
           LYNIS_OUT: ${{ runner.temp }}/lynis-out
