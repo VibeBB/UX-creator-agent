@@ -9,7 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType
-from typing import cast
+from typing import Any, cast
 
 import pytest
 import scripts.run_in_locked_image as locked_image_runner
@@ -130,3 +130,47 @@ def test_locked_image_runner_passes_workspace_root(
     monkeypatch.setattr(locked_image_runner.subprocess, "run", fake_run)
     assert locked_image_runner.main(["--", "true"]) == 0
     assert f"OPENHANDS_PROJECT_DIR={locked_image_runner.ROOT}" in calls[-1]
+
+
+def test_container_user_rootless(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Rootless daemons get 0:0 — the host uid maps to an unusable subuid."""
+    module = _load_launcher()
+    monkeypatch.setattr(
+        module,
+        "_docker_info_security_options",
+        lambda: '["name=seccomp,profile=builtin","name=rootless","name=cgroupns"]',
+    )
+    assert module._container_user() == "0:0"
+    argv = module._docker_argv("example/ux-tools:latest", None, ["doctor"])
+    assert argv[argv.index("--user") + 1] == "0:0"
+
+
+def test_container_user_rootful(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Rootful daemons keep the invoking uid:gid so artifacts stay user-owned."""
+    module = _load_launcher()
+    monkeypatch.setattr(
+        module,
+        "_docker_info_security_options",
+        lambda: '["name=seccomp,profile=builtin"]',
+    )
+    assert module._container_user() == f"{os.getuid()}:{os.getgid()}"
+
+
+def test_container_user_docker_info_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
+    """docker absent/failing -> keep the current uid:gid behavior."""
+    module = _load_launcher()
+    monkeypatch.setattr(module, "_docker_info_security_options", lambda: None)
+    assert module._container_user() == f"{os.getuid()}:{os.getgid()}"
+
+
+def test_run_in_locked_image_container_user(monkeypatch: pytest.MonkeyPatch) -> None:
+    """scripts/run_in_locked_image.py shares the same rootless rule."""
+    runner = cast(Any, locked_image_runner)
+    monkeypatch.setattr(
+        runner,
+        "_docker_info_security_options",
+        lambda: '["name=rootless"]',
+    )
+    assert runner._container_user() == "0:0"
+    monkeypatch.setattr(runner, "_docker_info_security_options", lambda: None)
+    assert runner._container_user() == f"{os.getuid()}:{os.getgid()}"
