@@ -1,5 +1,7 @@
 # UX-creator-agent
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/VibeBB/UX-creator-agent)
+
 VibeBB UX-creator-agent helps a product team turn an idea into a reviewable,
 testable user experience. It is an OpenHands plugin: describe the product and
 its users in conversation, and the UX agents help shape the work into a UX
