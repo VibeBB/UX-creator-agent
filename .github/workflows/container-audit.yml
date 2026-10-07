@@ -76,7 +76,8 @@ jobs:
         run: echo "iso=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
       # trivy-action's built-in cache is daily-keyed, so a weekly audit
       # misses it after every midnight; a weekly key reuses the ~1 GB DB
-      # across the three scans and successive runs.
+      # across successive runs. It feeds only the JSON scan leg below —
+      # the legs run concurrently, so each gets its own cache dir.
       - name: Restore Trivy DB cache (weekly)
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -86,16 +87,16 @@ jobs:
       - uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
         with:
           version: v0.75.0
-      - name: Warm the Trivy DB before the parallel scans
+      - name: Warm the Trivy DB for the CIS scan leg
         env:
-          TRIVY_CACHE_DIR: ${{ github.workspace }}/.cache/trivy
-        # Populate the shared cache dir serially so the scan legs below
-        # only ever read the DB (concurrent DB downloads in one cache dir
-        # are not safe).
+          TRIVY_CACHE_DIR: ${{ runner.temp }}/trivy-cache
+        # Populate the raw-trivy CIS leg's cache dir serially so it only
+        # ever reads the DB: concurrent trivy processes in one cache dir
+        # race on db/metadata.json and corrupt it.
         run: trivy image --download-db-only
-      # The three scans read the same pinned image and the now-warm shared
-      # vulnerability DB, and each writes a disjoint report path, so they
-      # run as one parallel group (implicit wait at the end).
+      # The scans read the same pinned image, each writes a disjoint
+      # report path, and each trivy process writes to its own cache dir,
+      # so they run as one parallel group (implicit wait at the end).
       # One scan feeds both outputs: the full JSON is the audit artifact,
       # and the SARIF below is `trivy convert`ed from a filtered view of it
       # — identical to the old second scan's severity/ignore-unfixed
@@ -118,8 +119,9 @@ jobs:
               skip-setup-trivy: true
           - name: Run Docker CIS compliance report
             env:
-              # Reuse the DB restored above instead of re-downloading ~1 GB.
-              TRIVY_CACHE_DIR: ${{ github.workspace }}/.cache/trivy
+              # Private warmed dir: concurrent use of the JSON leg's
+              # .cache/trivy raced on db/metadata.json once already.
+              TRIVY_CACHE_DIR: ${{ runner.temp }}/trivy-cache
             run: |
               set -euo pipefail
               # The compliance scan occasionally returns exit 0 with an empty
