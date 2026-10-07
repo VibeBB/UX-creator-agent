@@ -6,13 +6,6 @@
       "latest": "2.3.0",
       "review_by": "2027-04-01",
       "reason": "openhands-sdk 1.53.0 requires fastmcp>=3.2.0,<4, which requires mcp<2.0. Defer MCP 2.x until a supported SDK/fastmcp release removes that constraint."
-    },
-    {
-      "surface": "docker-arg",
-      "name": "MERMAID_CLI_VERSION",
-      "latest": "12.0.0",
-      "review_by": "2027-04-01",
-      "reason": "@mermaid-js/mermaid-cli 12.x requires Node >=22.13 but the ux-tools image runs Debian nodejs 20.19.x, producing EBADENGINE warnings. Pinned to 11.17.0 until the image moves to Node 22+."
     }
   ]
 }

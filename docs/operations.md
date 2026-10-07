@@ -79,7 +79,8 @@ re-check deadline) go in `scripts/dependency_update_deferrals.json`.
 | `MRUBY_VERSION` (+sha256) | Dockerfile ARG — `mruby/mruby` releases |
 | `MERMAID_CLI_VERSION` | Dockerfile ARG — `mermaid-js/mermaid-cli` releases |
 | `RUBOCOP_VERSION`, `MINITEST_VERSION` | Dockerfile ARG — rubygems |
-| Node.js / Chromium / Graphviz | Debian trixie apt (rolling with the release) |
+| `NODE_VERSION` (+sha256) | Dockerfile ARG — `nodejs/node` releases (official tarball) |
+| Chromium / Graphviz | Debian trixie apt (rolling with the release) |
 | openhands-sdk/-tools `1.53.0` | `pyproject.toml` sdk-check group |
 | GitHub Action SHAs | `.github/workflows/*.yml` + `dependabot.yml` |
 | Lynis audit version | `container-audit.yml` `git clone --branch` — `CISOfy/lynis` tags |
