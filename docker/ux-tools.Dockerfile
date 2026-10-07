@@ -61,28 +61,37 @@ LABEL org.opencontainers.image.source="https://github.com/VibeBB/UX-creator-agen
 
 COPY --from=uv /uv /uvx /usr/local/bin/
 
-RUN apt-get -o Acquire::Retries=5 update \
-    && apt-get -o Acquire::Retries=5 install --no-install-recommends -y \
-        ca-certificates \
-        curl \
-        git \
-        graphviz \
-        fontconfig \
-        fonts-ipafont \
-        fonts-noto-cjk \
-        build-essential \
-        bison \
-        chromium \
-        xz-utils \
-        # Ships in the digest-pinned base image; listed so apt upgrades it to
-        # the security build (CVE-2026-103111, fixed in 10.46-1~deb13u3).
-        libpcre2-8-0 \
-        # Same pattern for openssl: the pinned base ships 3.5.7-1~deb13u2,
-        # deb13u3 fixes CVE-2026-75804 and CVE-2026-84782.
-        libssl3t64 \
-        openssl \
-        openssl-provider-legacy \
-    && rm -rf /var/lib/apt/lists/*
+# apt resilience: Acquire::Retries covers single fetches, not a mirror that
+# is down for minutes (archive.ubuntu.com outage killed several builds).
+# Retry the whole update+install round with bounded backoff.
+RUN for attempt in 1 2 3 4 5; do \
+        apt-get -o Acquire::Retries=5 update \
+        && apt-get -o Acquire::Retries=5 install --no-install-recommends -y \
+            ca-certificates \
+            curl \
+            git \
+            graphviz \
+            fontconfig \
+            fonts-ipafont \
+            fonts-noto-cjk \
+            build-essential \
+            bison \
+            chromium \
+            xz-utils \
+            # Ships in the digest-pinned base image; listed so apt upgrades it to
+            # the security build (CVE-2026-103111, fixed in 10.46-1~deb13u3).
+            libpcre2-8-0 \
+            # Same pattern for openssl: the pinned base ships 3.5.7-1~deb13u2,
+            # deb13u3 fixes CVE-2026-75804 and CVE-2026-84782.
+            libssl3t64 \
+            openssl \
+            openssl-provider-legacy \
+        && rm -rf /var/lib/apt/lists/* \
+        && break; \
+        [ "$attempt" = 5 ] && exit 1; \
+        echo "::warning::apt update+install attempt ${attempt} failed; retrying"; \
+        sleep $((attempt * 30)); \
+    done
 
 # Node.js official tarball — Debian trixie ships nodejs 20.x, which blocks
 # mermaid-cli 12 (needs Node >=22.13). Installed from a sha256-verified
