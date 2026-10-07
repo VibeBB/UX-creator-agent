@@ -25,9 +25,11 @@ EXPECTED_AGENTS = {
 }
 EXPECTED_SKILLS = {
     "ux-cmf",
+    "ux-contract-rules",
     "ux-diagrams",
     "ux-interaction-content",
     "ux-jtbd",
+    "ux-out-rules",
     "ux-persona",
     "ux-production",
     "ux-ruby-style",
@@ -50,6 +52,7 @@ EXPECTED_SESSION_START_HOOKS = {
     "ux-doctor",
     "intake-attachments",
     "ensure-llm-profiles",
+    "ensure-agent-profiles",
     "require-records",
 }
 EXPECTED_USER_PROMPT_SUBMIT_HOOKS = {"intake-attachments"}
