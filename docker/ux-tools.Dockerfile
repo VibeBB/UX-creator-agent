@@ -22,7 +22,7 @@ ARG MERMAID_CLI_VERSION=12.0.0
 ARG MERMAID_CLI_SHA256=b5b43bc60c2e6bc87f7d12ab3e6e78883c799213ea5b015363fecdd5e6363c84
 ARG RUBOCOP_VERSION=1.91.0
 ARG MINITEST_VERSION=6.0.6
-ARG JSON_VERSION=2.19.2
+ARG JSON_VERSION=3.0.2
 
 # Fail the build when the left side of a verification pipe (curl|sha256sum)
 # breaks instead of silently passing the right side.

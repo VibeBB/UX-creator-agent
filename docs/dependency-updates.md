@@ -76,7 +76,7 @@ All `uses:` entries are pinned to a 40-char SHA with a `# vX.Y.Z` comment:
 | mruby | `4.0.0` (+sha256) | `ARG MRUBY_VERSION` — `mruby/mruby` releases |
 | Node.js | `26.11.0` (+sha256) | `ARG NODE_VERSION` — `nodejs/node` releases; official tarball → `/usr/local` |
 | mermaid-cli | `12.0.0` | `ARG MERMAID_CLI_VERSION` — `mermaid-js/mermaid-cli` releases |
-| rubocop / minitest / json | `1.91.0` / `6.0.6` / `2.19.2` | Dockerfile ARGs — rubygems |
+| rubocop / minitest / json | `1.91.0` / `6.0.6` / `3.0.2` | Dockerfile ARGs — rubygems |
 | Debian 13 (trixie) packages | unpinned | apt install layer (graphviz, chromium, CJK fonts, build tools, libpcre2-8-0) |
 
 ## Workflow git clone pins
@@ -161,6 +161,7 @@ only while `review_by` has not passed and still matches the reported
 | --- | --- | --- |
 | Node.js | Debian `nodejs`/`npm` 20.19.x -> `26.11.0` official tarball (+sha256) -> `/usr/local` | Adopted. Debian trixie freezes nodejs at 20.x for its lifecycle; NodeSource was rejected (unverified pipe-to-bash, floating version, third-party apt repo). The tarball matches the image's verified-download convention and adds dep-checker tracking (`nodejs/node` tags). Node 26 reaches LTS on 2026-10-28 (EOL 2029-04); dashboard-agent already runs Node 26. |
 | mermaid-cli | 11.17.0 -> 12.0.0 | Adopted. The Node >=22.13 blocker is resolved; the 2027-04-01 deferral is lifted early. |
+| json gem | 2.19.2 -> 3.0.2 | Adopted. Changelog reviewed: 3.0 removes `create_additions` and rarely used aliases, defaults `allow_duplicate_key`/`allow_comments` to false — the DSL uses only `JSON.parse`/`JSON.generate`, no affected APIs. |
 
 ## Decisions — 2026-10-07 round (SDK 1.53.0)
 
