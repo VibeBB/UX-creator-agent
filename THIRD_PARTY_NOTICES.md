@@ -23,7 +23,7 @@ import-linked into `ux_creator` (per ADR-0004).
 | minitest | `gem minitest:6.0.6` | MIT | Ruby test framework |
 | pydantic | `>=2` via `uv.lock` | MIT | Contract models |
 | mcp | `>=1.29,<2` via `uv.lock` | MIT | MCP server SDK |
-| openhands-sdk / openhands-tools | `1.52.0` (sdk-check group) | MIT | CI plugin-load verification only |
+| openhands-sdk / openhands-tools | `1.53.0` (sdk-check group) | MIT | CI plugin-load verification only |
 | fonts-ipafont / fonts-noto-cjk | Debian packages | IPA Font License / SIL OFL-1.1 | CJK glyphs in rendered SVG/PNG |
 
 ## Sources recorded in the image
