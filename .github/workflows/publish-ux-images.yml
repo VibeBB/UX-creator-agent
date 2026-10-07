@@ -147,6 +147,11 @@ jobs:
               # digest addresses on a real run, and the local image under
               # dry_run.
               scan-ref: ghcr.io/${{ env.IMAGE_OWNER }}/ux-tools:${{ github.sha }}-tools
+              # Private cache dir: this leg runs inside a parallel group,
+              # and trivy-action's default cache-dir (.cache/trivy) would
+              # share the DB with other legs and corrupt db/metadata.json
+              # on concurrent writes.
+              cache-dir: ${{ runner.temp }}/trivy-tools-json
               version: v0.75.0
               scanners: vuln,secret,misconfig,license
               ignore-unfixed: false

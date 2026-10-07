@@ -19,7 +19,7 @@ EXPECTED: dict[str, str] = {
         "38cab160d217b67eec286dfa917ad76f0cc673293eb22af6bc114818ba2eb4a2"
     ),
     ".github/workflows/scorecard.yml": (
-        "b91dcdca7cb587e9baf10a5ce127718c7473dc0ffb96438d3865b0553ec893ee"
+        "eb3cc9a5942aa438f362afbe7ba6ac5d9c9f1233950363d8ced8b383d4486f32"
     ),
 }
 UNITS: dict[str, tuple[str, bytes | None]] = {
