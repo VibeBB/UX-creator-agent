@@ -17,6 +17,7 @@ from scripts.check_dependency_updates import (
     check_docker_base,
     check_github_actions,
     check_lynis_pin,
+    check_python_versions,
     check_workflow_tool_pins,
     main,
 )
@@ -238,3 +239,45 @@ def test_main_reports_fetch_failures_as_unknown(
     assert main(["--json", str(report_path)]) == 0
     report = json.loads(report_path.read_text(encoding="utf-8"))
     assert report["unknown_count"] == 1
+
+
+def test_python_versions_skip_older_legs_when_source_covers_latest(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nrequires-python = ">=3.12"\n', encoding="utf-8"
+    )
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "ci.yml").write_text(
+        "jobs:\n  verify:\n    strategy:\n      matrix:\n"
+        '        python-version: ["3.12", "3.13", "3.14", "3.15"]\n',
+        encoding="utf-8",
+    )
+    statuses = check_python_versions(
+        tmp_path, list_remote_tags=lambda url: ["v3.12.0", "v3.13.0", "v3.14.0", "v3.15.0"]
+    )
+    ci_statuses = [status for status in statuses if status.source.endswith("ci.yml")]
+    assert ci_statuses
+    assert all(not status.outdated for status in ci_statuses)
+
+
+def test_python_versions_still_flag_source_without_latest(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nrequires-python = ">=3.12"\n', encoding="utf-8"
+    )
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "ci.yml").write_text(
+        "jobs:\n  verify:\n    steps:\n      - uses: actions/setup-python@x\n"
+        '        with:\n          python-version: "3.12"\n',
+        encoding="utf-8",
+    )
+    statuses = check_python_versions(
+        tmp_path, list_remote_tags=lambda url: ["v3.12.0", "v3.13.0", "v3.14.0", "v3.15.0"]
+    )
+    ci_statuses = [status for status in statuses if status.source.endswith("ci.yml")]
+    assert ci_statuses
+    assert all(status.outdated for status in ci_statuses)

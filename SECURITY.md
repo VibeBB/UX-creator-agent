@@ -2,8 +2,7 @@
 
 ## Reporting a Vulnerability
 
-Please report security vulnerabilities via the repository's private
-security advisory channel (GitHub → Security → "Report a vulnerability").
+Please report security vulnerabilities via [GitHub private vulnerability reporting](https://github.com/VibeBB/UX-creator-agent/security/advisories/new).
 Do not open public issues for security problems.
 
 We aim to acknowledge reports within 7 days.
