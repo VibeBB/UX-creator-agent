@@ -14,9 +14,12 @@ ARG PLANTUML_VERSION=1.2026.8
 ARG PLANTUML_SHA256=3629c9cd017c7f73e6450396eea0040216c7e1eef8473ce33cc1aad469dab2f9
 ARG MRUBY_VERSION=4.0.0
 ARG MRUBY_SHA256=e2ea271dbed14e9f2b33df773ae447b747dbc242ce2675022c0a57efea85a7b4
-ARG MERMAID_CLI_VERSION=11.17.0
-# sha256 of https://registry.npmjs.org/@mermaid-js/mermaid-cli/-/mermaid-cli-11.17.0.tgz
-ARG MERMAID_CLI_SHA256=23f2c2722262d98347cf979da6d88bc8693eef2cd8798a38ac393a7f006938a0
+ARG NODE_VERSION=26.11.0
+# sha256 of https://nodejs.org/dist/v26.11.0/node-v26.11.0-linux-x64.tar.xz
+ARG NODE_SHA256=db6342d36ebdb3cbd72103d0ce5ccc528620f6c9df72a11f4ccb384bf1bef678
+ARG MERMAID_CLI_VERSION=12.0.0
+# sha256 of https://registry.npmjs.org/@mermaid-js/mermaid-cli/-/mermaid-cli-12.0.0.tgz
+ARG MERMAID_CLI_SHA256=b5b43bc60c2e6bc87f7d12ab3e6e78883c799213ea5b015363fecdd5e6363c84
 ARG RUBOCOP_VERSION=1.91.0
 ARG MINITEST_VERSION=6.0.6
 ARG JSON_VERSION=2.19.2
@@ -44,6 +47,7 @@ LABEL org.opencontainers.image.source="https://github.com/VibeBB/UX-creator-agen
       ux.semeru.version="${SEMERU_JRE_VERSION}" \
       ux.plantuml.version="${PLANTUML_VERSION}" \
       ux.mruby.version="${MRUBY_VERSION}" \
+      ux.node.version="${NODE_VERSION}" \
       ux.mermaid-cli.version="${MERMAID_CLI_VERSION}"
 
 COPY --from=uv /uv /uvx /usr/local/bin/
@@ -60,23 +64,41 @@ RUN apt-get -o Acquire::Retries=5 update \
         build-essential \
         bison \
         chromium \
-        nodejs \
-        npm \
         xz-utils \
         # Ships in the digest-pinned base image; listed so apt upgrades it to
         # the security build (CVE-2026-103111, fixed in 10.46-1~deb13u3).
         libpcre2-8-0 \
-    # Install mermaid-cli from the registry tarball so the fetch is
-    # sha256-verified like every other external download in this image.
-    && curl --fail --location --silent --show-error \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node.js official tarball — Debian trixie ships nodejs 20.x, which blocks
+# mermaid-cli 12 (needs Node >=22.13). Installed from a sha256-verified
+# nodejs.org tarball, the same verified-download pattern as the other tools.
+# Provides /usr/local/bin/{node,npm,npx,corepack} (npm is bundled).
+RUN curl --fail --location --silent --show-error \
+        --retry 5 --retry-delay 10 --retry-all-errors \
+        --output /tmp/node.tar.xz \
+        "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
+    && echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum --check \
+    && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 --no-same-owner \
+    && rm -f /tmp/node.tar.xz \
+    && node --version | grep -F "v${NODE_VERSION}" \
+    && npm --version \
+    && mkdir -p /usr/share/doc/node \
+    && printf '%s\n' \
+        "source=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
+        "version=v${NODE_VERSION}" \
+        > /usr/share/doc/node/SOURCE
+
+# Install mermaid-cli from the registry tarball so the fetch is
+# sha256-verified like every other external download in this image.
+RUN curl --fail --location --silent --show-error \
         --retry 5 --retry-delay 10 --retry-all-errors \
         --output /tmp/mermaid-cli.tgz \
         "https://registry.npmjs.org/@mermaid-js/mermaid-cli/-/mermaid-cli-${MERMAID_CLI_VERSION}.tgz" \
     && echo "${MERMAID_CLI_SHA256}  /tmp/mermaid-cli.tgz" | sha256sum --check \
     && npm install -g /tmp/mermaid-cli.tgz \
     && rm -f /tmp/mermaid-cli.tgz \
-    && mmdc --version \
-    && rm -rf /var/lib/apt/lists/*
+    && mmdc --version
 
 # IBM Semeru OpenJ9 JRE (for PlantUML) — same verified pattern as
 # electrical-circuit-agent's circuit-tools image.

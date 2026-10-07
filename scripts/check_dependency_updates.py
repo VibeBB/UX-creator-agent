@@ -403,6 +403,7 @@ _DOCKER_ARG_UPSTREAMS = {
     "SEMERU_JRE_VERSION": ("ibmruntimes/semeru{major}-binaries", "jdk-"),
     "PLANTUML_VERSION": ("plantuml/plantuml", "v"),
     "MRUBY_VERSION": ("mruby/mruby", ""),
+    "NODE_VERSION": ("nodejs/node", "v"),
 }
 
 

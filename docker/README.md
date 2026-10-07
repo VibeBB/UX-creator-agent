@@ -4,7 +4,8 @@
   ruby:4.0.7-slim-trixie base, uv 0.12.23 → CPython 3.14 venv at
   `/opt/ux/.venv`, IBM Semeru OpenJ9 JRE 27 (`/opt/jre`), PlantUML MIT jar
   (`/opt/plantuml/plantuml.jar`, `PLANTUML_JAR`), mruby 4.0.0
-  (`/opt/mruby/bin`), Node.js + `@mermaid-js/mermaid-cli` + Debian
+  (`/opt/mruby/bin`), Node.js 26 (sha256-pinned `nodejs.org` tarball →
+  `/usr/local`) + `@mermaid-js/mermaid-cli` 12 + Debian
   Chromium (puppeteer via `docker/puppeteer-config.json`,
   `--no-sandbox`), Graphviz, CJK fonts, rubocop + minitest, non-root
   `ux` (uid 1000). Build-time smoke: doctor, Ruby DSL → contract →

@@ -74,9 +74,10 @@ All `uses:` entries are pinned to a 40-char SHA with a `# vX.Y.Z` comment:
 | IBM Semeru OpenJ9 JRE | `27.0.0.0` (+sha256) | `ARG SEMERU_JRE_VERSION` — `ibmruntimes/semeru27-binaries` releases |
 | PlantUML MIT jar | `1.2026.8` (+sha256) | `ARG PLANTUML_VERSION` — `plantuml/plantuml` releases |
 | mruby | `4.0.0` (+sha256) | `ARG MRUBY_VERSION` — `mruby/mruby` releases |
-| mermaid-cli | `11.17.0` | `ARG MERMAID_CLI_VERSION` — `mermaid-js/mermaid-cli` releases |
+| Node.js | `26.11.0` (+sha256) | `ARG NODE_VERSION` — `nodejs/node` releases; official tarball → `/usr/local` |
+| mermaid-cli | `12.0.0` | `ARG MERMAID_CLI_VERSION` — `mermaid-js/mermaid-cli` releases |
 | rubocop / minitest / json | `1.91.0` / `6.0.6` / `2.19.2` | Dockerfile ARGs — rubygems |
-| Debian 13 (trixie) packages | unpinned | apt install layer (graphviz, chromium, nodejs, npm, CJK fonts, build tools, libpcre2-8-0) |
+| Debian 13 (trixie) packages | unpinned | apt install layer (graphviz, chromium, CJK fonts, build tools, libpcre2-8-0) |
 
 ## Workflow git clone pins
 
@@ -109,7 +110,7 @@ Surfaces:
 - `pypi-uvx` — `uvx tool@version` pins in workflows against PyPI.
 - `docker-arg` — Dockerfile `ARG` pins (`UV_VERSION`,
   `MERMAID_CLI_VERSION`, `SEMERU_JRE_VERSION`, `PLANTUML_VERSION`,
-  `MRUBY_VERSION`) against the mapped upstream repos.
+  `MRUBY_VERSION`, `NODE_VERSION`) against the mapped upstream repos.
 - `docker-base` — the runtime `FROM` image tag; the `ruby:*-slim-trixie`
   base is reported as an unhandled image (presence only).
 - `workflow-pin` — the `git clone --branch` lynis pin in
@@ -140,7 +141,6 @@ only while `review_by` has not passed and still matches the reported
 | Surface | Name | Latest | Re-check | Reason |
 | --- | --- | --- | --- | --- |
 | pypi | mcp | 2.3.0 | 2027-04-01 | `openhands-sdk` 1.53.0 requires `fastmcp>=3.2.0,<4`, which caps `mcp<2`. |
-| docker-arg | MERMAID_CLI_VERSION | 12.0.0 | 2027-04-01 | mermaid-cli 12.x requires Node >=22.13; the image runs Debian nodejs 20.19.x. |
 
 ## Not covered
 
@@ -154,6 +154,13 @@ only while `review_by` has not passed and still matches the reported
   upstream tag comparison exists for it).
 - Debian/apt, gem, and npm packages inside the image beyond the tracked
   ARGs (apt tracks the Debian archive).
+
+## Decisions — 2026-10-07 round (Node 26 migration)
+
+| Component | From -> To | Decision |
+| --- | --- | --- |
+| Node.js | Debian `nodejs`/`npm` 20.19.x -> `26.11.0` official tarball (+sha256) -> `/usr/local` | Adopted. Debian trixie freezes nodejs at 20.x for its lifecycle; NodeSource was rejected (unverified pipe-to-bash, floating version, third-party apt repo). The tarball matches the image's verified-download convention and adds dep-checker tracking (`nodejs/node` tags). Node 26 reaches LTS on 2026-10-28 (EOL 2029-04); dashboard-agent already runs Node 26. |
+| mermaid-cli | 11.17.0 -> 12.0.0 | Adopted. The Node >=22.13 blocker is resolved; the 2027-04-01 deferral is lifted early. |
 
 ## Decisions — 2026-10-07 round (SDK 1.53.0)
 
