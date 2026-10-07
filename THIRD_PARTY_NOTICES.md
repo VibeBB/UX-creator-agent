@@ -18,6 +18,8 @@ import-linked into `ux_creator` (per ADR-0004).
 | Mermaid + mermaid-cli | `@mermaid-js/mermaid-cli@12.0.0` | MIT | Journey/statechart render (`mmdc`) |
 | Chromium | Debian package | BSD-3-Clause | Puppeteer headless browser (`--no-sandbox` config committed) |
 | Node.js | `v26.11.0` sha256-pinned tarball → `/usr/local` | MIT | mermaid-cli + npm runtime |
+| brace-expansion (npm vendored patch) | `5.0.12` sha256-pinned registry tarball → `/usr/local/lib/node_modules/npm/node_modules` | MIT | Publish-gate fix for npm's vendored copy |
+| undici (npm vendored patch) | `6.28.1` sha256-pinned registry tarball → `/usr/local/lib/node_modules/npm/node_modules` | MIT | Publish-gate fix for npm's vendored copy |
 | mruby | `4.0.0` sha256-pinned tarball → `/opt/mruby` | MIT | `mruby`/`mrbc` for firmware-side UX checks |
 | rubocop | `gem rubocop:1.91.0` | MIT | Ruby linter |
 | minitest | `gem minitest:6.0.6` | MIT | Ruby test framework |

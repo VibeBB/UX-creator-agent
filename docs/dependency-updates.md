@@ -75,9 +75,10 @@ All `uses:` entries are pinned to a 40-char SHA with a `# vX.Y.Z` comment:
 | PlantUML MIT jar | `1.2026.8` (+sha256) | `ARG PLANTUML_VERSION` — `plantuml/plantuml` releases |
 | mruby | `4.0.0` (+sha256) | `ARG MRUBY_VERSION` — `mruby/mruby` releases |
 | Node.js | `26.11.0` (+sha256) | `ARG NODE_VERSION` — `nodejs/node` releases; official tarball → `/usr/local` |
+| npm vendored patches | brace-expansion `5.0.12`, undici `6.28.1` (+sha256) | Dockerfile ARGs — registry tarballs applied over `npm/node_modules`; pins follow npm's bundled majors, so they are intentionally NOT tracked as docker-arg surfaces |
 | mermaid-cli | `12.0.0` | `ARG MERMAID_CLI_VERSION` — `mermaid-js/mermaid-cli` releases |
 | rubocop / minitest / json | `1.91.0` / `6.0.6` / `3.0.2` | Dockerfile ARGs — rubygems |
-| Debian 13 (trixie) packages | unpinned | apt install layer (graphviz, chromium, CJK fonts, build tools, libpcre2-8-0) |
+| Debian 13 (trixie) packages | unpinned | apt install layer (graphviz, chromium, CJK fonts, build tools, libpcre2-8-0, openssl trio for deb13u3) |
 
 ## Workflow git clone pins
 
@@ -162,6 +163,10 @@ only while `review_by` has not passed and still matches the reported
 | Node.js | Debian `nodejs`/`npm` 20.19.x -> `26.11.0` official tarball (+sha256) -> `/usr/local` | Adopted. Debian trixie freezes nodejs at 20.x for its lifecycle; NodeSource was rejected (unverified pipe-to-bash, floating version, third-party apt repo). The tarball matches the image's verified-download convention and adds dep-checker tracking (`nodejs/node` tags). Node 26 reaches LTS on 2026-10-28 (EOL 2029-04); dashboard-agent already runs Node 26. |
 | mermaid-cli | 11.17.0 -> 12.0.0 | Adopted. The Node >=22.13 blocker is resolved; the 2027-04-01 deferral is lifted early. |
 | json gem | 2.19.2 -> 3.0.2 | Adopted. Changelog reviewed: 3.0 removes `create_additions` and rarely used aliases, defaults `allow_duplicate_key`/`allow_comments` to false — the DSL uses only `JSON.parse`/`JSON.generate`, no affected APIs. |
+| npm | bundled 11.20.0 -> 12.2.0 | Not adopted. npm 12.2.0 still vendors brace-expansion 5.0.9 + undici 6.28.0 (the publish-gate findings) — no fix, extra churn; vendored deps patched in place instead. Re-evaluate on the next NODE_VERSION bump. |
+| brace-expansion (npm vendored) | 5.0.9 -> 5.0.12 | Adopted in place — fixes CVE-2026-102276 + CVE-2026-102278 flagged by the publish Trivy gate. Patch release, same API. |
+| undici (npm vendored) | 6.28.0 -> 6.28.1 | Adopted in place — fixes CVE-2026-19534. Patch within npm's vendored 6.x major; 7.x/8.x not adoptable until npm vendors them. |
+| openssl Debian packages | 3.5.7-1~deb13u2 -> ~deb13u3 | Adopted via the apt install list (same pattern as libpcre2-8-0) — fixes CVE-2026-75804 + CVE-2026-84782 across libssl3t64, openssl, openssl-provider-legacy. |
 
 ## Decisions — 2026-10-07 round (SDK 1.53.0)
 
