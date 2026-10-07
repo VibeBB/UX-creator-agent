@@ -4,11 +4,20 @@ Hook registration is in `plugins/ux/hooks/hooks.json`. Hooks add workspace
 safety, environment checks, and evidence collection around an OpenHands
 session. They do not replace the core schemas or deterministic gates.
 
+Every hook resolves the plugin root from `$UX_PLUGIN_ROOT`,
+`${OPENHANDS_PROJECT_DIR}/plugins/ux`, `~/.agents/plugins/ux`,
+`~/.openhands/plugins/installed/ux`, `${HOME}/plugins/installed/ux` or
+`${OH_PERSISTENCE_DIR}/plugins/installed/ux` and runs a stdlib-only script
+from `hooks/scripts/` on the host. The two extra candidates resolve the
+plugin inside an OpenHands docker conversation runtime (inner
+`HOME=/var/openhands/.openhands`), where `ux_launcher.py` then fails
+closed with guidance — docker is unavailable there by design.
+
 ## Event map
 
 | Event and matcher | Hook names | Behavior |
 | --- | --- | --- |
-| `session_start` (`*`) | `ux-doctor`, `intake-attachments`, `ensure-llm-profiles`, `require-records` | Probe readiness, ingest any current attachments, ensure model profiles are usable, and load the record policy. |
+| `session_start` (`*`) | `ux-doctor`, `intake-attachments`, `ensure-llm-profiles`, `ensure-agent-profiles`, `require-records` | Probe readiness, ingest any current attachments, ensure model and agent profiles are usable, and load the record policy. |
 | `user_prompt_submit` (`*`) | `intake-attachments` | Capture supported user-provided image attachments in the workspace. |
 | `pre_tool_use` (`file_editor|apply_patch|terminal`) | `protect-generated` | Reject hand edits to generated outputs and unsafe generated-file writes. |
 | `pre_tool_use` (`terminal`) | `safety-rail` | Reject dangerous shell operations in the workspace. |
@@ -20,7 +29,8 @@ session. They do not replace the core schemas or deterministic gates.
 
 | Script or helper | Responsibility |
 | --- | --- |
-| `ensure_llm_profiles.py` | Check or establish the configured author/reviewer model profiles. |
+| `ensure_llm_profiles.py` | Check or establish the configured author/reviewer/`oracle` model profiles. |
+| `ensure_agent_profiles.py` | Write `~/.openhands/agent-profiles/vibebb-ux.json` when missing: openhands-kind, `llm_profile_ref=vibebb-author`, MCP scoped to `ux`, no secrets (shared canon). |
 | `intake_attachments.py` | Copy supported attachment images into the workspace and invoke the intake path. |
 | `protect_generated.py` | Guard generated contract projections from direct edits. |
 | `record_image_observation.py` | Capture image observation evidence after relevant artifact tools. |

@@ -38,6 +38,8 @@ EXPECTED_SKILLS = {
     "ux-production",
     "ux-cmf",
     "ux-interaction-content",
+    "ux-contract-rules",
+    "ux-out-rules",
 }
 
 
