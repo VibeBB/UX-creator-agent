@@ -49,7 +49,8 @@ All `uses:` entries are pinned to a 40-char SHA with a `# vX.Y.Z` comment:
 | --- | --- |
 | actions/checkout | v7.0.1 |
 | astral-sh/setup-uv | v10.2.0 |
-| actions/upload-artifact | v7.0.1 |
+| actions/upload-artifact | v7.0.2 |
+| actions/download-artifact | v8.0.2 |
 | actions/attest-build-provenance | v4.2.2 |
 | actions/attest | v4.2.2 |
 | actions/dependency-review-action | v5.0.0 |
@@ -62,7 +63,7 @@ All `uses:` entries are pinned to a 40-char SHA with a `# vX.Y.Z` comment:
 | github/codeql-action/upload-sarif | v4.38.2 |
 | hadolint/hadolint-action | v3.5.0 |
 | ossf/scorecard-action | v2.4.4 |
-| step-security/harden-runner | v2.21.1 |
+| step-security/harden-runner | v2.22.1 |
 
 ## Docker image pins
 
@@ -142,6 +143,8 @@ only while `review_by` has not passed and still matches the reported
 | Surface | Name | Latest | Re-check | Reason |
 | --- | --- | --- | --- | --- |
 | pypi | mcp | 2.3.0 | 2027-04-01 | `openhands-sdk` 1.53.0 requires `fastmcp>=3.2.0,<4`, which caps `mcp<2`. |
+| python-version | Python version (pyproject.toml) | 3.14 | 2027-01-08 | 3.12/3.13 remain the supported floor; 3.14+ is exercised by the canary legs. |
+| python-version | Python version (ci.yml) | 3.14 | 2027-01-08 | 3.12/3.13 remain the supported floor; 3.14+ is exercised by the canary legs. |
 
 ## Not covered
 
@@ -155,6 +158,15 @@ only while `review_by` has not passed and still matches the reported
   upstream tag comparison exists for it).
 - Debian/apt, gem, and npm packages inside the image beyond the tracked
   ARGs (apt tracks the Debian archive).
+
+## Decisions — 2026-10-08 round (GitHub Actions + Python floor deferral)
+
+| Component | From -> To | Decision |
+| --- | --- | --- |
+| step-security/harden-runner | v2.21.1 -> v2.22.1 | Adopted across all workflows. v2.22.0 adds Linux ARM64 (community tier), GHES self-hosted VM support and macOS/Windows deny lists (enterprise tier); v2.22.1 fixes security-rule init and GHES connectivity on self-hosted runners. We run audit mode on GitHub-hosted Linux — none of the changes touch our usage. |
+| actions/upload-artifact | v7.0.1 -> v7.0.2 | Adopted. Patch: improves artifact download retries on HTTP 429 (honors Retry-After); `@actions/artifact` 6.3.1. |
+| actions/download-artifact | v8.0.1 -> v8.0.2 | Adopted. Same 429 retry improvement via `@actions/artifact` 6.3.1, plus readme updates. |
+| Python floor | 3.12/3.13 -> 3.14 | Deferred to 2027-01-08. `requires-python` and the required CI legs stay on the supported floor; 3.14 runs as a required leg and 3.15 as the canary. |
 
 ## Decisions — 2026-10-08 round (Node 26.11.1)
 
