@@ -188,6 +188,35 @@ def test_review_lens_and_images_without_record(
     assert lens["images_without_record"] == [str(tmp_path / "unreviewed.png")]
 
 
+def test_vision_points_list_rasters_with_checklist(
+    contract_dict: dict[str, Any], tmp_path: Path
+) -> None:
+    contract = UXContract.model_validate(contract_dict)
+    report = run_gates(contract, tmp_path)
+    for name in (
+        "kettle.j1.journey.svg",
+        "kettle.wireframe.png",
+        "kettle.blueprint.svg",
+        "kettle.mystery.png",
+        "notes.txt",
+    ):
+        (tmp_path / name).write_bytes(b"x")
+    points = build_report(contract, report, out_dir=tmp_path)["vision_points"]
+    assert [p["image_path"] for p in points] == [
+        "kettle.blueprint.svg",
+        "kettle.j1.journey.svg",
+        "kettle.mystery.png",
+        "kettle.wireframe.png",
+    ]
+    assert [p["checklist"] for p in points] == [
+        "service_blueprint",
+        "journey_map",
+        "sister_artifact",
+        "wireframe",
+    ]
+    assert all("review-visual-" in p["record_with"] for p in points)
+
+
 def test_verdict_independent_of_advisory(contract_dict: dict[str, Any], tmp_path: Path) -> None:
     contract = UXContract.model_validate(contract_dict)
     report = run_gates(contract, tmp_path)

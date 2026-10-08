@@ -20,6 +20,42 @@ from .responses import ALL_STATES, ALL_STATUSES, liaison_status
 
 _REVIEW_IMAGE_SUFFIXES = {".svg", ".png"}
 
+_VISION_POINT_CHECKLISTS: tuple[tuple[str, str], ...] = (
+    ("journey", "journey_map"),
+    ("statechart", "statechart"),
+    ("wireframe", "wireframe"),
+    ("blueprint", "service_blueprint"),
+    ("sequence", "service_blueprint"),
+    ("emotion", "emotion_curve"),
+    ("mindmap", "journey_map"),
+    ("wbs", "production_plan"),
+    ("plan", "production_plan"),
+)
+_VISION_POINT_RECORD_HINT = "review-visual-<slug>.advisory.json via `review-record`"
+
+
+def _vision_point_checklist(stem: str) -> str:
+    kind = stem.rsplit(".", 1)[-1]
+    for token, checklist in _VISION_POINT_CHECKLISTS:
+        if kind == token:
+            return checklist
+    # `sister_artifact` is the review-record CLI's catch-all checklist for
+    # rendered artifacts outside the named review types.
+    return "sister_artifact"
+
+
+def vision_points(out_dir: Path) -> list[dict[str, str]]:
+    """Rendered rasters in out_dir a vision reviewer must look at, with their checklist."""
+    return [
+        {
+            "image_path": image.name,
+            "checklist": _vision_point_checklist(image.stem),
+            "record_with": _VISION_POINT_RECORD_HINT,
+        }
+        for image in sorted(out_dir.iterdir())
+        if image.is_file() and image.suffix.lower() in _REVIEW_IMAGE_SUFFIXES
+    ]
+
 
 def _review_slug(stem: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", stem.lower()).strip("-") or "image"
@@ -195,6 +231,7 @@ def build_report(
         report["lenses"]["review"] = review_lens(contract, gate_report, out_dir)
         report["lenses"]["liaison"] = liaison_lens(out_dir)
         report["lenses"]["innovation"] = innovation_lens(contract, out_dir)
+        report["vision_points"] = vision_points(out_dir)
     if renders is not None:
         report["renders"] = [
             {
@@ -321,6 +358,17 @@ def render_markdown(report: dict[str, Any]) -> str:
             f"(blocked: {', '.join(innovation['bold_blocked']) or 'none'})",
             f"- core experience: {innovation['core_experience']}",
         ]
+    points = cast(list[dict[str, str]], report.get("vision_points") or [])
+    if points:
+        lines += [
+            "",
+            "## Vision points (advisory)",
+            "",
+            f"Each raster below needs a vision review record ({_VISION_POINT_RECORD_HINT}).",
+            "",
+        ]
+        for point in points:
+            lines.append(f"- `{point['image_path']}` — checklist `{point['checklist']}`")
     lines += ["", "## Checks", ""]
     for check in report["checks"]:
         detail = f" — {check['detail']}" if check.get("detail") else ""
