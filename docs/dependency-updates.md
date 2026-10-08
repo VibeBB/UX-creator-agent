@@ -74,7 +74,7 @@ All `uses:` entries are pinned to a 40-char SHA with a `# vX.Y.Z` comment:
 | IBM Semeru OpenJ9 JRE | `27.0.0.0` (+sha256) | `ARG SEMERU_JRE_VERSION` — `ibmruntimes/semeru27-binaries` releases |
 | PlantUML MIT jar | `1.2026.8` (+sha256) | `ARG PLANTUML_VERSION` — `plantuml/plantuml` releases |
 | mruby | `4.0.0` (+sha256) | `ARG MRUBY_VERSION` — `mruby/mruby` releases |
-| Node.js | `26.11.0` (+sha256) | `ARG NODE_VERSION` — `nodejs/node` releases; official tarball → `/usr/local` |
+| Node.js | `26.11.1` (+sha256) | `ARG NODE_VERSION` — `nodejs/node` releases; official tarball → `/usr/local` |
 | npm vendored patches | brace-expansion `5.0.12`, undici `6.28.1` (+sha256) | Dockerfile ARGs — registry tarballs applied over `npm/node_modules`; pins follow npm's bundled majors, so they are intentionally NOT tracked as docker-arg surfaces |
 | mermaid-cli | `12.0.0` | `ARG MERMAID_CLI_VERSION` — `mermaid-js/mermaid-cli` releases |
 | rubocop / minitest / json | `1.91.0` / `6.0.6` / `3.0.2` | Dockerfile ARGs — rubygems |
@@ -155,6 +155,13 @@ only while `review_by` has not passed and still matches the reported
   upstream tag comparison exists for it).
 - Debian/apt, gem, and npm packages inside the image beyond the tracked
   ARGs (apt tracks the Debian archive).
+
+## Decisions — 2026-10-08 round (Node 26.11.1)
+
+| Component | From -> To | Decision |
+| --- | --- | --- |
+| Node.js | `26.11.0` -> `26.11.1` official tarball (+sha256) | Adopted. The 26.11.1 release (Current line, 2026-10-07) contains only three reverts of documentation build tooling (`build: toggle doc-kit verbosity based on V`, `build, doc: move to redesign`, `tools: bump the doc group in /tools/doc`) — no runtime, API, or security changes. |
+| npm | bundled 11.20.0 (unchanged) -> still patched in place | Re-evaluated on this NODE_VERSION bump as recorded below. Latest npm is still 12.2.0, vendoring the same brace-expansion 5.0.9 + undici 6.28.0 the publish gate flags (verified 2026-10-08 via registry tarballs); Node 26.11.1's bundled npm 11.20.0 ships the same. The in-place patches (5.0.12, 6.28.1) stay. |
 
 ## Decisions — 2026-10-07 round (Node 26 migration)
 

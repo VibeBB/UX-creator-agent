@@ -14,10 +14,10 @@ ARG PLANTUML_VERSION=1.2026.8
 ARG PLANTUML_SHA256=3629c9cd017c7f73e6450396eea0040216c7e1eef8473ce33cc1aad469dab2f9
 ARG MRUBY_VERSION=4.0.0
 ARG MRUBY_SHA256=e2ea271dbed14e9f2b33df773ae447b747dbc242ce2675022c0a57efea85a7b4
-ARG NODE_VERSION=26.11.0
-# sha256 of https://nodejs.org/dist/v26.11.0/node-v26.11.0-linux-x64.tar.xz
-ARG NODE_SHA256=db6342d36ebdb3cbd72103d0ce5ccc528620f6c9df72a11f4ccb384bf1bef678
-# npm 11.20.0 (bundled with Node 26.11.0) vendors vulnerable deps whose
+ARG NODE_VERSION=26.11.1
+# sha256 of https://nodejs.org/dist/v26.11.1/node-v26.11.1-linux-x64.tar.xz
+ARG NODE_SHA256=3883bfc73f9a680ca4eab04b196068aaaab1373ffa77d8fc1a4408222495b651
+# npm 11.20.0 (bundled with Node 26.11.1) vendors vulnerable deps whose
 # fixes no npm release carries yet (npm 12.2.0 ships the same versions);
 # patched in place below from sha256-verified registry tarballs.
 ARG BRACE_EXPANSION_VERSION=5.0.12
