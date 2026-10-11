@@ -96,6 +96,39 @@ circular, and done responses cite decision and impression records. An
 unavailable liaison directory or a missing response is `unknown`, not a
 pass. See [Contracts](contracts.md) for the production plan format.
 
+## Change control (ECR/ECO) and design review
+
+A change to a hash-pinned file anywhere in the family goes through two
+workspace records, authored by AI agents; no human approval step exists.
+
+- `<id>.ecr.json` (`schema_version: vibebb.ecr/v1`, `ECR-<n>`): `origin`
+  plugin, `reason`, `proposal`, `items[]` (`path`, `sha256` before the
+  change), optional `raised_by` (the `ECO-<n>` whose result triggered it),
+  `created_at`.
+- `<id>.eco.json` (`vibebb.eco/v1`, `ECO-<n>`): the pinned `ecr`, `author`,
+  `changes[]` (`path`, `before`, `after`, `gate_report` path+sha256) and
+  `review` (`reviewers[]`, `findings[]` with `severity`
+  blocker/major/minor, `disposition` open/fixed/accepted, `resolution`).
+
+`ux change <eco>` / `ux_change_check` derives the impact itself: every JSON
+object in the workspace holding one sha256 and one path to a workspace file
+is a pin. The verdict passes only if every check passes:
+
+| Check | Fails when |
+| --- | --- |
+| `eco.ecr` | the ECR changed after pinning or is invalid (`unknown` if missing) |
+| `eco.scope` | an ECR item is not changed, or its `before` differs |
+| `eco.applied` | a changed file is missing or its sha256 is not `after` |
+| `eco.evidence` | the gate report changed or its `verdict` is not `pass` (`unknown` if missing or it does not cite the `after` sha256) |
+| `eco.pins` | a consumer still pins an old sha256 of a changed file, or re-pinned without being listed in `changes` |
+| `dr.independence` | the ECO author is one of its reviewers |
+| `dr.findings` | a finding is open, a blocker is accepted rather than fixed, the resolution is missing, or the reviewer is not listed |
+| `eco.cycle` | the `raised_by` chain of ECRs and ECOs loops |
+
+Review findings come from an independent AI reviewer agent (for example a
+sister's `*-review` agent briefed blind on the changed files). They can only
+stop a change; the sister gates in `gate_report` decide whether it passes.
+
 ## Example files and scope
 
 The `examples/smart-kettle/` and

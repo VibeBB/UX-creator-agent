@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Family change control: `*.ecr.json` / `*.eco.json` records and
+  `ux change` / `ux_change_check`, which derive the impact from workspace
+  sha256 pins and fail on stale or unlisted consumers, unpassed gate
+  reports, a self-reviewing author, unresolved AI design-review findings and
+  ECR/ECO cycles.
+
 ### Fixed
 
 - MCP transport errors now carry error status, workspace paths are contained,

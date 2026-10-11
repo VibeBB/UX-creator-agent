@@ -21,6 +21,7 @@ review the diff; `protect-generated` blocks direct edits to generated output.
 | `review-record` | Write an image-bound advisory review with checklist, summary, and repeatable `--finding CATEGORY:SEVERITY:WHERE:OBSERVATION`; use `--not-applicable` if a vision-capable review could not be performed. |
 | `review-reconcile` | Compare review advisories in `--out-dir` with contract and gate truth; findings remain advisory. |
 | `liaison` | Reconcile requests and responses under `--liaison-dir` (default workspace liaison directory). |
+| `change` | Check that an ECO closes its ECR: positional `<id>.eco.json`, optional `--workspace`; exits 1 unless every check passes. |
 | `produce` | Validate a product plan and write status under required `--out`; `--workspace`, `--liaison-dir`, and `--render` are optional. |
 | `intake-record` | Record image touchpoint candidates with repeatable `--touchpoint ID[@SURFACE]=EVIDENCE`. |
 | `intake-reconcile` | Compare intake advisory records in `--out-dir` with contract-declared touchpoints. |
