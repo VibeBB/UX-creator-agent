@@ -66,7 +66,18 @@ class UXResponse(BaseModel):
     decision_refs: list[str] = Field(default_factory=list[str])
     impression_refs: list[str] = Field(default_factory=list[str])
     questions_for_user: list[str] = Field(default_factory=list[str])
+    records_heads: dict[str, str] = Field(default_factory=dict[str, str])
     responded_at: str
+
+    @field_validator("records_heads")
+    @classmethod
+    def _records_heads_are_valid(cls, values: dict[str, str]) -> dict[str, str]:
+        for kind, head in values.items():
+            if kind not in _vrp.LOG_FILES:
+                raise ValueError(f"unknown VRP log kind in records_heads: {kind!r}")
+            if not SHA256.fullmatch(head):
+                raise ValueError(f"records_heads[{kind!r}] must be a SHA256 event id")
+        return values
 
     @field_validator("input_hashes")
     @classmethod
@@ -209,6 +220,16 @@ def _response_problems(response: UXResponse, workspace: Path) -> list[str]:
     missing_impressions = sorted(set(response.impression_refs) - impressions)
     if missing_impressions:
         broken.append(f"impression refs not found: {', '.join(missing_impressions)}")
+    for kind, head in sorted(response.records_heads.items()):
+        if head == _vrp.GENESIS:
+            continue
+        filename = _vrp.LOG_FILES[kind]
+        if filename not in logs:
+            logs[filename], problem = _read_event_ids(workspace, response.responder, filename)
+            if problem:
+                broken.append(problem)
+        if head not in logs[filename]:
+            broken.append(f"{kind} chain head {head[:12]} is no longer in the responder log")
     return broken
 
 

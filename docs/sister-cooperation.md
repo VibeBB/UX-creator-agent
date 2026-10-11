@@ -71,7 +71,7 @@ reconciliation.
 | `answered` | A response is present, from the target agent, and its inputs/artifacts/evidence reconcile. This describes record integrity; its response status may still be rejected, deferred, or needs-info. |
 | `mismatched` | The response names a responder different from the request's target. |
 | `stale` | The request's input hashes no longer match current workspace content. |
-| `broken` | A present response has invalid or unavailable artifact/evidence references. Malformed JSON is separately listed in `malformed`. |
+| `broken` | A present response has invalid or unavailable artifact/evidence references, or a `records_heads` chain head that is no longer in the responder's intact VRP log. Malformed JSON is separately listed in `malformed`. |
 | `blocked` | No response exists and a dependency is missing or not in `answered` state. |
 | `circular` | The request is part of a dependency cycle. |
 

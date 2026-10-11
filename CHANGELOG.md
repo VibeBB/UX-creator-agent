@@ -8,6 +8,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- SLP v2 responses accept optional `records_heads` (VRP log kind → the
+  responder's chain head at answer time). Liaison reconciliation reports the
+  response `broken` when a non-genesis head is no longer in the responder's
+  intact log, so a later rewrite of answered history is detected.
+
 - `oobe.in_box[]` box contents in unboxing order (exactly one `product`);
   `oobe.in_box` fails when an item needed earlier in the OOBE is listed
   under a later one. production-engineering's `packaging.oobe` packs the
