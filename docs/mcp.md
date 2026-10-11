@@ -30,6 +30,7 @@ workspace; the server validates paths before reading or writing.
 | `ux_mruby_check` | `source` path. | Runs the pinned mruby syntax checker. | `verdict` and detail; missing tool is a failure, not an assumed pass. |
 | `ux_review_reconcile` | `contract_path`, `out_dir`; optional `workspace`. | Reads contract, gates, and review advisory files. | Reconciled findings and malformed paths; findings do not change the gate verdict. |
 | `ux_produce` | `plan_path`, `out_dir`; optional workspace, liaison directory, and `render`. | Reads the plan, contract, liaison responses, and workspace evidence; writes production status/projections and optional renders. | Production checks, hashed plan, written paths, and optional render results. |
+| `ux_change_check` | Required `eco_path`; optional `workspace`. | Reads the ECO, its pinned ECR, changed files, gate reports and every workspace JSON pin. | Closure checks (`eco.*`, `dr.*`) and verdict. |
 | `ux_liaison_status` | Optional `workspace`, `liaison_dir`, and `attach_images`. | Reads requests, responses, referenced inputs/artifacts, and VRP event references. | Entries, seven-state summary, malformed/orphan files; optional image content. |
 | `ux_intake_reconcile` | `contract_path` and `out_dir`. | Reads contract and intake advisory files. | Declared, undeclared, unobserved, mismatched touchpoints, and malformed paths. |
 | `ux_render` | `dir`. | Reads top-level Mermaid and PlantUML sources; writes SVG/PNG files. | Per-render status; image content blocks for successful renders. |

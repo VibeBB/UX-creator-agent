@@ -318,6 +318,18 @@ def _cmd_liaison(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_change(args: argparse.Namespace) -> int:
+    from .changes import check_eco
+
+    try:
+        workspace = workspace_path(args.workspace or ".", workspace_root())
+        payload = check_eco(workspace_path(args.eco, workspace), workspace)
+    except (OSError, ValueError) as exc:
+        return _fail("change", exc)
+    _print(payload)
+    return 0 if payload["verdict"] == PASS else 1
+
+
 def _cmd_record(args: argparse.Namespace) -> int:
     if args.kind == "status":
         _print(records_summary())
@@ -602,6 +614,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--workspace")
     p.add_argument("--liaison-dir")
     p.set_defaults(func=_cmd_liaison)
+
+    p = sub.add_parser("change", help="check an ECO closes its ECR (pins, gates, AI review)")
+    p.add_argument("eco", help="<id>.eco.json")
+    p.add_argument("--workspace")
+    p.set_defaults(func=_cmd_change)
 
     p = sub.add_parser("produce", help="product-level plan gates + production status")
     p.add_argument("plan", help="<product>.production.json")

@@ -232,6 +232,15 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
         "required": [],
         "additionalProperties": False,
     },
+    "ux_change_check": {
+        "type": "object",
+        "properties": {
+            "eco_path": {"type": "string"},
+            "workspace": {"type": "string"},
+        },
+        "required": ["eco_path"],
+        "additionalProperties": False,
+    },
     "ux_intake_reconcile": {
         "type": "object",
         "properties": {
@@ -308,6 +317,7 @@ _DESCRIPTIONS = {
     "ux_review_reconcile": "Reconcile vision-review advisories with contract gates.",
     "ux_produce": "Run production-plan gates and write status projections.",
     "ux_liaison_status": "Reconcile SLP v2 requests, responses, dependencies, and artifacts.",
+    "ux_change_check": "Check an ECO closes its ECR: pins, gate evidence, AI design review.",
     "ux_intake_reconcile": "Reconcile image-intake touchpoints against a UX contract.",
     "ux_render": "Render Mermaid and PlantUML sources under a workspace directory.",
 }
@@ -680,6 +690,11 @@ async def dispatch_tool(
             ]
             return _render_content(payload, renders)
         return payload
+    if name == "ux_change_check":
+        from .changes import check_eco
+
+        workspace = _workspace_arg(arguments)
+        return check_eco(workspace_path(arguments["eco_path"], workspace), workspace)
     if name == "ux_liaison_status":
         workspace = _workspace_arg(arguments)
         liaison_dir = (

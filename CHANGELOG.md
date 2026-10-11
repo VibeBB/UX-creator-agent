@@ -22,7 +22,11 @@ All notable changes to this project are documented here. The format follows
   sister's impressions with per-sister concern, dispute, read, insight and
   review-split counts, plus concern cycles between sisters (A worries about
   B, B about A) that no single owner can close.
-
+- Family change control: `*.ecr.json` / `*.eco.json` records and
+  `ux change` / `ux_change_check`, which derive the impact from workspace
+  sha256 pins and fail on stale or unlisted consumers, unpassed gate
+  reports, a self-reviewing author, unresolved AI design-review findings and
+  ECR/ECO cycles.
 - Out-of-box experience: optional contract `oobe` block (`statechart`,
   `ready_state`, `max_steps`, `rationale`). `oobe.steps` fails when the
   ready state is unreachable from the single initial state or needs more

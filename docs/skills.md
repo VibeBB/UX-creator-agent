@@ -14,7 +14,7 @@ guidance; they do not run executable code or override deterministic gates.
 | `ux-persona` | Apply the UX designer voice, QCD discipline, and Think Different creed. |
 | `ux-production` | Author production plans, dependencies, statuses, decisions, blockers, requests, and evidence loops. |
 | `ux-ruby-style` | Write idiomatic UX Ruby DSL sources and compile them to contract JSON. |
-| `ux-sibling-cooperation` | Import sister artifacts and coordinate hash-bound SLP v2 requests and responses. |
+| `ux-sibling-cooperation` | Import sister artifacts, coordinate hash-bound SLP v2 requests and responses, and close ECR/ECO changes with `ux change`. |
 | `ux-theory-lenses` | Apply HIG, game design, JTBD/ODI, CJM/service blueprint, and QCD lenses to decisions. |
 | `ux-workflow` | Run the conversational contract → gates → projections → advisory review workflow. |
 | `ux-out-rules` | Path rule on `**/out/**` — generated projections are read-only; change the contract or plan and regenerate (the `protect-generated` hook enforces). |
