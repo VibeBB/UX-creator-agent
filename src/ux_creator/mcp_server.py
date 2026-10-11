@@ -61,6 +61,7 @@ from .requests import build_request, load_request, write_request
 from .responses import LiaisonStatus, liaison_status
 from .ruby_bridge import contract_from_ruby, mruby_check
 from .sisters import PRODUCT_STAGES, TARGET_AGENTS
+from .vrp_hub import escalate as records_escalate
 from .vrp_hub import hub as records_hub
 from .workspace import workspace_path
 
@@ -85,6 +86,11 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
         "additionalProperties": False,
     },
     "ux_records_hub": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": False,
+    },
+    "ux_records_escalate": {
         "type": "object",
         "properties": {},
         "additionalProperties": False,
@@ -300,6 +306,12 @@ _DESCRIPTIONS = {
         "insight and review-split counts, plus concern cycles (A worries about B, B about "
         "A) that no single owner can close. Advisory; never a gate verdict."
     ),
+    "ux_records_escalate": (
+        "Drafts from every unresolved error-level sister concern: requested_changes for "
+        "the next ux-request to the owning sister, or an ECR candidate when UX or the "
+        "user owns it, each with the concern event ids as upstream. Advisory; writes "
+        "nothing. production.error_concerns stays unknown until they are resolved."
+    ),
     "ux_records_search": (
         "Search every plugin's impressions by keyword, plugin, stage, artifact or sha256, "
         "severity and open concerns. Broken logs are listed separately."
@@ -505,6 +517,8 @@ async def dispatch_tool(
         return records_digest()
     if name == "ux_records_hub":
         return records_hub()
+    if name == "ux_records_escalate":
+        return records_escalate()
     if name == "ux_records_search":
         return records_search(arguments)
     if name == "ux_doctor":

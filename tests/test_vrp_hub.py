@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from ux_creator import vrp_hub
 
 
@@ -92,3 +94,58 @@ def test_hub_flags_a_broken_sister_log(tmp_path: Path) -> None:
     result = vrp_hub.hub(tmp_path)
     assert result["status"] == "attention"
     assert result["broken_logs"] == ["mech"]
+
+
+def _concern_text(system: str, about: str, severity: str, n: int) -> dict[str, Any]:
+    return _concern(system, about, severity, n) | {"text": f"worry {n}", "status": "open"}
+
+
+def test_escalate_drafts_requests_and_ecr_from_error_concerns(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    digest = _digest(
+        open_concerns=[
+            _concern_text("ux", "mech", "error", 1),
+            _concern_text("wire", "mech", "error", 2),
+            _concern_text("mech", "ux", "error", 3),
+            _concern_text("ux", "circuit", "warning", 4),
+        ]
+    )
+
+    def _digest_of(_root: Path) -> dict[str, Any]:
+        return digest
+
+    monkeypatch.setattr(vrp_hub._vrp, "digest", _digest_of)  # pyright: ignore[reportPrivateUsage]
+    view = vrp_hub.escalate(tmp_path)
+    assert view["status"] == "attention"
+    assert view["requests"] == [
+        {
+            "target": "mech",
+            "requested_changes": ["worry 1 (ux:e1#c1)", "worry 2 (wire:e2#c2)"],
+            "upstream": [
+                {"system": "ux", "event_id": "e1"},
+                {"system": "wire", "event_id": "e2"},
+            ],
+        }
+    ]
+    assert view["ecr_candidates"] == [
+        {
+            "about": "ux",
+            "change": "worry 3 (mech:e3#c3)",
+            "status": "open",
+            "upstream": [{"system": "mech", "event_id": "e3"}],
+        }
+    ]
+
+
+def test_escalate_is_clear_without_error_concerns(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    digest = _digest(open_concerns=[_concern_text("ux", "mech", "warning", 1)])
+
+    def _digest_of(_root: Path) -> dict[str, Any]:
+        return digest
+
+    monkeypatch.setattr(vrp_hub._vrp, "digest", _digest_of)  # pyright: ignore[reportPrivateUsage]
+    view = vrp_hub.escalate(tmp_path)
+    assert (view["status"], view["requests"], view["ecr_candidates"]) == ("clear", [], [])

@@ -21,11 +21,13 @@ from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from . import _vrp
 from .contract import load_contract
 from .gates import FAIL, PASS, UNKNOWN, CheckStatus, GateCheck, Verdict, run_gates
 from .observations import collect_records, records_to_dict
 from .responses import LiaisonStatus, liaison_status, load_response_records
 from .sisters import PRODUCT_STAGES, ProductStage, TargetAgent
+from .vrp_hub import error_concerns
 
 ARTIFACT_KIND: Final = "ux_production_plan"
 STATUS_KIND: Final = "ux_production_status"
@@ -294,6 +296,7 @@ def run_production_gates(
             _sister_records_check(plan, liaison_dir, liaison),
         ]
     )
+    checks.append(_error_concerns_check(workspace))
 
     eval_done = [w.id for w in plan.workstreams if w.stage == "evaluation" and w.status == "done"]
     loop_bad = sorted(
@@ -465,6 +468,19 @@ def _sister_records_check(
         if part
     )
     return GateCheck("production.sister_records", "production", status, detail=detail)
+
+
+def _error_concerns_check(workspace: Path) -> GateCheck:
+    """Unknown while the family still carries an unresolved error-level concern."""
+    digest = _vrp.digest(workspace)
+    systems: dict[str, dict[str, object]] = digest.get("systems", {})
+    broken = sorted(s for s, info in systems.items() if info.get("integrity") != "ok")
+    errors = sorted(str(c.get("ref")) for c in error_concerns(digest))
+    parts = [f"broken VRP logs: {', '.join(broken)}"] if broken else []
+    if errors:
+        parts.append(f"unresolved error concerns: {', '.join(errors)}")
+    status: CheckStatus = UNKNOWN if parts else PASS
+    return GateCheck("production.error_concerns", "observations", status, detail="; ".join(parts))
 
 
 def _contract_check(plan: ProductionPlan, workspace: Path) -> GateCheck:

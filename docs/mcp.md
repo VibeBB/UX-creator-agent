@@ -16,6 +16,7 @@ workspace; the server validates paths before reading or writing.
 | `ux_record_song_receipt` | `SongReceiptInput`: song path and sha256, feeling, look-again flag. | Appends to `song-receipts.jsonl`. | Receipt for a bard song; never feeds a gate and never asks for another song. |
 | `ux_record_read` | `ReadInput`: sister artifact path and producer. | Appends to `reads.jsonl`. | Resolves sister impressions bound to those bytes; the next impression must answer each ref. |
 | `ux_records_digest` | No arguments. | Reads every `observations/*` log. | Family-wide integrity, open concerns, disputes, unanswered reads, insights, review splits and songs. |
+| `ux_records_escalate` | No arguments. | Reads every `observations/*` log through the digest. | Draft `requests[]` (`target`, `requested_changes`, `upstream`) and `ecr_candidates[]` from unresolved error-level concerns; advisory, writes nothing. `production.error_concerns` stays `unknown` until they are resolved. |
 | `ux_records_hub` | No arguments. | Reads every `observations/*` log through the digest. | Per-sister concern/dispute/read/insight/review-split counts, concern cycles between sisters, undelivered songs; `status` is `clear` or `attention`, advisory only. |
 | `ux_records_search` | Optional query, system, kind, stage, artifact, severity, open_only, limit. | Reads every intact plugin log. | Keyword search over sister impressions; broken logs are listed separately. |
 | `ux_doctor` | No arguments. | Probes the local environment. | Tool readiness checks. |
