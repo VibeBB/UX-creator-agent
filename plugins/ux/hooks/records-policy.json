@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "plugin": "ux",
   "records_dir": "observations/ux",
   "artifact_globs": [
@@ -25,6 +25,11 @@
     "node_modules/**",
     ".venv/**"
   ],
+  "dual_review_globs": [
+    "**/*.journey.png",
+    "**/*.statechart.png",
+    "**/*.wireframe.png"
+  ],
   "max_stop_denials": 2,
-  "record_hint": "Use ux_record_decision, ux_record_impression, ux_record_vision_review or `python -m ux_creator record decision|impression|vision-review --json <file>`. Impressions need at least 400 characters and 3 sentences: what you noticed, what works, what worries you, how a maker or user would read it, and what to do next."
+  "record_hint": "Use the MCP tools ux_record_decision, ux_record_impression, ux_record_vision_review, ux_record_reconcile, ux_record_read, ux_record_insight and ux_record_song_receipt (or `python -m ux_creator record <kind> --json <file>`). Impressions need 400+ characters, 3+ sentences, facets (observed, works, concerns, feelings, next_actions), claims quoting exact tokens from the artifacts, and an upstream entry for every sister impression you took in. Search sister impressions with ux_records_search / ux_records_digest."
 }

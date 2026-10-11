@@ -36,6 +36,7 @@ ARTIFACT_SUFFIXES = (
     ".content.json",
     ".production-status.json",
     ".production-status.md",
+    ".bard-song.json",
 )
 ARTIFACT_NAMES = (
     "manifest.json",
@@ -47,6 +48,10 @@ RECORD_LOGS = {
     "decisions.jsonl",
     "impressions.jsonl",
     "vision-reviews.jsonl",
+    "reads.jsonl",
+    "insights.jsonl",
+    "reconciles.jsonl",
+    "song-receipts.jsonl",
     "vision-tool-events.jsonl",
     "image-observations.jsonl",
     "records-status.json",

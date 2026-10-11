@@ -34,6 +34,7 @@ closed with guidance — docker is unavailable there by design.
 | `intake_attachments.py` | Copy supported attachment images into the workspace and invoke the intake path. |
 | `protect_generated.py` | Guard generated contract projections from direct edits. |
 | `record_image_observation.py` | Capture image observation evidence after relevant artifact tools. |
+| `blind_guard.py` | Declared only by `ux-blind-review`: deny reads of `observations/`, advisory records, reports, liaison answers and bard songs so the second review stays independent. |
 | `record_vision_tool_event.py` | Record post-tool vision events for later source-event binding. |
 | `report_ux_status.py` | Summarize outstanding image reviews and UX status at stop. |
 | `require_records.py` | Enforce the configured session/stop record policy and write its latest status. |

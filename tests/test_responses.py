@@ -319,3 +319,27 @@ def test_tree_hash_matches_request_input_reference(tmp_path: Path) -> None:
     source.write_text("bound input", encoding="utf-8")
     request = _request(tmp_path, "hash-one", "mech", inputs=["input.txt"])
     assert request.inputs[0].sha256 == tree_sha256(source)
+
+
+def _sister_log(root: Path, plugin: str, record: dict[str, object]) -> None:
+    log = root / "observations" / plugin / "decisions.jsonl"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    log.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+
+def test_decision_ref_into_broken_v2_chain_is_refused(tmp_path: Path) -> None:
+    _sister_log(tmp_path, "doc", {"schema_version": 2, "event_id": "1" * 64})
+    _request(tmp_path, "forged", "doc")
+    _response(tmp_path, "forged", "doc", status="in_progress", decision_refs=["1" * 64])
+    entry = _entry(liaison_status(tmp_path, tmp_path), "forged")
+    assert entry.state == "broken"
+    assert "fails VRP integrity" in " ".join(entry.problems)
+    assert "decision refs not found" in " ".join(entry.problems)
+
+
+def test_decision_ref_into_legacy_v1_log_still_resolves(tmp_path: Path) -> None:
+    _sister_log(tmp_path, "doc", {"schema_version": 1, "event_id": "1" * 64})
+    _request(tmp_path, "legacy", "doc")
+    _response(tmp_path, "legacy", "doc", status="in_progress", decision_refs=["1" * 64])
+    entry = _entry(liaison_status(tmp_path, tmp_path), "legacy")
+    assert not any("decision refs" in problem for problem in entry.problems)

@@ -38,11 +38,21 @@ from .projections import write_projections, write_provenance
 from .proposals import ProposalSet, triage, write_triage
 from .records import (
     DecisionInput,
+    InsightStatusInput,
+    ReadInput,
+    ReconcileInput,
+    SongReceiptInput,
     StageImpressionInput,
     VisionReviewInput,
     record_decision,
     record_impression,
+    record_insight,
+    record_read,
+    record_reconcile,
+    record_song_receipt,
     record_vision_review,
+    records_digest,
+    records_search,
     records_summary,
 )
 from .render import RenderResult, render_all
@@ -51,6 +61,7 @@ from .requests import build_request, load_request, write_request
 from .responses import LiaisonStatus, liaison_status
 from .ruby_bridge import contract_from_ruby, mruby_check
 from .sisters import PRODUCT_STAGES, TARGET_AGENTS
+from .vrp_hub import hub as records_hub
 from .workspace import workspace_path
 
 server: Server = Server(f"ux-mcp/{__version__}")
@@ -59,9 +70,37 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
     "ux_record_decision": DecisionInput.model_json_schema(),
     "ux_record_impression": StageImpressionInput.model_json_schema(),
     "ux_record_vision_review": VisionReviewInput.model_json_schema(),
+    "ux_record_reconcile": ReconcileInput.model_json_schema(),
+    "ux_record_insight": InsightStatusInput.model_json_schema(),
+    "ux_record_song_receipt": SongReceiptInput.model_json_schema(),
+    "ux_record_read": ReadInput.model_json_schema(),
     "ux_records_status": {
         "type": "object",
         "properties": {},
+        "additionalProperties": False,
+    },
+    "ux_records_digest": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": False,
+    },
+    "ux_records_hub": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": False,
+    },
+    "ux_records_search": {
+        "type": "object",
+        "properties": {
+            "query": {"type": "string"},
+            "system": {"type": "string"},
+            "kind": {"type": "string", "enum": ["stage_impression", "vision_review"]},
+            "stage": {"type": "string"},
+            "artifact": {"type": "string", "description": "path fragment or sha256"},
+            "severity": {"type": "string", "enum": ["info", "warning", "error"]},
+            "open_only": {"type": "boolean"},
+            "limit": {"type": "integer", "minimum": 1, "maximum": 200},
+        },
         "additionalProperties": False,
     },
     "ux_doctor": {"type": "object", "properties": {}, "additionalProperties": False},
@@ -221,9 +260,50 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
 
 _DESCRIPTIONS = {
     "ux_record_decision": "Append a validated, evidence-bound UX decision record.",
-    "ux_record_impression": "Append a long-form impression for a completed UX stage.",
-    "ux_record_vision_review": "Append a vision review bound to an image or source event.",
+    "ux_record_impression": (
+        "Record the impression that closes a stage: 400+ chars and 3+ sentences of prose, "
+        "facets (observed, works, concerns with severity/about/anchor, maker and user "
+        "feelings, next_actions), 2+ claims whose anchor is an exact token in the cited "
+        "artifact, optional insights and an upstream entry (adopted/deferred/disputed/noted "
+        "+ effect) for every sister impression you took in. Near copies fail."
+    ),
+    "ux_record_vision_review": (
+        "Record what you thought after looking at an image: impression body (prose, facets, "
+        "claims), findings and a lookback that re-checks every claim. reviewer is primary, "
+        "blind (never shown the first review) or tiebreak."
+    ),
+    "ux_record_reconcile": (
+        "Compare independent reviews of one image deterministically: [primary, blind] "
+        "(round 1) or [primary, blind, tiebreak] (round 2, the last). A round-2 split is "
+        "'unresolved' and counts as unknown."
+    ),
+    "ux_record_insight": (
+        "Move an impression insight through tried / adopted / rejected / deferred / "
+        "superseded. Adopted needs a deterministic gate pass and a decision; rejected "
+        "insights need 'revisits' and new evidence before they return."
+    ),
+    "ux_record_song_receipt": (
+        "Receive a bard song addressed to ux (liaison/<id>.bard-song.json). Songs never feed "
+        "a gate, and a receipt never asks bard for another song."
+    ),
+    "ux_record_read": (
+        "Record that you took in a sister artifact; resolves the impressions bound to its "
+        "bytes. Answer each resolved ref in the upstream field of your next impression."
+    ),
     "ux_records_status": "Summarize VRP record counts and the latest stop-hook verdict.",
+    "ux_records_digest": (
+        "Family-wide impression digest: integrity per plugin, open concerns, disputes, "
+        "unanswered reads, insights, split vision reviews and undelivered songs."
+    ),
+    "ux_records_hub": (
+        "UX hub view over every sister's impressions: per-sister concern, dispute, read, "
+        "insight and review-split counts, plus concern cycles (A worries about B, B about "
+        "A) that no single owner can close. Advisory; never a gate verdict."
+    ),
+    "ux_records_search": (
+        "Search every plugin's impressions by keyword, plugin, stage, artifact or sha256, "
+        "severity and open concerns. Broken logs are listed separately."
+    ),
     "ux_doctor": "Check whether the local UX authoring environment is ready.",
     "ux_validate_contract": "Validate a UX contract against the strict contract schema.",
     "ux_gates": "Run deterministic UX contract gates in a workspace.",
@@ -243,6 +323,10 @@ _DESCRIPTIONS = {
 }
 
 _WRITE_TOOLS = {
+    "ux_record_reconcile",
+    "ux_record_insight",
+    "ux_record_song_receipt",
+    "ux_record_read",
     "ux_author",
     "ux_import",
     "ux_request",
@@ -255,6 +339,10 @@ _WRITE_TOOLS = {
     "ux_record_vision_review",
 }
 _APPEND_RECORD_TOOLS = {
+    "ux_record_reconcile",
+    "ux_record_insight",
+    "ux_record_song_receipt",
+    "ux_record_read",
     "ux_record_decision",
     "ux_record_impression",
     "ux_record_vision_review",
@@ -405,6 +493,20 @@ async def dispatch_tool(
         return record_vision_review(arguments)
     if name == "ux_records_status":
         return records_summary()
+    if name == "ux_record_reconcile":
+        return record_reconcile(arguments)
+    if name == "ux_record_insight":
+        return record_insight(arguments)
+    if name == "ux_record_song_receipt":
+        return record_song_receipt(arguments)
+    if name == "ux_record_read":
+        return record_read(arguments)
+    if name == "ux_records_digest":
+        return records_digest()
+    if name == "ux_records_hub":
+        return records_hub()
+    if name == "ux_records_search":
+        return records_search(arguments)
     if name == "ux_doctor":
         return run_doctor()
     if name == "ux_validate_contract":

@@ -237,6 +237,37 @@ def test_verdict_independent_of_advisory(contract_dict: dict[str, Any], tmp_path
     assert with_advisory["lenses"]["review"]["reconciliation"]["contradicted"] == 1
 
 
+def _vrp_body(tmp_path: Path, image: str) -> str:
+    """VRP v2 structured body for review-record (facets, claims, lookback)."""
+    body = {
+        "facets": {
+            "observed": [
+                "the ownership cue sits outside the plan",
+                "stages run left to right",
+            ],
+            "works": ["stage grouping keeps handoffs readable"],
+            "concerns": [
+                {
+                    "id": "ownership-cue",
+                    "text": "the ownership cue is not visible on the plan",
+                    "severity": "warning",
+                    "about": "ux",
+                    "anchor": "ownership",
+                }
+            ],
+            "feelings": {"maker": "can follow the handoffs", "user": "never sees this plan"},
+            "next_actions": ["draw the owner next to every workstream"],
+        },
+        "claims": [{"text": "the plan was rendered", "anchor": "image", "artifact": image}],
+        "lookback": [{"claim": 0, "verdict": "confirmed", "note": "second look agrees"}],
+        "confidence": "medium",
+        "unknowns": [],
+    }
+    path = tmp_path / "vrp.json"
+    path.write_text(json.dumps(body), encoding="utf-8")
+    return str(path)
+
+
 def test_cli_review_record_appends_vrp_before_advisory(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -246,7 +277,7 @@ def test_cli_review_record_appends_vrp_before_advisory(
     summary = (
         "The production plan keeps workstream ownership visible while its dependency edges, "
         "stage grouping, and artifact labels make the intended handoffs easy to follow even "
-        "when a maker scans the diagram between tasks. The layout separates decisions that "
+        "when a maker scans the image between tasks. The layout separates decisions that "
         "remain open from work that is ready to advance, and it shows where measured evidence "
         "must feed a later design or revision instead of being forgotten after evaluation. "
         "A product team can use this view to coordinate the next build, identify questions "
@@ -266,6 +297,8 @@ def test_cli_review_record_appends_vrp_before_advisory(
             "missing_touchpoint:minor:power_button:button is absent from the entry flow",
             "--finding",
             "design_intent:major::the ownership cue is not visible",
+            "--vrp-json",
+            _vrp_body(tmp_path, "production.png"),
         ]
     )
 
@@ -309,12 +342,28 @@ def test_cli_review_record_rejects_short_impression_before_advisory(
             "production_plan",
             "--summary",
             "Too short.",
+            "--vrp-json",
+            _vrp_body(tmp_path, "plan.png"),
         ]
     )
 
     assert result == 1
     assert "at least 400" in capsys.readouterr().out
     assert not (tmp_path / "observations" / "ux" / "vision-reviews.jsonl").exists()
+    assert not (tmp_path / "review-visual-plan.advisory.json").exists()
+
+
+def test_cli_review_record_requires_vrp_body(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    image = tmp_path / "plan.png"
+    image.write_bytes(b"image")
+    result = cli.main(
+        ["review-record", str(image), "--checklist", "production_plan", "--summary", "x"]
+    )
+    assert result == 1
+    assert "--vrp-json is required" in capsys.readouterr().out
     assert not (tmp_path / "review-visual-plan.advisory.json").exists()
 
 

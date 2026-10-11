@@ -38,13 +38,20 @@ from .imports import import_source
 from .production import load_plan, plan_sha256, run_production_gates, write_production
 from .projections import write_projections, write_provenance
 from .proposals import ProposalSet, triage, write_triage
-from .records import RECORDERS, record_vision_review, records_summary
+from .records import (
+    RECORDERS,
+    record_vision_review,
+    records_digest,
+    records_search,
+    records_summary,
+)
 from .render import render_all
 from .report import write_report
 from .requests import build_request, load_request, write_request
 from .responses import liaison_status
 from .ruby_bridge import contract_from_ruby, mruby_check
 from .sisters import PRODUCT_STAGES, TARGET_AGENTS
+from .vrp_hub import hub as records_hub
 from .workspace import workspace_path, workspace_root
 
 
@@ -327,10 +334,22 @@ def _cmd_record(args: argparse.Namespace) -> int:
     if args.kind == "status":
         _print(records_summary())
         return 0
+    if args.kind == "hub":
+        _print(records_hub())
+        return 0
+    if args.kind == "digest":
+        _print(records_digest())
+        return 0
+    if args.kind == "search" and not args.json:
+        _print(records_search({}))
+        return 0
     try:
         payload: Any = json.loads(Path(args.json).read_text(encoding="utf-8"))
         if not isinstance(payload, dict):
             raise ValueError("record JSON must be an object")
+        if args.kind == "search":
+            _print(records_search(cast(dict[str, Any], payload)))
+            return 0
         result = RECORDERS[args.kind](cast(dict[str, Any], payload))
     except (OSError, ValueError, ValidationError) as exc:
         return _fail("record", exc)
@@ -412,6 +431,13 @@ def _cmd_review_record(args: argparse.Namespace) -> int:
             )
             return 0
         findings = [_parse_review_finding(spec) for spec in args.finding]
+        if not args.vrp_json:
+            raise ValueError(
+                "--vrp-json is required: VRP v2 vision reviews need facets, claims and a lookback"
+            )
+        extra: Any = json.loads(Path(args.vrp_json).read_text(encoding="utf-8"))
+        if not isinstance(extra, dict):
+            raise ValueError("--vrp-json must hold a JSON object")
         model = args.model.strip() or "unspecified"
         severity_map = {"info": "info", "minor": "warning", "major": "error"}
         record = record_vision_review(
@@ -432,6 +458,7 @@ def _cmd_review_record(args: argparse.Namespace) -> int:
                     for finding in findings
                 ],
                 "impression": args.summary,
+                **cast(dict[str, Any], extra),
             },
             root=root,
         )
@@ -558,6 +585,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--summary", required=True)
     p.add_argument("--model", default="")
     p.add_argument(
+        "--vrp-json",
+        default=None,
+        help="JSON object with the VRP v2 body (facets, claims, lookback, confidence, ...)",
+    )
+    p.add_argument(
         "--not-applicable",
         action="store_true",
         help="record that the image did not reach a vision-capable model",
@@ -614,13 +646,29 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=_cmd_intake_reconcile)
 
     p = sub.add_parser("record", help="append a VibeBB Record Protocol record")
-    p.add_argument("kind", choices=["decision", "impression", "vision-review", "status"])
+    p.add_argument(
+        "kind",
+        choices=[
+            "decision",
+            "impression",
+            "vision-review",
+            "reconcile",
+            "insight",
+            "song-receipt",
+            "read",
+            "status",
+            "digest",
+            "hub",
+            "search",
+        ],
+    )
     p.add_argument("--json", default=None, help="JSON object file with the record fields")
     p.set_defaults(func=_cmd_record)
 
     args = parser.parse_args(argv)
-    if args.command == "record" and args.kind != "status" and not args.json:
-        parser.error("record decision|impression|vision-review requires --json")
+    readers = {"status", "digest", "hub", "search"}
+    if args.command == "record" and args.kind not in readers and not args.json:
+        parser.error(f"record {args.kind} requires --json")
     try:
         if args.command == "doctor" and getattr(args, "warn", False):
             report = run_doctor()
