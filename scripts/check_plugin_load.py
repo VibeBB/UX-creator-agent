@@ -16,6 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_DIR = REPO_ROOT / "plugins" / "ux"
 
 EXPECTED_AGENTS = {
+    "ux-blind-review",
     "ux-creator",
     "ux-liaison",
     "ux-producer",

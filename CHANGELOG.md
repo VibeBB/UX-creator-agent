@@ -8,6 +8,21 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- VRP v2 (ported from wire-agent, ADR-0021): hash-chained record logs,
+  structured impression facets and artifact-grounded claims, near-duplicate
+  refusal, read receipts answered as adopted/deferred/disputed/noted, no
+  re-raise of a disputed concern on unchanged bytes, rejected insights that
+  return only through `revisits`, the `ux-blind-review` agent behind the
+  `blind-guard` hook with one tiebreak round, and bard song receipts that
+  never ask for another song. New MCP tools `ux_record_reconcile`,
+  `ux_record_insight`, `ux_record_song_receipt`, `ux_record_read`,
+  `ux_records_digest`, `ux_records_search`; `record` CLI kinds to match.
+  `review-record` now requires `--vrp-json` with the v2 body.
+- `ux_records_hub` / `ux record hub`: advisory family view over every
+  sister's impressions with per-sister concern, dispute, read, insight and
+  review-split counts, plus concern cycles between sisters (A worries about
+  B, B about A) that no single owner can close.
+
 - Out-of-box experience: optional contract `oobe` block (`statechart`,
   `ready_state`, `max_steps`, `rationale`). `oobe.steps` fails when the
   ready state is unreachable from the single initial state or needs more

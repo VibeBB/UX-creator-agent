@@ -15,6 +15,7 @@ protocols, operations, and accepted design decisions.
 - [Hooks](hooks.md) — lifecycle events, scripts, and record policy
 - [Contracts](contracts.md) — UX, SLP v2, production, VRP, and advisory formats
 - [Records and vision](records-and-vision.md) — decision, impression, image, and review evidence
+- [Records protocol (VRP v2)](records-protocol.md) — hash-chained, grounded, answerable records; blind review; bard receipts
 - [Sister cooperation](sister-cooperation.md) — ten registered targets and hash-bound exchange
 - [Performance and limits](performance-and-limits.md) — timeouts, inline image caps, and known gaps
 - [Development](development.md) — checkout setup and prescribed verification
@@ -57,3 +58,4 @@ protocols, operations, and accepted design decisions.
 - [ADR-0018](adr/0018-attest-published-tools-images.md) — attest published tools images
 - [ADR-0019](adr/0019-hash-bound-slp-v2-and-liaison-gates.md) — hash-bound SLP v2 and deterministic liaison reconciliation
 - [ADR-0020](adr/0020-structural-coverage.md) — structural coverage gate (C0, C1, C2, MC/DC, boundaries)
+- [ADR-0021](adr/0021-vrp-v2-and-family-hub.md) — VRP v2 port and the UX family hub (aggregation, concern cycles)

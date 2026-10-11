@@ -9,6 +9,7 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[1] / "plugins" / "ux"
 REQUIRED_FRONTMATTER = ("name:", "description:")
 
 EXPECTED_AGENTS = {
+    "ux-blind-review",
     "ux-creator",
     "ux-research",
     "ux-statechart",

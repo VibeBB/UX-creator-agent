@@ -1,6 +1,6 @@
 # UX agents
 
-The six agents share the same deterministic UX core and workspace. Use the
+The seven agents share the same deterministic UX core and workspace. Use the
 specialist whose scope matches the requested work; delegate through the
 OpenHands `task_tool_set` rather than inventing a plugin-specific task
 transport. An agent's narrative is not a gate verdict.
@@ -11,6 +11,7 @@ transport. An agent's narrative is not a gate verdict.
 | `ux-research` | Personas, functional/emotional/social JTBD, ODI opportunity scoring, journeys, and service blueprints. | Research structure for the authored contract; does not claim user research was performed when evidence is absent. |
 | `ux-statechart` | Product behavior, states, events, transitions, guards, actions, and state-machine exports. | Statechart projections and gate results; authoring changes belong in the contract. |
 | `ux-review` | Advisory vision review of rendered UX artifacts and image-intake touchpoints. | Typed findings tied to an image or event; never supplies a pass/fail verdict. |
+| `ux-blind-review` | Independent second (or tiebreak) vision review of an important render. | One `blind`/`tiebreak` vision review with claims and lookback; `blind-guard` denies reads of earlier reviews, records and reports. |
 | `ux-liaison` | Imports, SLP v2 requests, delegation briefs, response reconciliation, and user questions across all ten sisters. | Hash-bound workspace records; does not mark missing or stale evidence as complete. |
 | `ux-producer` | Product/revision workstreams, dependencies, owners, blockers, decisions, sibling requests, and evaluation-to-revision flow. | Production plan and status projections; `production.*` gates determine readiness. |
 

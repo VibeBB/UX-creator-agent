@@ -11,6 +11,13 @@ workspace; the server validates paths before reading or writing.
 | `ux_record_impression` | `stage`, artifact paths, and long-form `impression`. | Reads and hashes artifact files/directories; appends to the stage-impression log. | `verdict`, log path, event. |
 | `ux_record_vision_review` | Image path or source event ID, model, checklist, findings, and impression. | Reads and hashes an image when supplied; appends to the vision-review log. | `verdict`, log path, event. |
 | `ux_records_status` | No arguments. | Reads VRP logs and the latest stop-hook status. | Counts by record kind and `last_stop`; informational only. |
+| `ux_record_reconcile` | `ReconcileInput`: image path and the primary/blind(/tiebreak) event ids. | Appends to `reconciles.jsonl`. | Deterministic agreement of independent vision reviews; a round-2 split is `unresolved` (unknown). |
+| `ux_record_insight` | `InsightStatusInput`: insight ref, status, gate/decision refs, reason. | Appends to `insights.jsonl`. | Adopted needs a gate pass and a decision; rejected insights need `revisits` and new evidence. |
+| `ux_record_song_receipt` | `SongReceiptInput`: song path and sha256, feeling, look-again flag. | Appends to `song-receipts.jsonl`. | Receipt for a bard song; never feeds a gate and never asks for another song. |
+| `ux_record_read` | `ReadInput`: sister artifact path and producer. | Appends to `reads.jsonl`. | Resolves sister impressions bound to those bytes; the next impression must answer each ref. |
+| `ux_records_digest` | No arguments. | Reads every `observations/*` log. | Family-wide integrity, open concerns, disputes, unanswered reads, insights, review splits and songs. |
+| `ux_records_hub` | No arguments. | Reads every `observations/*` log through the digest. | Per-sister concern/dispute/read/insight/review-split counts, concern cycles between sisters, undelivered songs; `status` is `clear` or `attention`, advisory only. |
+| `ux_records_search` | Optional query, system, kind, stage, artifact, severity, open_only, limit. | Reads every intact plugin log. | Keyword search over sister impressions; broken logs are listed separately. |
 | `ux_doctor` | No arguments. | Probes the local environment. | Tool readiness checks. |
 | `ux_validate_contract` | `contract` JSON object. | Validates in memory; no file write. | `verdict: pass` or `fail` and stage/detail. |
 | `ux_gates` | Required `contract_path`; optional `workspace`. | Reads the contract and referenced workspace evidence. | Gate checks, verdict, and summary. |

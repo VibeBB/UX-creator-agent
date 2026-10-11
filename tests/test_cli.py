@@ -37,7 +37,8 @@ def test_record_status_reports_empty_workspace(
     assert proc.returncode == 0, proc.stderr + proc.stdout
     payload = json.loads(proc.stdout)
     assert payload["records_dir"] == str(tmp_path / "observations" / "ux")
-    assert payload["counts"] == {"decision": 0, "stage_impression": 0, "vision_review": 0}
+    assert set(payload["counts"].values()) == {0}
+    assert {"decision", "stage_impression", "vision_review"} <= set(payload["counts"])
 
 
 def test_author_writes_projections(tmp_path: Path) -> None:
