@@ -6,10 +6,11 @@ import json
 from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import Literal, cast
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from . import _vrp
 from .records import tree_sha256
 from .requests import UXRequest, load_request
 from .sisters import SHA256, SLUG, ProductStage, TargetAgent
@@ -149,25 +150,24 @@ class LiaisonStatus(BaseModel):
     summary: dict[LiaisonState, int]
 
 
-def _read_event_ids(workspace: Path, plugin: str, filename: str) -> set[str]:
-    event_ids: set[str] = set()
+def _read_event_ids(workspace: Path, plugin: str, filename: str) -> tuple[set[str], str | None]:
+    """Event ids from a sister's VRP log; a broken v2 chain yields none plus a problem."""
+    log = f"observations/{plugin}/{filename}"
     try:
         path = workspace_path(Path("observations") / plugin / filename, workspace)
         if not path.is_file():
-            return event_ids
-        lines = path.read_text(encoding="utf-8").splitlines()
+            return set(), None
+        kind = {name: kind for kind, name in _vrp.LOG_FILES.items()}[filename]
+        records, problems = _vrp.verify_log(path, kind)
+        if not records and not problems:
+            records, _ = _vrp.load_jsonl(path)
     except (OSError, UnicodeError, ValueError):
-        return event_ids
-    for line in lines:
-        try:
-            payload: object = json.loads(line)
-        except ValueError:
-            continue
-        if isinstance(payload, Mapping):
-            event_id = cast(Mapping[str, object], payload).get("event_id")
-            if isinstance(event_id, str):
-                event_ids.add(event_id)
-    return event_ids
+        return set(), f"{log} is unreadable"
+    if problems:
+        return set(), f"{log} fails VRP integrity: {problems[0]}"
+    return {
+        str(record["event_id"]) for record in records if isinstance(record.get("event_id"), str)
+    }, None
 
 
 def _input_problems(request: UXRequest, response: UXResponse, workspace: Path) -> list[str]:
@@ -196,12 +196,16 @@ def _response_problems(response: UXResponse, workspace: Path) -> list[str]:
             current = None
         if current != artifact.sha256:
             broken.append(f"artifact {artifact.path} is missing or changed")
-    decisions = _read_event_ids(workspace, response.responder, "decisions.jsonl")
-    missing_decisions = sorted(set(response.decision_refs) - decisions)
+    logs: dict[str, set[str]] = {}
+    for filename in ("decisions.jsonl", "impressions.jsonl", "vision-reviews.jsonl"):
+        ids, problem = _read_event_ids(workspace, response.responder, filename)
+        if problem:
+            broken.append(problem)
+        logs[filename] = ids
+    missing_decisions = sorted(set(response.decision_refs) - logs["decisions.jsonl"])
     if missing_decisions:
         broken.append(f"decision refs not found: {', '.join(missing_decisions)}")
-    impressions = _read_event_ids(workspace, response.responder, "impressions.jsonl")
-    impressions |= _read_event_ids(workspace, response.responder, "vision-reviews.jsonl")
+    impressions = logs["impressions.jsonl"] | logs["vision-reviews.jsonl"]
     missing_impressions = sorted(set(response.impression_refs) - impressions)
     if missing_impressions:
         broken.append(f"impression refs not found: {', '.join(missing_impressions)}")

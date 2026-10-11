@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Liaison reconciliation accepts sister `decision_refs`/`impression_refs`
+  only from intact VRP v2 chains; a broken log marks the response broken.
 - VRP v2 (ported from wire-agent, ADR-0021): hash-chained record logs,
   structured impression facets and artifact-grounded claims, near-duplicate
   refusal, read receipts answered as adopted/deferred/disputed/noted, no

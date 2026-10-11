@@ -31,3 +31,9 @@ The hub view is advisory: `status` is `clear` or `attention`, never a
 gate verdict. A broken sister log is listed and excluded, as in the
 digest. `review-record` needs a `--vrp-json` body, so v1 call sites fail
 closed instead of writing an unanswerable review.
+Liaison reconciliation resolves a sister's `decision_refs` and
+`impression_refs` only against an intact v2 chain: a log that fails
+`verify_log` marks the response `broken` and contributes no event ids.
+A sister still on VRP v1 (every record `schema_version: 1`) has no chain
+to verify, so its ids resolve as before until its next v2 write archives
+the log.
