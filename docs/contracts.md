@@ -71,7 +71,11 @@ SHA-256 digests.
 
 Responses use `request`, `responder`, `status`, `reason`, `input_hashes`,
 `artifacts`, `gate_verdicts`, `decision_refs`, `impression_refs`,
-`questions_for_user`, and timezone-aware `responded_at`. Statuses are
+`questions_for_user`, optional `records_heads`, and timezone-aware
+`responded_at`. `records_heads` maps a VRP log kind to the responder's chain
+head when it answered; reconciliation marks the response `broken` when a
+non-genesis head is no longer in that intact log (history rewritten after
+the answer). Responses without it are accepted as legacy. Statuses are
 `accepted`, `in_progress`, `done`, `rejected`, `deferred`, and `needs_info`.
 Statuses that represent a conclusion require a sufficiently detailed reason;
 `done` cannot contain failing or unknown gate verdicts.

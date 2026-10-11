@@ -74,6 +74,7 @@ def _response(
     decision_refs: list[str] | None = None,
     impression_refs: list[str] | None = None,
     questions_for_user: list[str] | None = None,
+    records_heads: dict[str, str] | None = None,
 ) -> Path:
     response = UXResponse(
         request=request_id,
@@ -85,6 +86,7 @@ def _response(
         decision_refs=decision_refs or [],
         impression_refs=impression_refs or [],
         questions_for_user=questions_for_user or [],
+        records_heads=records_heads or {},
         responded_at=FIXED.isoformat(),
     )
     path = directory / f"{request_id}.ux-response.json"
@@ -343,3 +345,39 @@ def test_decision_ref_into_legacy_v1_log_still_resolves(tmp_path: Path) -> None:
     _response(tmp_path, "legacy", "doc", status="in_progress", decision_refs=["1" * 64])
     entry = _entry(liaison_status(tmp_path, tmp_path), "legacy")
     assert not any("decision refs" in problem for problem in entry.problems)
+
+
+def test_records_head_still_in_responder_log_is_accepted(tmp_path: Path) -> None:
+    _sister_log(tmp_path, "doc", {"schema_version": 1, "event_id": "1" * 64})
+    _request(tmp_path, "headed", "doc")
+    heads = {"decision": "1" * 64, "stage_impression": "0" * 64}
+    _response(tmp_path, "headed", "doc", status="in_progress", records_heads=heads)
+    entry = _entry(liaison_status(tmp_path, tmp_path), "headed")
+    assert not any("chain head" in problem for problem in entry.problems)
+
+
+def test_records_head_rewritten_out_of_responder_log_is_broken(tmp_path: Path) -> None:
+    _sister_log(tmp_path, "doc", {"schema_version": 1, "event_id": "2" * 64})
+    _request(tmp_path, "rewritten", "doc")
+    heads = {"decision": "1" * 64, "vision_review": "3" * 64}
+    _response(tmp_path, "rewritten", "doc", status="in_progress", records_heads=heads)
+    entry = _entry(liaison_status(tmp_path, tmp_path), "rewritten")
+    assert entry.state == "broken"
+    problems = " ".join(entry.problems)
+    assert "decision chain head 111111111111" in problems
+    assert "vision_review chain head 333333333333" in problems
+
+
+@pytest.mark.parametrize(
+    "heads",
+    [{"unknown_log": "1" * 64}, {"decision": "not-a-sha"}],
+)
+def test_records_heads_schema_rejects_unknown_kind_and_bad_digest(heads: dict[str, str]) -> None:
+    with pytest.raises(ValidationError, match="records_heads"):
+        UXResponse(
+            request="bad-heads",
+            responder="doc",
+            status="accepted",
+            records_heads=heads,
+            responded_at=FIXED.isoformat(),
+        )
