@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from . import _vrp
+from .sisters import TARGET_AGENTS
 from .workspace import workspace_root
 
 SEVERITIES = ("error", "warning", "info")
@@ -129,4 +130,57 @@ def hub(root: Path | None = None) -> dict[str, Any]:
         "cycles": cycles,
         "systems": aggregate(digest),
         "undelivered_songs": [s for s in digest.get("songs", []) if not s.get("received")],
+    }
+
+
+def error_concerns(digest: dict[str, Any]) -> list[dict[str, Any]]:
+    """Unresolved (open, deferred or disputed) error-severity concerns."""
+    return [c for c in digest.get("open_concerns", []) if c.get("severity") == "error"]
+
+
+def _upstream(concern: dict[str, Any]) -> dict[str, str]:
+    event = str(concern.get("ref", "")).split(":", 1)[-1].split("#", 1)[0]
+    return {"system": str(concern.get("system")), "event_id": event}
+
+
+def escalate(root: Path | None = None) -> dict[str, Any]:
+    """Draft the next SLP requests and ECR candidates from unresolved error concerns.
+
+    A concern owned by a sister becomes a ``requested_changes`` line of a draft
+    request to that sister; any other owner (UX itself, the user) becomes an
+    ECR candidate. Each draft carries the concerns' event ids as ``upstream``
+    so the UX decision that acts on it cites where it came from. Advisory:
+    nothing is written and no verdict changes.
+    """
+    digest = _vrp.digest(root or workspace_root())
+    requests: dict[str, dict[str, Any]] = {}
+    ecr: list[dict[str, Any]] = []
+    for concern in error_concerns(digest):
+        ref = str(concern.get("ref", ""))
+        change = f"{concern.get('text') or 'unresolved concern'} ({ref})"
+        owner = str(concern.get("about") or "")
+        if owner in TARGET_AGENTS:
+            draft = requests.setdefault(
+                owner, {"target": owner, "requested_changes": [], "upstream": []}
+            )
+            draft["requested_changes"].append(change)
+            draft["upstream"].append(_upstream(concern))
+        else:
+            ecr.append(
+                {
+                    "about": owner,
+                    "change": change,
+                    "status": concern.get("status"),
+                    "upstream": [_upstream(concern)],
+                }
+            )
+    systems: dict[str, dict[str, Any]] = digest.get("systems", {})
+    broken = sorted(s for s, info in systems.items() if info.get("integrity") != "ok")
+    return {
+        "schema_version": _vrp.SCHEMA_VERSION,
+        "advisory": True,
+        "status": "attention" if requests or ecr or broken else "clear",
+        "broken_logs": broken,
+        "requests": [requests[target] for target in sorted(requests)],
+        "ecr_candidates": ecr,
     }

@@ -54,6 +54,7 @@ def test_example_plan_passes() -> None:
         "production.request_owner",
         "production.liaison_integrity",
         "production.sister_records",
+        "production.error_concerns",
         "production.evidence_loop",
         "production.ux_contract",
     }
@@ -375,3 +376,27 @@ def test_cli_produce_fails_closed_without_liaison(tmp_path: Path) -> None:
     )
     assert proc.returncode == 1
     assert json.loads(proc.stdout)["verdict"] == "fail"
+
+
+def test_error_concerns_hold_production_unknown(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from ux_creator import production
+
+    check = production._error_concerns_check  # pyright: ignore[reportPrivateUsage]
+    assert check(tmp_path).status == "pass"
+    digest: dict[str, Any] = {
+        "systems": {"wire": {"integrity": "broken"}},
+        "open_concerns": [
+            {"ref": "mech:e1#c1", "severity": "error"},
+            {"ref": "mech:e2#c2", "severity": "warning"},
+        ],
+    }
+
+    def _digest_of(_root: Path) -> dict[str, Any]:
+        return digest
+
+    monkeypatch.setattr(production._vrp, "digest", _digest_of)  # pyright: ignore[reportPrivateUsage]
+    result = check(tmp_path)
+    assert result.status == "unknown"
+    assert result.detail == "broken VRP logs: wire; unresolved error concerns: mech:e1#c1"

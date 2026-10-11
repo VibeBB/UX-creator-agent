@@ -24,11 +24,19 @@ reference (`docs/records-protocol.md`).
   (`ux_records_hub`, `ux record hub`): per-sister aggregation and
   elementary cycles in the "raiser -> owner" graph of open concerns and
   disputes. ECR/ECO chain cycles stay with the change check.
+- Add `vrp_hub.escalate()` (`ux_records_escalate`, `ux record escalate`):
+  every unresolved (open, deferred or disputed) error-level concern
+  becomes a `requested_changes` line of a draft request to the owning
+  sister, or an ECR candidate when UX or the user owns it. Each draft
+  carries the concern event ids as `upstream`, which the UX decision that
+  acts on it cites. The production gate `production.error_concerns` is
+  `unknown` while such a concern or a broken VRP log remains.
 
 ## Consequences
 
-The hub view is advisory: `status` is `clear` or `attention`, never a
-gate verdict. A broken sister log is listed and excluded, as in the
+The hub and escalation views are advisory: `status` is `clear` or
+`attention`, never a gate verdict. An error concern can only hold
+production at `unknown`; it never makes a gate pass. A broken sister log is listed and excluded, as in the
 digest. `review-record` needs a `--vrp-json` body, so v1 call sites fail
 closed instead of writing an unanswerable review.
 Liaison reconciliation resolves a sister's `decision_refs` and

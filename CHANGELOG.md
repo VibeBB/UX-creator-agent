@@ -29,6 +29,11 @@ All notable changes to this project are documented here. The format follows
   `ux_record_insight`, `ux_record_song_receipt`, `ux_record_read`,
   `ux_records_digest`, `ux_records_search`; `record` CLI kinds to match.
   `review-record` now requires `--vrp-json` with the v2 body.
+- `ux_records_escalate` / `ux record escalate`: drafts the next
+  `requested_changes` per owning sister, or ECR candidates, from every
+  unresolved error-level concern, with the concern event ids as `upstream`.
+  New production gate `production.error_concerns` is `unknown` while such a
+  concern or a broken VRP log remains.
 - `ux_records_hub` / `ux record hub`: advisory family view over every
   sister's impressions with per-sister concern, dispute, read, insight and
   review-split counts, plus concern cycles between sisters (A worries about

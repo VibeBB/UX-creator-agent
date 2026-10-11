@@ -51,6 +51,7 @@ from .requests import build_request, load_request, write_request
 from .responses import liaison_status
 from .ruby_bridge import contract_from_ruby, mruby_check
 from .sisters import PRODUCT_STAGES, TARGET_AGENTS
+from .vrp_hub import escalate as records_escalate
 from .vrp_hub import hub as records_hub
 from .workspace import workspace_path, workspace_root
 
@@ -336,6 +337,9 @@ def _cmd_record(args: argparse.Namespace) -> int:
         return 0
     if args.kind == "hub":
         _print(records_hub())
+        return 0
+    if args.kind == "escalate":
+        _print(records_escalate())
         return 0
     if args.kind == "digest":
         _print(records_digest())
@@ -659,6 +663,7 @@ def main(argv: list[str] | None = None) -> int:
             "status",
             "digest",
             "hub",
+            "escalate",
             "search",
         ],
     )
@@ -666,7 +671,7 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=_cmd_record)
 
     args = parser.parse_args(argv)
-    readers = {"status", "digest", "hub", "search"}
+    readers = {"status", "digest", "hub", "escalate", "search"}
     if args.command == "record" and args.kind not in readers and not args.json:
         parser.error(f"record {args.kind} requires --json")
     try:
