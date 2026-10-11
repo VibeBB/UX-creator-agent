@@ -159,6 +159,16 @@ class Statechart(BaseModel):
     transitions: list[Transition] = Field(default_factory=list[Transition])
 
 
+class OOBE(BaseModel):
+    """Out-of-box experience: unboxing to first use within a step budget."""
+
+    model_config = ConfigDict(extra="forbid")
+    statechart: str = Field(min_length=1)
+    ready_state: str = Field(min_length=1)
+    max_steps: int = Field(ge=1, le=50, strict=True)
+    rationale: str = Field(min_length=12)
+
+
 class QCD(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -353,6 +363,18 @@ class UXContract(BaseModel):
     imports: list[ImportRef] = Field(default_factory=list[ImportRef])
     cmf: CMF | None = None
     content: list[ContentAsset] = Field(default_factory=list[ContentAsset])
+    oobe: OOBE | None = None
+
+    @model_validator(mode="after")
+    def _oobe_known(self) -> UXContract:
+        if self.oobe is None:
+            return self
+        chart = next((c for c in self.statecharts if c.id == self.oobe.statechart), None)
+        if chart is None:
+            raise ValueError(f"oobe: unknown statechart {self.oobe.statechart!r}")
+        if self.oobe.ready_state not in {s.id for s in chart.states}:
+            raise ValueError(f"oobe: unknown ready_state {self.oobe.ready_state!r}")
+        return self
 
     @model_validator(mode="after")
     def _stage_jobs_known(self) -> UXContract:
