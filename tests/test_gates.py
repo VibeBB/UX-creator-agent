@@ -194,3 +194,72 @@ def test_oobe_rejects_unknown_refs_and_bounds(
     payload["oobe"] = oobe
     with pytest.raises(ValueError):
         _contract(payload)
+
+
+def _in_box(contract_dict: dict[str, Any], items: list[dict[str, Any]]) -> dict[str, Any]:
+    payload = copy.deepcopy(contract_dict)
+    chart = payload["statecharts"][0]
+    chart["states"].insert(1, {"id": "pair"})
+    chart["transitions"] = [
+        {"from": "a", "event": "unbox", "to": "pair"},
+        {"from": "pair", "event": "paired", "to": "b"},
+    ]
+    payload["oobe"] = {
+        "statechart": "sc",
+        "ready_state": "b",
+        "max_steps": 5,
+        "rationale": "first brew within one press",
+        "in_box": items,
+    }
+    return payload
+
+
+def _in_box_status(payload: dict[str, Any]) -> GateCheck:
+    return next(c for c in run_gates(_contract(payload)).checks if c.id == "oobe.in_box")
+
+
+@pytest.mark.parametrize(
+    ("guide_state", "status"), [("a", "pass"), ("pair", "pass"), ("b", "fail")]
+)
+def test_in_box_first_use_order_boundary(
+    contract_dict: dict[str, Any], guide_state: str, status: str
+) -> None:
+    items = [
+        {"id": "guide", "name": "Quick start", "kind": "document", "first_used_state": guide_state},
+        {"id": "kettle", "name": "Kettle", "kind": "product", "first_used_state": "pair"},
+        {"id": "cord", "name": "Power cord", "kind": "cable"},
+    ]
+    check = _in_box_status(_in_box(contract_dict, items))
+    assert check.status == status
+    if status == "fail":
+        assert check.detail == "kettle (step 1) listed under guide"
+
+
+def test_in_box_unreachable_state_fails_and_empty_list_emits_nothing(
+    contract_dict: dict[str, Any],
+) -> None:
+    items = [{"id": "kettle", "name": "Kettle", "kind": "product", "first_used_state": "b"}]
+    payload = _in_box(contract_dict, items)
+    payload["statecharts"][0]["transitions"] = [{"from": "b", "event": "x", "to": "a"}]
+    assert _in_box_status(payload).status == "fail"
+    report = run_gates(_contract(_in_box(contract_dict, [])))
+    assert "oobe.in_box" not in {c.id for c in report.checks}
+
+
+@pytest.mark.parametrize(
+    "items",
+    [
+        [{"id": "a1", "name": "A", "kind": "accessory"}],
+        [
+            {"id": "k", "name": "K", "kind": "product"},
+            {"id": "k", "name": "K2", "kind": "cable"},
+        ],
+        [{"id": "k", "name": "K", "kind": "product", "first_used_state": "nope"}],
+    ],
+    ids=["no-product", "duplicate", "unknown-state"],
+)
+def test_in_box_rejects_malformed_lists(
+    contract_dict: dict[str, Any], items: list[dict[str, Any]]
+) -> None:
+    with pytest.raises(ValueError):
+        _contract(_in_box(contract_dict, items))
