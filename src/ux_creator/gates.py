@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Literal
 
+from ._envelope import check_envelope, sidecar_path
 from .contract import UXContract, contract_sha256
 
 CheckStatus = Literal["pass", "fail", "unknown"]
@@ -398,6 +399,10 @@ def _import_checks(contract: UXContract, workspace: Path) -> list[GateCheck]:
                 detail=f"sha256 {digest[:12]}… vs declared {ref.sha256[:12]}…",
             )
         )
+        # Authored sister contracts carry no sidecar; generated projections do.
+        if ref.system != "csv" and sidecar_path(path).is_file():
+            status, detail = check_envelope(path, ref.system, workspace, ref.sha256)
+            checks.append(GateCheck(f"{cid}.provenance", ref.path, status, detail=detail))
     return checks
 
 

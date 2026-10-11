@@ -66,6 +66,7 @@ helpers are private implementation details rather than stable API.
 | `projections` | `write_projections` creates contract-derived files; `write_provenance` records hashes for those outputs. |
 | `render` | `render_mermaid`, `render_plantuml`, and `render_all` run the pinned external renderers and return per-file statuses. |
 | `imports` | `extract_touchpoints` extracts supported candidate references; `import_source` copies supported sister data into contract provenance. |
+| `_envelope` | Interchange envelope v3 (shared verbatim): `check_envelope` verifies an imported artifact's `<artifact>.provenance.json` sidecar against the pinned sha256, its sources and the producer's intact VRP decision log; `write_envelope` writes one. |
 | `requests` | `build_request` validates and hashes inputs; `write_request` writes without silent replacement; `load_request` validates a request file. |
 | `responses` | `liaison_status` reconciles request/response files; `load_response_records` loads valid response records for production checks. |
 | `proposals` | `triage` deterministically scores proposals; `write_triage` writes triage and eligible requests. |

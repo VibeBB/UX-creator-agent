@@ -263,3 +263,32 @@ def test_in_box_rejects_malformed_lists(
 ) -> None:
     with pytest.raises(ValueError):
         _contract(_in_box(contract_dict, items))
+
+
+def test_import_sidecar_checked_when_present(contract_dict: dict[str, Any], tmp_path: Path) -> None:
+    import hashlib
+
+    from ux_creator._envelope import sidecar_path, write_envelope
+
+    src = tmp_path / "board.connectivity.json"
+    src.write_text(json.dumps({"system": "circuit", "connectors": []}), encoding="utf-8")
+    digest = hashlib.sha256(src.read_bytes()).hexdigest()
+    contract_dict["imports"] = [
+        {"system": "circuit", "path": "board.connectivity.json", "sha256": digest}
+    ]
+    cid = "imports.circuit:board.connectivity.json.provenance"
+
+    def status() -> str | None:
+        report = run_gates(_contract(contract_dict), tmp_path)
+        return next((c.status for c in report.checks if c.id == cid), None)
+
+    assert status() is None  # authored contracts carry no sidecar
+    write_envelope(src, "circuit", [], tmp_path)
+    assert status() == "pass"
+    sidecar = sidecar_path(src)
+    body = json.loads(sidecar.read_text(encoding="utf-8"))
+    sidecar.write_text(json.dumps(body | {"producer": "mech"}), encoding="utf-8")
+    assert status() == "fail"
+    body["artifact"]["sha256"] = "0" * 64
+    sidecar.write_text(json.dumps(body), encoding="utf-8")
+    assert status() == "fail"

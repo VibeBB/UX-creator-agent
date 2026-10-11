@@ -19,16 +19,7 @@
     "cues.json": "095f957d4d3c49cceacd2d12d647d1498387c3db7cd068605e678075268f6d04",
     "cues.md": "bed04085f99780ab0e5f77afafe71e8105421a8e3262b400a619240f7df5df1f"
   },
-  "sources": [
-    {
-      "kind": "ux_request",
-      "ref": "ux/smart-kettle.ux-request.json"
-    },
-    {
-      "kind": "file",
-      "ref": "ux/smart-kettle.ux.json#feedback"
-    }
-  ],
+  "sources": [],
   "script_sha256": "60ebd37f9e715aba7bac0451a438b64a425ab9969b5f97b47085b85fabc9a47d",
   "license": "BSD-3-Clause",
   "originality": {
@@ -36,5 +27,12 @@
     "no_trademark_sound_imitation": true
   },
   "device": "piezo",
-  "cue_count": 4
+  "cue_count": 4,
+  "envelope_version": 3,
+  "producer": "bard",
+  "artifact": {
+    "name": "cues.json",
+    "sha256": "095f957d4d3c49cceacd2d12d647d1498387c3db7cd068605e678075268f6d04"
+  },
+  "decision_refs": []
 }
