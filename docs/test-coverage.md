@@ -65,6 +65,13 @@ floor or add `# pragma: no cover` to make a gate pass. `[tool.coverage.report]
 fail_under` is the combined statement+branch percentage coverage.py reports
 with `branch = true`.
 
+The one exception so far: VRP v2 (ADR-0021) vendored the canonical record
+core (about 1,000 statements) and the family hub. Measured as CI's verify job
+runs, every criterion fell (C0 85.66%, C1 75.80%, decision 71.98%, C2
+67.54%, MC/DC 45.19%, boundary 49.33%, combined 82.99%), so each floor was
+set one point below its measured value rounded down (84, 74, 70, 66, 44,
+48; `fail_under` 81). They all ratchet up from there.
+
 ## Test-design techniques
 
 Coverage shows what the tests executed, not whether they check the right
