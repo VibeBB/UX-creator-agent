@@ -9,6 +9,10 @@ triggers:
   - sibling
   - ux-request
   - 姉妹連携
+  - ECR
+  - ECO
+  - design review
+  - 設計変更
   - 取り込み
 ---
 
@@ -111,3 +115,16 @@ Projections include liaison rows, open user questions, and sister record
 counts/freshness. A rejected or deferred high-risk answer is a design
 signal: revisit the rationale or job framing instead of bypassing the
 sister.
+
+## Change control: ECR → ECO → `ux change`
+
+1. Write `<id>.ecr.json` naming the pinned files to change with their
+   current sha256, the reason and the proposal.
+2. Each owning sister changes its file through its own entry points and
+   re-runs its gates; consumers that pin a changed file re-pin it and are
+   changed too (the check finds them, you do not choose them).
+3. Brief an independent reviewer agent (not the ECO author) on the changed
+   files; record every finding with a disposition. Blockers must be fixed.
+4. Write `<id>.eco.json` and run `ux change <eco>` (`ux_change_check`).
+   Only its verdict closes the change; never mark an ECO done on review
+   text. Details: `docs/sister-cooperation.md`.

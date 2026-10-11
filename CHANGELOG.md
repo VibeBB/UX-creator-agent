@@ -8,6 +8,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Family change control: `*.ecr.json` / `*.eco.json` records and
+  `ux change` / `ux_change_check`, which derive the impact from workspace
+  sha256 pins and fail on stale or unlisted consumers, unpassed gate
+  reports, a self-reviewing author, unresolved AI design-review findings and
+  ECR/ECO cycles.
 - Out-of-box experience: optional contract `oobe` block (`statechart`,
   `ready_state`, `max_steps`, `rationale`). `oobe.steps` fails when the
   ready state is unreachable from the single initial state or needs more
