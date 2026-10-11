@@ -159,14 +159,28 @@ class Statechart(BaseModel):
     transitions: list[Transition] = Field(default_factory=list[Transition])
 
 
+class InBoxItem(BaseModel):
+    """One thing the user finds in the box, listed in unboxing order (top first)."""
+
+    model_config = ConfigDict(extra="forbid")
+    id: str = Field(pattern=r"^[a-z0-9][a-z0-9_-]*$")
+    name: str = Field(min_length=1)
+    kind: Literal["product", "accessory", "document", "cable", "other"]
+    first_used_state: str | None = None
+
+
 class OOBE(BaseModel):
-    """Out-of-box experience: unboxing to first use within a step budget."""
+    """Out-of-box experience: unboxing to first use within a step budget.
+
+    ``in_box`` is handed to production-engineering, which packs it in this order.
+    """
 
     model_config = ConfigDict(extra="forbid")
     statechart: str = Field(min_length=1)
     ready_state: str = Field(min_length=1)
     max_steps: int = Field(ge=1, le=50, strict=True)
     rationale: str = Field(min_length=12)
+    in_box: list[InBoxItem] = Field(default_factory=list[InBoxItem])
 
 
 class QCD(BaseModel):
@@ -374,6 +388,15 @@ class UXContract(BaseModel):
             raise ValueError(f"oobe: unknown statechart {self.oobe.statechart!r}")
         if self.oobe.ready_state not in {s.id for s in chart.states}:
             raise ValueError(f"oobe: unknown ready_state {self.oobe.ready_state!r}")
+        items = self.oobe.in_box
+        if len({item.id for item in items}) != len(items):
+            raise ValueError("oobe: duplicate in_box ids")
+        if items and sum(item.kind == "product" for item in items) != 1:
+            raise ValueError("oobe: in_box needs exactly one product item")
+        states = {s.id for s in chart.states}
+        for item in items:
+            if item.first_used_state is not None and item.first_used_state not in states:
+                raise ValueError(f"oobe: {item.id} uses unknown state {item.first_used_state!r}")
         return self
 
     @model_validator(mode="after")

@@ -30,4 +30,9 @@ paths:
   `ready_state` (first use), `max_steps` (1–50 transitions from the single
   initial state) and a `rationale`. `oobe.steps` fails when the ready state is
   unreachable or further than `max_steps`; `oobe.journey` fails without a
-  journey stage of kind `onboard`.
+  journey stage of kind `onboard`. `in_box[]` (`id`, `name`, `kind`
+  product|accessory|document|cable|other, optional `first_used_state`) lists
+  the box contents top first, with exactly one `product`; `oobe.in_box`
+  fails when an item needed at an earlier OOBE step is listed under a later
+  one or its state is unreachable. production-engineering pins the contract
+  and packs the carton in this order (`packaging.oobe`).

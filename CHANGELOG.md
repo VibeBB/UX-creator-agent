@@ -8,6 +8,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `oobe.in_box[]` box contents in unboxing order (exactly one `product`);
+  `oobe.in_box` fails when an item needed earlier in the OOBE is listed
+  under a later one. production-engineering's `packaging.oobe` packs the
+  carton from this list.
 - Liaison reconciliation accepts sister `decision_refs`/`impression_refs`
   only from intact VRP v2 chains; a broken log marks the response broken.
 - VRP v2 (ported from wire-agent, ADR-0021): hash-chained record logs,

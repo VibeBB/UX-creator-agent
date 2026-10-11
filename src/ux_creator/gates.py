@@ -446,8 +446,8 @@ def _opportunity_checks(contract: UXContract) -> list[GateCheck]:
     return checks
 
 
-def oobe_steps(contract: UXContract) -> int | None:
-    """Fewest transitions from the initial state to the OOBE ready state."""
+def _oobe_depths(contract: UXContract) -> dict[str, int] | None:
+    """Fewest transitions from the single initial state to each reachable state."""
     assert contract.oobe is not None
     chart = next(c for c in contract.statecharts if c.id == contract.oobe.statechart)
     initial = [s.id for s in chart.states if s.initial]
@@ -460,12 +460,43 @@ def oobe_steps(contract: UXContract) -> int | None:
     frontier = [initial[0]]
     while frontier:
         node = frontier.pop(0)
-        if node == contract.oobe.ready_state:
-            return depth[node]
         for target in sorted(adjacency.get(node, set()) - depth.keys()):
             depth[target] = depth[node] + 1
             frontier.append(target)
-    return None
+    return depth
+
+
+def oobe_steps(contract: UXContract) -> int | None:
+    """Fewest transitions from the initial state to the OOBE ready state."""
+    assert contract.oobe is not None
+    depths = _oobe_depths(contract)
+    return None if depths is None else depths.get(contract.oobe.ready_state)
+
+
+def _in_box_check(contract: UXContract) -> GateCheck:
+    """Items needed earlier in the OOBE are listed (and so packed) above later ones."""
+    assert contract.oobe is not None
+    depths = _oobe_depths(contract) or {}
+    problems: list[str] = []
+    previous: tuple[str, int] | None = None
+    for item in contract.oobe.in_box:
+        if item.first_used_state is None:
+            continue
+        depth = depths.get(item.first_used_state)
+        if depth is None:
+            problems.append(f"{item.id}: {item.first_used_state} unreachable")
+            continue
+        if previous is not None and depth < previous[1]:
+            problems.append(f"{item.id} (step {depth}) listed under {previous[0]}")
+        previous = (item.id, depth)
+    return GateCheck(
+        "oobe.in_box",
+        contract.oobe.statechart,
+        FAIL if problems else PASS,
+        measured=float(len(problems)),
+        limit=0.0,
+        detail="; ".join(problems) or f"{len(contract.oobe.in_box)} items in first-use order",
+    )
 
 
 def _oobe_checks(contract: UXContract) -> list[GateCheck]:
@@ -501,6 +532,7 @@ def _oobe_checks(contract: UXContract) -> list[GateCheck]:
             limit=1.0,
             detail=", ".join(onboard) if onboard else "no journey stage of kind onboard",
         ),
+        *([_in_box_check(contract)] if oobe.in_box else []),
     ]
 
 
