@@ -129,3 +129,68 @@ def test_corrupt_check_unknown_is_fail_closed(
     report = run_gates(_contract(contract_dict), tmp_path)
     assert report.verdict == "fail"
     assert contract
+
+
+def _oobe(contract_dict: dict[str, Any], max_steps: int) -> dict[str, str]:
+    payload = copy.deepcopy(contract_dict)
+    payload["oobe"] = {
+        "statechart": "sc",
+        "ready_state": "b",
+        "max_steps": max_steps,
+        "rationale": "first brew within one press",
+    }
+    payload["journeys"][0]["stages"][0]["kind"] = "onboard"
+    report = run_gates(_contract(payload))
+    return {c.id: c.status for c in report.checks if c.id.startswith("oobe.")}
+
+
+def test_oobe_step_budget_boundary(contract_dict: dict[str, Any]) -> None:
+    payload = copy.deepcopy(contract_dict)
+    chart = payload["statecharts"][0]
+    chart["states"].insert(1, {"id": "pair"})
+    chart["transitions"] = [
+        {"from": "a", "event": "unbox", "to": "pair"},
+        {"from": "pair", "event": "paired", "to": "b"},
+    ]
+    assert _oobe(payload, 1)["oobe.steps"] == "fail"
+    assert _oobe(payload, 2)["oobe.steps"] == "pass"
+    assert _oobe(payload, 3)["oobe.steps"] == "pass"
+    assert _oobe(payload, 2)["oobe.journey"] == "pass"
+
+
+def test_oobe_without_onboard_stage_fails(contract_dict: dict[str, Any]) -> None:
+    payload = copy.deepcopy(contract_dict)
+    payload["oobe"] = {
+        "statechart": "sc",
+        "ready_state": "b",
+        "max_steps": 5,
+        "rationale": "first brew within one press",
+    }
+    statuses = {c.id: c.status for c in run_gates(_contract(payload)).checks}
+    assert statuses["oobe.journey"] == "fail"
+
+
+def test_oobe_unreachable_ready_state_fails(contract_dict: dict[str, Any]) -> None:
+    payload = copy.deepcopy(contract_dict)
+    payload["statecharts"][0]["transitions"] = []
+    assert _oobe(payload, 5)["oobe.steps"] == "fail"
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("statechart", "nope"), ("ready_state", "nope"), ("max_steps", 0), ("max_steps", 51)],
+)
+def test_oobe_rejects_unknown_refs_and_bounds(
+    contract_dict: dict[str, Any], field: str, value: object
+) -> None:
+    payload = copy.deepcopy(contract_dict)
+    oobe: dict[str, object] = {
+        "statechart": "sc",
+        "ready_state": "b",
+        "max_steps": 5,
+        "rationale": "first brew within one press",
+    }
+    oobe[field] = value
+    payload["oobe"] = oobe
+    with pytest.raises(ValueError):
+        _contract(payload)

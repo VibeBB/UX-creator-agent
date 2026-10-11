@@ -26,3 +26,8 @@ paths:
   `provenance.json`, `ux-report.*`, `*.triage.json`, `*.production-status.*`)
   are never hand-edited — change the contract or plan and re-run the
   deterministic pipeline; gates stay fail-closed.
+- `oobe` (optional) bounds the out-of-box experience: `statechart` and its
+  `ready_state` (first use), `max_steps` (1–50 transitions from the single
+  initial state) and a `rationale`. `oobe.steps` fails when the ready state is
+  unreachable or further than `max_steps`; `oobe.journey` fails without a
+  journey stage of kind `onboard`.

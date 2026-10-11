@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Out-of-box experience: optional contract `oobe` block (`statechart`,
+  `ready_state`, `max_steps`, `rationale`). `oobe.steps` fails when the
+  ready state is unreachable from the single initial state or needs more
+  transitions than `max_steps`; `oobe.journey` fails without a journey
+  stage of kind `onboard`.
+
 ### Fixed
 
 - MCP transport errors now carry error status, workspace paths are contained,
