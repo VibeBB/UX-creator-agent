@@ -446,6 +446,64 @@ def _opportunity_checks(contract: UXContract) -> list[GateCheck]:
     return checks
 
 
+def oobe_steps(contract: UXContract) -> int | None:
+    """Fewest transitions from the initial state to the OOBE ready state."""
+    assert contract.oobe is not None
+    chart = next(c for c in contract.statecharts if c.id == contract.oobe.statechart)
+    initial = [s.id for s in chart.states if s.initial]
+    if len(initial) != 1:
+        return None
+    adjacency: dict[str, set[str]] = {}
+    for transition in chart.transitions:
+        adjacency.setdefault(transition.from_state, set()).add(transition.to)
+    depth = {initial[0]: 0}
+    frontier = [initial[0]]
+    while frontier:
+        node = frontier.pop(0)
+        if node == contract.oobe.ready_state:
+            return depth[node]
+        for target in sorted(adjacency.get(node, set()) - depth.keys()):
+            depth[target] = depth[node] + 1
+            frontier.append(target)
+    return None
+
+
+def _oobe_checks(contract: UXContract) -> list[GateCheck]:
+    assert contract.oobe is not None
+    oobe = contract.oobe
+    steps = oobe_steps(contract)
+    if steps is None:
+        status: CheckStatus = FAIL
+        detail = f"{oobe.ready_state} is not reachable from a single initial state"
+    else:
+        status = PASS if steps <= oobe.max_steps else FAIL
+        detail = f"{steps} steps to {oobe.ready_state} (budget {oobe.max_steps})"
+    onboard = sorted(
+        f"{journey.id}.{stage.id}"
+        for journey in contract.journeys
+        for stage in journey.stages
+        if stage.kind == "onboard"
+    )
+    return [
+        GateCheck(
+            "oobe.steps",
+            oobe.statechart,
+            status,
+            measured=None if steps is None else float(steps),
+            limit=float(oobe.max_steps),
+            detail=detail,
+        ),
+        GateCheck(
+            "oobe.journey",
+            "journeys",
+            PASS if onboard else FAIL,
+            measured=float(len(onboard)),
+            limit=1.0,
+            detail=", ".join(onboard) if onboard else "no journey stage of kind onboard",
+        ),
+    ]
+
+
 def run_gates(contract: UXContract, workspace: Path | None = None) -> GateReport:
     checks: list[GateCheck] = []
     checks += _wrap("statechart", _statechart_checks, contract)
@@ -458,6 +516,8 @@ def run_gates(contract: UXContract, workspace: Path | None = None) -> GateReport
     checks += _wrap("core_experience", _core_experience_checks, contract)
     if contract.cmf is not None:
         checks += _wrap("cmf", _cmf_checks, contract)
+    if contract.oobe is not None:
+        checks += _wrap("oobe", _oobe_checks, contract)
     if contract.content:
         checks += _wrap("content", _content_checks, contract)
     if contract.imports:
