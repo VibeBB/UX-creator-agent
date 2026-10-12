@@ -147,7 +147,9 @@ class TestCli:
             == 0
         )
 
-    def test_check_missing_manifest(self, project: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_check_missing_manifest(
+        self, project: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         assert (
             main(
                 [
@@ -167,12 +169,7 @@ class TestCli:
 
     def test_empty_dir_fails(self, tmp_path: Path) -> None:
         (tmp_path / "ux").mkdir()
-        assert (
-            main(
-                ["mruby-manifest", "--dir", str(tmp_path / "ux"), "--product", "k"]
-            )
-            == 1
-        )
+        assert main(["mruby-manifest", "--dir", str(tmp_path / "ux"), "--product", "k"]) == 1
 
     def test_not_a_dir_fails(self, tmp_path: Path) -> None:
         assert main(["mruby-manifest", "--dir", str(tmp_path / "no"), "--product", "k"]) == 1
