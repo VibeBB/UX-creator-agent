@@ -59,3 +59,4 @@ protocols, operations, and accepted design decisions.
 - [ADR-0019](adr/0019-hash-bound-slp-v2-and-liaison-gates.md) — hash-bound SLP v2 and deterministic liaison reconciliation
 - [ADR-0020](adr/0020-structural-coverage.md) — structural coverage gate (C0, C1, C2, MC/DC, boundaries)
 - [ADR-0021](adr/0021-vrp-v2-and-family-hub.md) — VRP v2 port and the UX family hub (aggregation, concern cycles)
+- [ADR-0022](adr/0022-mruby-device-api-spec.md) — UX-authored `*.mruby-api.json` device API specs, rubyness gate, API doc

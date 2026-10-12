@@ -22,6 +22,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .mruby_api import detect_classes
+
 # Kept in lockstep with firmware's feature_scan patterns.
 _FLOAT_RE = re.compile(r"(?<![\w.'])\d+\.\d+(?![\w'])|\.to_f\b|\bFloat\b")
 _MATH_RE = re.compile(r"\bMath\.")
@@ -115,7 +117,14 @@ def build_manifest(
             )
         )
         merged = _merge_requires(merged, detect_requires(blob.decode("utf-8", "replace")))
-    return MrubyManifest(product=product, files=files, requires=merged)
+    classes = sorted(
+        {
+            name
+            for source in sources
+            for name in detect_classes(source.read_text(encoding="utf-8", errors="replace"))
+        }
+    )
+    return MrubyManifest(product=product, files=files, requires=merged, classes=classes)
 
 
 def render_manifest(manifest: MrubyManifest) -> str:
