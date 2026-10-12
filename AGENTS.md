@@ -35,7 +35,8 @@ service blueprints, statecharts, QCD — and projects them into diagrams
   `python -m ux_creator` inside the `ux-tools` container image.
 - UX output files are `{product}.ux.json`, `*.ux-proposals.json` +
   `*.triage.json`, hash-bound SLP v2 `*.ux-request.json` and
-  `*.ux-response.json` liaison files, `out/<name>/` projections
+  `*.ux-response.json` liaison files, `*.mruby-manifest.json` mruby/c
+  handoffs, `out/<name>/` projections
   (`*.journey.mmd`, `*.statechart.{mmd,puml,xstate.json,scxml}`,
   `*.wireframe.puml`, `*.blueprint.puml`, `*.emotion.mmd`/`*.emotion.json`, `*.mindmap.mmd`,
   `*.sequence.puml`, `*.wbs.puml`,

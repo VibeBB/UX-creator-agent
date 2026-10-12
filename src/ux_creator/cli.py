@@ -1,6 +1,7 @@
 """python -m ux_creator — deterministic CLI entry points.
 
 Subcommands: doctor, gates, author, render, import, from-ruby, mruby-check,
+mruby-manifest,
 request, propose, review-record, review-reconcile, liaison, produce,
 delegate, intake-record, intake-reconcile, record.
 
@@ -35,6 +36,13 @@ from .delegation import delegation_brief
 from .doctor import run_doctor
 from .gates import FAIL, PASS, run_gates
 from .imports import import_source
+from .mruby_manifest import (
+    MrubyRequires,
+    build_manifest,
+    list_ruby_sources,
+    manifest_problems,
+    render_manifest,
+)
 from .production import load_plan, plan_sha256, run_production_gates, write_production
 from .projections import write_projections, write_provenance
 from .proposals import ProposalSet, triage, write_triage
@@ -166,6 +174,56 @@ def _cmd_mruby_check(args: argparse.Namespace) -> int:
         }
     )
     return 0 if result.status == "ok" else 1
+
+
+def _cmd_mruby_manifest(args: argparse.Namespace) -> int:
+    directory = Path(args.dir)
+    root = Path(args.root).resolve()
+    if not directory.is_dir():
+        _print(
+            {
+                "verdict": FAIL,
+                "stage": "mruby-manifest",
+                "detail": f"{directory} is not a directory",
+            }
+        )
+        return 1
+    out = Path(args.out) if args.out else directory / f"{args.product}.mruby-manifest.json"
+    if args.check:
+        problems = manifest_problems(out, root) if out.is_file() else [f"{out.name} missing"]
+        _print(
+            {
+                "verdict": FAIL if problems else PASS,
+                "stage": "mruby-manifest",
+                "problems": problems,
+                "manifest": str(out),
+            }
+        )
+        return 1 if problems else 0
+    sources = list_ruby_sources(directory)
+    if not sources:
+        _print(
+            {
+                "verdict": FAIL,
+                "stage": "mruby-manifest",
+                "detail": f"no *.rb sources under {directory}",
+            }
+        )
+        return 1
+    requires = MrubyRequires(float=args.float) if args.float is not None else None
+    manifest = build_manifest(args.product, sources, root, requires)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(render_manifest(manifest), encoding="utf-8")
+    _print(
+        {
+            "verdict": PASS,
+            "stage": "mruby-manifest",
+            "manifest": str(out),
+            "files": len(manifest.files),
+            "requires": manifest.requires.model_dump(),
+        }
+    )
+    return 0
 
 
 def _cmd_request(args: argparse.Namespace) -> int:
@@ -538,6 +596,18 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("mruby-check", help="mrbc -c syntax check on a Ruby snippet")
     p.add_argument("source")
     p.set_defaults(func=_cmd_mruby_check)
+
+    p = sub.add_parser(
+        "mruby-manifest",
+        help="emit or check a *.mruby-manifest.json for mruby/c-bound .rb sources",
+    )
+    p.add_argument("--dir", required=True, help="directory holding the *.rb sources")
+    p.add_argument("--product", required=True)
+    p.add_argument("--out", help="manifest path (default: <dir>/<product>.mruby-manifest.json)")
+    p.add_argument("--root", default=".", help="workspace root for file entries (default: cwd)")
+    p.add_argument("--float", type=int, choices=[0, 1, 2], help="declared float level override")
+    p.add_argument("--check", action="store_true", help="verify instead of writing (gate mode)")
+    p.set_defaults(func=_cmd_mruby_manifest)
 
     p = sub.add_parser("request", help="write a ux-request.json for a sibling agent")
     p.add_argument("contract")

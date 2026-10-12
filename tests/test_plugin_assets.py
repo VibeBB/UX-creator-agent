@@ -33,6 +33,7 @@ EXPECTED_SKILLS = {
     "ux-persona",
     "ux-theory-lenses",
     "ux-jtbd",
+    "ux-mruby",
     "ux-diagrams",
     "ux-ruby-style",
     "ux-sibling-cooperation",
