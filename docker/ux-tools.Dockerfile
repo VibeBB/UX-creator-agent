@@ -98,7 +98,7 @@ RUN for attempt in 1 2 3 4 5; do \
 # nodejs.org tarball, the same verified-download pattern as the other tools.
 # Provides /usr/local/bin/{node,npm,npx,corepack} (npm is bundled).
 RUN curl --fail --location --silent --show-error \
-        --retry 5 --retry-delay 10 --retry-all-errors \
+        --retry 8 --retry-delay 20 --retry-max-time 600 --retry-all-errors \
         --output /tmp/node.tar.xz \
         "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
     && echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum --check \
@@ -120,7 +120,7 @@ RUN curl --fail --location --silent --show-error \
 # block once NODE_VERSION's npm vendors the fixed versions.
 RUN npm_root=/usr/local/lib/node_modules/npm/node_modules \
     && curl --fail --location --silent --show-error \
-        --retry 5 --retry-delay 10 --retry-all-errors \
+        --retry 8 --retry-delay 20 --retry-max-time 600 --retry-all-errors \
         --output /tmp/brace-expansion.tgz \
         "https://registry.npmjs.org/brace-expansion/-/brace-expansion-${BRACE_EXPANSION_VERSION}.tgz" \
     && echo "${BRACE_EXPANSION_SHA256}  /tmp/brace-expansion.tgz" | sha256sum --check \
@@ -128,7 +128,7 @@ RUN npm_root=/usr/local/lib/node_modules/npm/node_modules \
     && mkdir -p "${npm_root}/brace-expansion" \
     && tar -xzf /tmp/brace-expansion.tgz -C "${npm_root}/brace-expansion" --strip-components=1 \
     && curl --fail --location --silent --show-error \
-        --retry 5 --retry-delay 10 --retry-all-errors \
+        --retry 8 --retry-delay 20 --retry-max-time 600 --retry-all-errors \
         --output /tmp/undici.tgz \
         "https://registry.npmjs.org/undici/-/undici-${UNDICI_VERSION}.tgz" \
     && echo "${UNDICI_SHA256}  /tmp/undici.tgz" | sha256sum --check \
@@ -143,7 +143,7 @@ RUN npm_root=/usr/local/lib/node_modules/npm/node_modules \
 # Install mermaid-cli from the registry tarball so the fetch is
 # sha256-verified like every other external download in this image.
 RUN curl --fail --location --silent --show-error \
-        --retry 5 --retry-delay 10 --retry-all-errors \
+        --retry 8 --retry-delay 20 --retry-max-time 600 --retry-all-errors \
         --output /tmp/mermaid-cli.tgz \
         "https://registry.npmjs.org/@mermaid-js/mermaid-cli/-/mermaid-cli-${MERMAID_CLI_VERSION}.tgz" \
     && echo "${MERMAID_CLI_SHA256}  /tmp/mermaid-cli.tgz" | sha256sum --check \
@@ -155,7 +155,7 @@ RUN curl --fail --location --silent --show-error \
 # electrical-circuit-agent's circuit-tools image.
 RUN mkdir -p /opt/jre \
     && curl --fail --location --silent --show-error \
-        --retry 5 --retry-delay 10 --retry-all-errors \
+        --retry 8 --retry-delay 20 --retry-max-time 600 --retry-all-errors \
         --output /tmp/semeru-jre.tar.gz \
         "https://github.com/ibmruntimes/semeru27-binaries/releases/download/jdk-${SEMERU_JRE_VERSION}/ibm-semeru-open-jre_x64_linux_${SEMERU_JRE_VERSION}.tar.gz" \
     && echo "${SEMERU_JRE_SHA256}  /tmp/semeru-jre.tar.gz" | sha256sum --check \
@@ -173,14 +173,14 @@ RUN mkdir -p /opt/jre \
 # PlantUML MIT jar (GitHub releases; Maven Central rate-limits CI).
 RUN mkdir -p /opt/plantuml \
     && curl --fail --location --silent --show-error \
-        --retry 5 --retry-delay 10 --retry-all-errors \
+        --retry 8 --retry-delay 20 --retry-max-time 600 --retry-all-errors \
         --output /opt/plantuml/plantuml.jar \
         "https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-mit-${PLANTUML_VERSION}.jar" \
     && echo "${PLANTUML_SHA256}  /opt/plantuml/plantuml.jar" | sha256sum --check \
     && java -jar /opt/plantuml/plantuml.jar -version 2>&1 | grep -F "PlantUML" \
     && mkdir -p /usr/share/doc/plantuml \
     && curl --fail --location --silent --show-error \
-        --retry 5 --retry-delay 10 --retry-all-errors \
+        --retry 8 --retry-delay 20 --retry-max-time 600 --retry-all-errors \
         --output /usr/share/doc/plantuml/LICENSE \
         "https://raw.githubusercontent.com/plantuml/plantuml/v${PLANTUML_VERSION}/LICENSE" \
     && printf '%s\n' \
@@ -190,7 +190,7 @@ RUN mkdir -p /opt/plantuml \
 
 # mruby built from the pinned source tarball (embedded-firmware UX checks).
 RUN curl --fail --location --silent --show-error \
-        --retry 5 --retry-delay 10 --retry-all-errors \
+        --retry 8 --retry-delay 20 --retry-max-time 600 --retry-all-errors \
         --output /tmp/mruby.tar.gz \
         "https://github.com/mruby/mruby/archive/refs/tags/${MRUBY_VERSION}.tar.gz" \
     && echo "${MRUBY_SHA256}  /tmp/mruby.tar.gz" | sha256sum --check \
