@@ -36,6 +36,12 @@ from .delegation import delegation_brief
 from .doctor import run_doctor
 from .gates import FAIL, PASS, run_gates
 from .imports import import_source
+from .mruby_api import (
+    api_problems,
+    detect_classes,
+    render_api_doc,
+    spec_problems,
+)
 from .mruby_manifest import (
     MrubyRequires,
     build_manifest,
@@ -177,7 +183,7 @@ def _cmd_mruby_check(args: argparse.Namespace) -> int:
 
 
 def _cmd_mruby_manifest(args: argparse.Namespace) -> int:
-    directory = Path(args.dir)
+    directory = Path(args.dir).resolve()
     root = Path(args.root).resolve()
     if not directory.is_dir():
         _print(
@@ -221,8 +227,66 @@ def _cmd_mruby_manifest(args: argparse.Namespace) -> int:
             "manifest": str(out),
             "files": len(manifest.files),
             "requires": manifest.requires.model_dump(),
+            "classes": manifest.classes,
         }
     )
+    return 0
+
+
+def _cmd_mruby_api(args: argparse.Namespace) -> int:
+    spec_path = Path(args.spec)
+    problems, spec = spec_problems(spec_path)
+    if spec is None:
+        _print({"verdict": FAIL, "stage": "mruby-api", "problems": problems})
+        return 1
+    ruby_dir = Path(args.ruby_dir)
+    sources = list_ruby_sources(ruby_dir) if ruby_dir.is_dir() else []
+    manifest_classes: list[str] = []
+    manifest_path = Path(args.manifest) if args.manifest else None
+    if manifest_path is not None and manifest_path.is_file():
+        try:
+            manifest_classes = json.loads(manifest_path.read_text(encoding="utf-8")).get(
+                "classes", []
+            )
+        except (OSError, json.JSONDecodeError) as exc:
+            problems.append(f"{manifest_path.name} unreadable: {exc}")
+    else:
+        for source in sources:
+            manifest_classes += detect_classes(source.read_text(encoding="utf-8", errors="replace"))
+    problems += api_problems(spec, spec_path, sources, manifest_classes)
+    if args.check:
+        _print(
+            {
+                "verdict": FAIL if problems else PASS,
+                "stage": "mruby-api",
+                "problems": problems,
+                "spec": str(spec_path),
+                "classes": [c.name for c in spec.classes],
+            }
+        )
+        return 1 if problems else 0
+    doc_out = Path(args.doc_out) if args.doc_out else spec_path.with_suffix(".md")
+    if problems:
+        _print(
+            {
+                "verdict": FAIL,
+                "stage": "mruby-api",
+                "problems": problems,
+                "spec": str(spec_path),
+            }
+        )
+        return 1
+    doc_out.write_text(render_api_doc(spec), encoding="utf-8")
+    _print(
+        {
+            "verdict": PASS,
+            "stage": "mruby-api",
+            "spec": str(spec_path),
+            "doc": str(doc_out),
+            "classes": [c.name for c in spec.classes],
+        }
+    )
+    return 0
     return 0
 
 
@@ -608,6 +672,17 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--float", type=int, choices=[0, 1, 2], help="declared float level override")
     p.add_argument("--check", action="store_true", help="verify instead of writing (gate mode)")
     p.set_defaults(func=_cmd_mruby_manifest)
+
+    p = sub.add_parser(
+        "mruby-api",
+        help="check a *.mruby-api.json device API spec and emit its API doc",
+    )
+    p.add_argument("spec", help="api/<name>.mruby-api.json")
+    p.add_argument("--ruby-dir", default="ux", help="directory of ux *.rb sources")
+    p.add_argument("--manifest", help="manifest to cross-check classes against")
+    p.add_argument("--doc-out", help="api doc path (default: spec with .md suffix)")
+    p.add_argument("--check", action="store_true", help="verify only (gate mode)")
+    p.set_defaults(func=_cmd_mruby_api)
 
     p = sub.add_parser("request", help="write a ux-request.json for a sibling agent")
     p.add_argument("contract")

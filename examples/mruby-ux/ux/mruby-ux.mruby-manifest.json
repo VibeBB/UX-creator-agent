@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "mruby_manifest",
+  "product": "mruby-ux",
+  "files": [
+    {
+      "file": "ux/app.rb",
+      "sha256": "a10e5ffb54913c92cddcff31b0717f3957c049a34b16a70ffa680af09d110557"
+    }
+  ],
+  "requires": {
+    "float": 0,
+    "math": false,
+    "string": true,
+    "utf8": false,
+    "tick": false
+  },
+  "classes": [
+    "Ux"
+  ]
+}
