@@ -34,7 +34,7 @@ stay below the 16 MiB limit.
 - `docs` — markdown-only changes: verify_docs + git diff --check
 - `fast` — ruff check, ruff format --check, pyright (strict), pytest,
   verify_docs, git diff --check
-- `standard` — fast + `check_plugin_load.py` (SDK 1.53.0 plugin load) +
+- `standard` — fast + `check_plugin_load.py` (SDK 1.54.0 plugin load) +
   locked-image e2e on `examples/smart-kettle` (`e2e_authoring.py`) +
   `check_ruby_dsl.py` inside the image
 - `ruby` — Ruby DSL parity/lint/minitest inside the image only
@@ -81,7 +81,7 @@ re-check deadline) go in `scripts/dependency_update_deferrals.json`.
 | `RUBOCOP_VERSION`, `MINITEST_VERSION` | Dockerfile ARG — rubygems |
 | `NODE_VERSION` (+sha256) | Dockerfile ARG — `nodejs/node` releases (official tarball) |
 | Chromium / Graphviz | Debian trixie apt (rolling with the release) |
-| openhands-sdk/-tools `1.53.0` | `pyproject.toml` sdk-check group |
+| openhands-sdk/-tools `1.54.0` | `pyproject.toml` sdk-check group |
 | GitHub Action SHAs | `.github/workflows/*.yml` + `dependabot.yml` |
 | Lynis audit version | `container-audit.yml` `git clone --branch` — `CISOfy/lynis` tags |
 

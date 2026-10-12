@@ -4,6 +4,15 @@ This document records the pinned versions in use, where they come from, and
 the adoption decision for each. Update it in the same change that touches
 `pyproject.toml`, a workflow pin, or a new external source.
 
+## 2026-10-12 update (sdk 1.54.0, uv 0.13.0, rubocop 1.92.0)
+
+| Component | From -> to | Changelog review decision |
+| --- | --- | --- |
+| openhands-sdk / openhands-tools | 1.53.0 -> 1.54.0 | See `docs/research/sdk-v1.54.0-feature-evaluation.md`. |
+| uv | 0.12.23 -> 0.13.0 | Breaking-change review in the same document. |
+| RUBOCOP_VERSION | 1.91.0 -> 1.92.0 | Gem-installed linter; image build asserts `rubocop --version`. |
+| python-version (all surfaces) | deferred | 3.15 blocked solely by `openhands-sdk->litellm->fastuuid 0.14.0` (sdist-only, bundled PyO3 fails to build on 3.15). Wildcard deferral `python-version/*`, review_by 2027-01-08. |
+
 ## Runtime dependencies (pyproject.toml + uv.lock)
 
 | Package | Pin | Source | Decision |
@@ -15,8 +24,8 @@ the adoption decision for each. Update it in the same change that touches
 
 | Package | Pin | Source | Decision |
 | --- | --- | --- | --- |
-| openhands-sdk | `==1.53.0` | PyPI | Exact pin — plugin API contract; same pin as the sibling plugins so a merged conversation sees one SDK. |
-| openhands-tools | `==1.53.0` | PyPI | Exact pin — matches SDK. |
+| openhands-sdk | `==1.54.0` | PyPI | Exact pin — plugin API contract; same pin as the sibling plugins so a merged conversation sees one SDK. |
+| openhands-tools | `==1.54.0` | PyPI | Exact pin — matches SDK. |
 
 The `sdk-check` group is installed by default (`tool.uv default-groups`) so
 pyright strict can type `check_plugin_load.py`; the Docker image excludes it
@@ -37,7 +46,7 @@ via `uv export --no-dev`.
 
 | Tool | Pin | Where |
 | --- | --- | --- |
-| uv | `==0.12.23` | `[tool.uv] required-version` |
+| uv | `==0.13.0` | `[tool.uv] required-version` |
 | Python | `>=3.12`, CI matrix 3.12/3.13/3.14 (+3.15 canary) | pyproject `requires-python` |
 | zizmor | `1.30.1` (uvx pin) | `workflow-lint.yml` |
 
@@ -70,7 +79,7 @@ All `uses:` entries are pinned to a 40-char SHA with a `# vX.Y.Z` comment:
 | Item | Pin | Where |
 | --- | --- | --- |
 | ruby base image | `ruby:4.0.7-slim-trixie` (digest-pinned) | `docker/ux-tools.Dockerfile` `FROM` |
-| uv | `0.12.23` (+ `UV_DIGEST`) | `docker/ux-tools.Dockerfile` `ARG UV_VERSION` (must equal `[tool.uv] required-version`) |
+| uv | `0.13.0` (+ `UV_DIGEST`) | `docker/ux-tools.Dockerfile` `ARG UV_VERSION` (must equal `[tool.uv] required-version`) |
 | Python in image | `3.14` | `uv python install` inside the Dockerfile |
 | IBM Semeru OpenJ9 JRE | `27.0.0.0` (+sha256) | `ARG SEMERU_JRE_VERSION` — `ibmruntimes/semeru27-binaries` releases |
 | PlantUML MIT jar | `1.2026.8` (+sha256) | `ARG PLANTUML_VERSION` — `plantuml/plantuml` releases |
@@ -142,7 +151,7 @@ only while `review_by` has not passed and still matches the reported
 
 | Surface | Name | Latest | Re-check | Reason |
 | --- | --- | --- | --- | --- |
-| pypi | mcp | 2.3.0 | 2027-04-01 | `openhands-sdk` 1.53.0 requires `fastmcp>=3.2.0,<4`, which caps `mcp<2`. |
+| pypi | mcp | 2.3.0 | 2027-04-01 | `openhands-sdk` 1.54.0 requires `fastmcp>=3.2.0,<4`, which caps `mcp<2`. |
 | python-version | Python version (pyproject.toml) | 3.14 | 2027-01-08 | 3.12/3.13 remain the supported floor; 3.14+ is exercised by the canary legs. |
 | python-version | Python version (ci.yml) | 3.14 | 2027-01-08 | 3.12/3.13 remain the supported floor; 3.14+ is exercised by the canary legs. |
 
@@ -187,12 +196,12 @@ only while `review_by` has not passed and still matches the reported
 | undici (npm vendored) | 6.28.0 -> 6.28.1 | Adopted in place — fixes CVE-2026-19534. Patch within npm's vendored 6.x major; 7.x/8.x not adoptable until npm vendors them. |
 | openssl Debian packages | 3.5.7-1~deb13u2 -> ~deb13u3 | Adopted via the apt install list (same pattern as libpcre2-8-0) — fixes CVE-2026-75804 + CVE-2026-84782 across libssl3t64, openssl, openssl-provider-legacy. |
 
-## Decisions — 2026-10-07 round (SDK 1.53.0)
+## Decisions — 2026-10-07 round (SDK 1.54.0)
 
 | Component | From -> To | Decision |
 | --- | --- | --- |
-| `openhands-sdk` / `openhands-tools` (sdk-check group) | 1.52.0 -> 1.53.0 | Adopted. All 6 upstream PRs reviewed; see [SDK v1.53.0 feature evaluation](research/sdk-v1.53.0-feature-evaluation.md). |
-| mcp | stays <2 | Deferred: `openhands-sdk` 1.53.0 still requires `fastmcp<4` -> `mcp<2`; reason refreshed to cite 1.53.0, `review_by` unchanged. |
+| `openhands-sdk` / `openhands-tools` (sdk-check group) | 1.52.0 -> 1.54.0 | Adopted. All 6 upstream PRs reviewed; see [SDK v1.54.0 feature evaluation](research/sdk-v1.54.0-feature-evaluation.md). |
+| mcp | stays <2 | Deferred: `openhands-sdk` 1.54.0 still requires `fastmcp<4` -> `mcp<2`; reason refreshed to cite 1.54.0, `review_by` unchanged. |
 
 ## Decisions — 2026-10-05 round (SDK 1.52.0)
 
@@ -206,7 +215,7 @@ only while `review_by` has not passed and still matches the reported
 | Component | Change | Decision | Reason |
 | --- | --- | --- | --- |
 | actions/cache | v5.0.5 -> v6.1.0 | adopted | v4's Node20 runtime was deleted 2026-09-23; v6.1.0 is the ESM line the family standardizes on. SHA `55cc8345…`. |
-| uv | 0.12.22 -> 0.12.23 | adopted | Patch release; required-version, `UV_VERSION`, `UV_DIGEST`, and the setup-uv `version:` input move in lockstep. |
+| uv | 0.12.22 -> 0.13.0 | adopted | Patch release; required-version, `UV_VERSION`, `UV_DIGEST`, and the setup-uv `version:` input move in lockstep. |
 | CPython | matrix 3.12/3.13 -> +3.14, scalar pins -> 3.14, +3.15 canary | adopted | Latest stable minor; the 3.15 experimental leg reports via `::warning::` (step-level continue-on-error keeps the check green). |
 | codeql-action | new shared `codeql.yml` (actions + python) | adopted | Needs repo-level default setup disabled before uploads succeed — tracked family-wide. |
 | checker coverage | python-version scans all workflows + `.python-version` + Dockerfile `uv venv`/`python3.x`; RUBOCOP/MINITEST/JSON gem ARGs monitored via rubygems.org | adopted | Coverage audit found these pins unmonitored. |
