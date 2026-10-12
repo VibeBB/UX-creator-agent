@@ -15,6 +15,7 @@ review the diff; `protect-generated` blocks direct edits to generated output.
 | `import` | Read a supported `circuit`, `mech`, `wire`, `bard`, or `csv` input and update contract import provenance. |
 | `from-ruby` | Compile a Ruby DSL source to the required `--out` contract JSON. |
 | `mruby-check` | Syntax-check a Ruby source with `mrbc -c`. |
+| `mruby-manifest` | Emit (`--dir`/`--product`) or verify (`--check`) a `*.mruby-manifest.json` — sha256-pinned `.rb` list plus detected `requires` for the firmware handshake. |
 | `request` | Write a v2 request; repeat `--change`, `--input`, `--deliverable`, `--accept`, and optional `--depends-on`. High-risk requests need a declared job ID in `--rationale`; `--replace` is required to replace a different existing request. |
 | `delegate` | Read a request and print its deterministic task-tool brief. |
 | `propose` | Read a contract and proposal set, write triage and eligible requests to `--out-dir`. |

@@ -30,6 +30,7 @@ EXPECTED_SKILLS = {
     "ux-diagrams",
     "ux-interaction-content",
     "ux-jtbd",
+    "ux-mruby",
     "ux-out-rules",
     "ux-persona",
     "ux-production",

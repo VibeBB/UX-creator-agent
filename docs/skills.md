@@ -11,6 +11,7 @@ guidance; they do not run executable code or override deterministic gates.
 | `ux-diagrams` | Understand Mermaid, PlantUML, XState, SCXML, Storybook requirements, and how Figma fits the generated projections. |
 | `ux-interaction-content` | Map feedback records to LED, sound, haptic, motion, and text assets; request product sound cues from bard. |
 | `ux-jtbd` | Write functional, emotional, and social jobs and calculate ODI opportunity scores. |
+| `ux-mruby` | Author mruby/c-bound `.rb` UX logic and the `*.mruby-manifest.json` handshake for the firmware contract. |
 | `ux-persona` | Apply the UX designer voice, QCD discipline, and Think Different creed. |
 | `ux-production` | Author production plans, dependencies, statuses, decisions, blockers, requests, and evidence loops. |
 | `ux-ruby-style` | Write idiomatic UX Ruby DSL sources and compile them to contract JSON. |
