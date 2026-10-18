@@ -60,6 +60,9 @@ service blueprints, statecharts, QCD — and projects them into diagrams
   `paths:` glob list makes a skill a path-triggered rule instead
   (`ux-contract-rules`, `ux-out-rules`) — the two mechanisms are
   exclusive, so rules live in their own `skills/` entries.
+- Version expectations and pins in source code must derive from files
+  the dependency-update checker covers (pyproject pins, lockfiles,
+  Dockerfiles, workflow pins); do not hardcode a second copy.
 - See `docs/` for operations and ADRs.
 
 ## Voice and commit policy
