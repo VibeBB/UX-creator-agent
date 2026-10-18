@@ -4,6 +4,17 @@ This document records the pinned versions in use, where they come from, and
 the adoption decision for each. Update it in the same change that touches
 `pyproject.toml`, a workflow pin, or a new external source.
 
+## 2026-10-18 update (sdk 1.55.1, uv 0.13.1, plantuml 1.2026.9, node 26.12.0, nlohmann-json 3.1.0)
+
+sdk `==1.54.0` -> `==1.55.1` (sdk + tools), uv `==0.13.0` -> `==0.13.1`,
+zizmor `1.30.1` -> `1.31.1`, trivy `v0.75.0` -> `v0.76.0`, codeql-action
+v4.38.3 -> v4.39.0. Full changelog review:
+[SDK v1.55.1 feature evaluation](research/sdk-v1.55.1-feature-evaluation.md).
+Deferrals unchanged (mcp 2.x, Python 3.15 default, Tauri 3.0.0-alpha where
+applicable); reasons refreshed to cite SDK 1.55.1.
+
+Node.js `26.11.1` -> `26.12.0` and PlantUML `1.2026.8` -> `1.2026.9` (both sha256-pinned), nlohmann/json `3.0.2` -> `3.1.0`.
+
 ## 2026-10-12 update (sdk 1.54.0, uv 0.13.0, rubocop 1.92.0)
 
 | Component | From -> to | Changelog review decision |
@@ -24,8 +35,8 @@ the adoption decision for each. Update it in the same change that touches
 
 | Package | Pin | Source | Decision |
 | --- | --- | --- | --- |
-| openhands-sdk | `==1.54.0` | PyPI | Exact pin — plugin API contract; same pin as the sibling plugins so a merged conversation sees one SDK. |
-| openhands-tools | `==1.54.0` | PyPI | Exact pin — matches SDK. |
+| openhands-sdk | `==1.55.1` | PyPI | Exact pin — plugin API contract; same pin as the sibling plugins so a merged conversation sees one SDK. |
+| openhands-tools | `==1.55.1` | PyPI | Exact pin — matches SDK. |
 
 The `sdk-check` group is installed by default (`tool.uv default-groups`) so
 pyright strict can type `check_plugin_load.py`; the Docker image excludes it
@@ -46,9 +57,9 @@ via `uv export --no-dev`.
 
 | Tool | Pin | Where |
 | --- | --- | --- |
-| uv | `==0.13.0` | `[tool.uv] required-version` |
+| uv | `==0.13.1` | `[tool.uv] required-version` |
 | Python | `>=3.12`, CI matrix 3.12/3.13/3.14 (+3.15 canary) | pyproject `requires-python` |
-| zizmor | `1.30.1` (uvx pin) | `workflow-lint.yml` |
+| zizmor | `1.31.1` (uvx pin) | `workflow-lint.yml` |
 
 ## GitHub Actions pins
 
@@ -82,9 +93,9 @@ All `uses:` entries are pinned to a 40-char SHA with a `# vX.Y.Z` comment:
 | uv | `0.13.0` (+ `UV_DIGEST`) | `docker/ux-tools.Dockerfile` `ARG UV_VERSION` (must equal `[tool.uv] required-version`) |
 | Python in image | `3.14` | `uv python install` inside the Dockerfile |
 | IBM Semeru OpenJ9 JRE | `27.0.0.0` (+sha256) | `ARG SEMERU_JRE_VERSION` — `ibmruntimes/semeru27-binaries` releases |
-| PlantUML MIT jar | `1.2026.8` (+sha256) | `ARG PLANTUML_VERSION` — `plantuml/plantuml` releases |
+| PlantUML MIT jar | `1.2026.9` (+sha256) | `ARG PLANTUML_VERSION` — `plantuml/plantuml` releases |
 | mruby | `4.0.0` (+sha256) | `ARG MRUBY_VERSION` — `mruby/mruby` releases |
-| Node.js | `26.11.1` (+sha256) | `ARG NODE_VERSION` — `nodejs/node` releases; official tarball → `/usr/local` |
+| Node.js | `26.12.0` (+sha256) | `ARG NODE_VERSION` — `nodejs/node` releases; official tarball → `/usr/local` |
 | npm vendored patches | brace-expansion `5.0.12`, undici `6.28.1` (+sha256) | Dockerfile ARGs — registry tarballs applied over `npm/node_modules`; pins follow npm's bundled majors, so they are intentionally NOT tracked as docker-arg surfaces |
 | mermaid-cli | `12.0.0` | `ARG MERMAID_CLI_VERSION` — `mermaid-js/mermaid-cli` releases |
 | rubocop / minitest / json | `1.91.0` / `6.0.6` / `3.0.2` | Dockerfile ARGs — rubygems |

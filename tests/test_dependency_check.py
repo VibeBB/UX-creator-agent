@@ -158,10 +158,10 @@ def test_aquasecurity_version_inputs_stays_inside_the_step():
 def test_workflow_tool_pins_reads_direct_download_and_trivy_inputs():
     def fetch_json(url: str):
         assert "zizmor" in url
-        return {"info": {"version": "1.31.0"}}
+        return {"info": {"version": "1.32.0"}}
 
     def tags(url: str) -> list[str]:
-        return {"rhysd/actionlint": ["v1.7.12"], "aquasecurity/trivy": ["v0.75.0"]}[
+        return {"rhysd/actionlint": ["v1.7.12"], "aquasecurity/trivy": ["v0.76.0"]}[
             url.removeprefix("https://github.com/")
         ]
 
@@ -171,8 +171,8 @@ def test_workflow_tool_pins_reads_direct_download_and_trivy_inputs():
     }
     wheel = statuses["zizmor (wheel)"]
     assert wheel.surface == "workflow-pin"
-    assert wheel.current == "1.30.1"
-    assert wheel.latest == "1.31.0"
+    assert wheel.current == "1.31.1"
+    assert wheel.latest == "1.32.0"
     assert wheel.outdated is True
     assert wheel.source == "workflow-lint.yml"
     tarball = statuses["actionlint (tarball)"]
@@ -180,8 +180,8 @@ def test_workflow_tool_pins_reads_direct_download_and_trivy_inputs():
     assert tarball.latest == "v1.7.12"
     assert tarball.outdated is False
     trivy = statuses["trivy (action input)"]
-    assert trivy.current == "v0.75.0"
-    assert trivy.latest == "v0.75.0"
+    assert trivy.current == "v0.76.0"
+    assert trivy.latest == "v0.76.0"
     assert trivy.outdated is False
 
 
