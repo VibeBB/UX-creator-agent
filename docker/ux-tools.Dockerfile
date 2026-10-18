@@ -86,6 +86,10 @@ RUN for attempt in 1 2 3 4 5; do \
             libssl3t64 \
             openssl \
             openssl-provider-legacy \
+        # Apply every Debian security fix published after the pinned base
+        # digest so the publish Trivy gate cannot trip on fixable findings
+        # (apt always pulls the latest published fix).
+        && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 upgrade -y --no-install-recommends \
         && rm -rf /var/lib/apt/lists/* \
         && break; \
         [ "$attempt" = 5 ] && exit 1; \
