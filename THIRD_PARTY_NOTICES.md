@@ -13,11 +13,11 @@ import-linked into `ux_creator` (per ADR-0004).
 | uv | `ghcr.io/astral-sh/uv:0.13.1` | Apache-2.0 / MIT | Python + package manager |
 | CPython | 3.14.x via `uv python install` | PSF-2.0 | Agent runtime |
 | IBM Semeru OpenJ9 JRE | `27.0.0.0` sha256-pinned tarball → `/opt/jre` | GPLv2 + Classpath Exception, EPL-2.0, Apache-2.0 (per component; see `license/` inside the JRE) | PlantUML runtime only — no linking |
-| PlantUML MIT jar | `v1.2026.8` sha256-pinned → `/opt/plantuml/plantuml.jar` | MIT | Diagram renderer (subprocess) |
+| PlantUML MIT jar | `v1.2026.9` sha256-pinned → `/opt/plantuml/plantuml.jar` | MIT | Diagram renderer (subprocess) |
 | Graphviz | Debian package | EPL-1.0 | PlantUML layout engine (`dot`) |
 | Mermaid + mermaid-cli | `@mermaid-js/mermaid-cli@12.0.0` | MIT | Journey/statechart render (`mmdc`) |
 | Chromium | Debian package | BSD-3-Clause | Puppeteer headless browser (`--no-sandbox` config committed) |
-| Node.js | `v26.11.1` sha256-pinned tarball → `/usr/local` | MIT | mermaid-cli + npm runtime |
+| Node.js | `v26.12.0` sha256-pinned tarball → `/usr/local` | MIT | mermaid-cli + npm runtime |
 | brace-expansion (npm vendored patch) | `5.0.12` sha256-pinned registry tarball → `/usr/local/lib/node_modules/npm/node_modules` | MIT | Publish-gate fix for npm's vendored copy |
 | undici (npm vendored patch) | `6.28.1` sha256-pinned registry tarball → `/usr/local/lib/node_modules/npm/node_modules` | MIT | Publish-gate fix for npm's vendored copy |
 | mruby | `4.0.0` sha256-pinned tarball → `/opt/mruby` | MIT | `mruby`/`mrbc` for firmware-side UX checks |
