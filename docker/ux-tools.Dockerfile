@@ -3,7 +3,7 @@ ARG UV_DIGEST=sha256:4a1f3666816dafadd20ceb71eac9a7d56d7ef30279f7d64048519ab901a
 FROM ghcr.io/astral-sh/uv:${UV_VERSION}@${UV_DIGEST} AS uv
 
 # ruby:4.0.7-slim-trixie — Debian 13 with Ruby 4.0.7 (YJIT+ZJIT).
-FROM ruby:4.0.7-slim-trixie@sha256:d10bdb076bb10d2261773ea20eadf4cdbde3346fc8f8db409856608b2d01b9c9
+FROM ruby:4.0.7-slim-trixie@sha256:ba6a00593739f9cb66de80ad2e395a93a52a13635867ee32918ba0ec083b1ff6
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG UV_VERSION=0.13.1
