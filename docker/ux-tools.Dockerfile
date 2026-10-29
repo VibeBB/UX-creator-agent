@@ -15,17 +15,17 @@ ARG PLANTUML_SHA256=835b2f2eb1d756da3f03bffdbd0baf252b4b858547a741ac8e972958a09c
 ARG MRUBY_VERSION=4.0.0
 ARG MRUBY_SHA256=e2ea271dbed14e9f2b33df773ae447b747dbc242ce2675022c0a57efea85a7b4
 ARG NODE_VERSION=26.13.0
-# sha256 of https://nodejs.org/dist/v26.12.0/node-v26.12.0-linux-x64.tar.xz
+# sha256 of https://nodejs.org/dist/v26.13.0/node-v26.13.0-linux-x64.tar.xz
 ARG NODE_SHA256=d28a96af6c38596f6d9d97c0ee531c13d238d757742387d1928de822d959e997
-# npm 11.20.0 (bundled with Node 26.12.0) vendors vulnerable deps whose
-# fixes no npm release carries yet (npm 12.2.0 ships the same versions);
+# npm bundled with Node 26.13.0 vendors vulnerable deps whose fixes no
+# npm release carries yet (npm 12.2.1 still ships undici 6.29.0);
 # patched in place below from sha256-verified registry tarballs.
 ARG BRACE_EXPANSION_VERSION=5.0.12
 # sha256 of https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.12.tgz
 ARG BRACE_EXPANSION_SHA256=ef8448ec78f20b692f04fa6d01f39b5ab34c66404bea3429f5a39c6c9e0be8b4
-ARG UNDICI_VERSION=6.28.1
-# sha256 of https://registry.npmjs.org/undici/-/undici-6.28.1.tgz
-ARG UNDICI_SHA256=e18191aac9c0ff43dac7fe9b10b7041a22d07addb7b66a6e8ac14a52a5b69b74
+ARG UNDICI_VERSION=6.29.1
+# sha256 of https://registry.npmjs.org/undici/-/undici-6.29.1.tgz
+ARG UNDICI_SHA256=29c4b8e0b2d86cb8795571c1959012ce057a14ecfd34858335f47c31e770a04f
 ARG MERMAID_CLI_VERSION=12.0.0
 # sha256 of https://registry.npmjs.org/@mermaid-js/mermaid-cli/-/mermaid-cli-12.0.0.tgz
 ARG MERMAID_CLI_SHA256=b5b43bc60c2e6bc87f7d12ab3e6e78883c799213ea5b015363fecdd5e6363c84
@@ -117,11 +117,12 @@ RUN curl --fail --location --silent --show-error \
         > /usr/share/doc/node/SOURCE
 
 # Patch npm's vendored dependencies in place: the bundled npm ships
-# brace-expansion 5.0.9 (CVE-2026-102276, CVE-2026-102278) and undici
-# 6.28.0 (CVE-2026-19534), and the publish Trivy gate counts them as
-# fixable findings. These pins follow npm's bundled tree (patch-level
-# bumps within its vendored majors), not upstream latest — drop this
-# block once NODE_VERSION's npm vendors the fixed versions.
+# vulnerable brace-expansion (CVE-2026-102276, CVE-2026-102278) and
+# undici (CVE-2026-109383, CVE-2026-109869, CVE-2026-87018), and the
+# publish Trivy gate counts them as fixable findings. These pins follow
+# npm's bundled tree (patch-level bumps within its vendored majors), not
+# upstream latest — drop this block once NODE_VERSION's npm vendors the
+# fixed versions.
 RUN npm_root=/usr/local/lib/node_modules/npm/node_modules \
     && curl --fail --location --silent --show-error \
         --retry 8 --retry-delay 20 --retry-max-time 600 --retry-all-errors \
