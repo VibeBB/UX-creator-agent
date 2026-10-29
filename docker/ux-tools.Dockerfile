@@ -1,12 +1,12 @@
-ARG UV_VERSION=0.13.1
-ARG UV_DIGEST=sha256:4a1f3666816dafadd20ceb71eac9a7d56d7ef30279f7d64048519ab901ada336
+ARG UV_VERSION=0.13.6
+ARG UV_DIGEST=sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0
 FROM ghcr.io/astral-sh/uv:${UV_VERSION}@${UV_DIGEST} AS uv
 
 # ruby:4.0.7-slim-trixie — Debian 13 with Ruby 4.0.7 (YJIT+ZJIT).
-FROM ruby:4.0.7-slim-trixie@sha256:d10bdb076bb10d2261773ea20eadf4cdbde3346fc8f8db409856608b2d01b9c9
+FROM ruby:4.0.9-slim-trixie@sha256:32fdd19c0a001077d1711f1afa6d8a0ac9d497c4eac20e47ae7e1c7f7a8c49df
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG UV_VERSION=0.13.1
+ARG UV_VERSION=0.13.6
 ARG IMAGE_REVISION=unknown
 ARG SEMERU_JRE_VERSION=27.0.0.0
 ARG SEMERU_JRE_SHA256=9e6d9c1131da124bd08eb4183f7787a9f90111fc3d62c1231976c2d37372d59e
@@ -14,9 +14,9 @@ ARG PLANTUML_VERSION=1.2026.9
 ARG PLANTUML_SHA256=835b2f2eb1d756da3f03bffdbd0baf252b4b858547a741ac8e972958a09c7f91
 ARG MRUBY_VERSION=4.0.0
 ARG MRUBY_SHA256=e2ea271dbed14e9f2b33df773ae447b747dbc242ce2675022c0a57efea85a7b4
-ARG NODE_VERSION=26.12.0
+ARG NODE_VERSION=26.13.0
 # sha256 of https://nodejs.org/dist/v26.12.0/node-v26.12.0-linux-x64.tar.xz
-ARG NODE_SHA256=fd47865ecd6391ebb431fc815e01b9135bf83ded5cf373247e9331e196b7aded
+ARG NODE_SHA256=d28a96af6c38596f6d9d97c0ee531c13d238d757742387d1928de822d959e997
 # npm 11.20.0 (bundled with Node 26.12.0) vendors vulnerable deps whose
 # fixes no npm release carries yet (npm 12.2.0 ships the same versions);
 # patched in place below from sha256-verified registry tarballs.
@@ -29,7 +29,7 @@ ARG UNDICI_SHA256=e18191aac9c0ff43dac7fe9b10b7041a22d07addb7b66a6e8ac14a52a5b69b
 ARG MERMAID_CLI_VERSION=12.0.0
 # sha256 of https://registry.npmjs.org/@mermaid-js/mermaid-cli/-/mermaid-cli-12.0.0.tgz
 ARG MERMAID_CLI_SHA256=b5b43bc60c2e6bc87f7d12ab3e6e78883c799213ea5b015363fecdd5e6363c84
-ARG RUBOCOP_VERSION=1.92.0
+ARG RUBOCOP_VERSION=1.92.2
 ARG MINITEST_VERSION=6.0.6
 ARG JSON_VERSION=3.1.0
 

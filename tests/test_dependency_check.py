@@ -69,7 +69,7 @@ def test_docker_base_resolves_ruby_slim_tags():
     status = statuses[0]
     assert status.surface == "docker-base"
     assert status.name == "ruby"
-    assert status.current == "4.0.7-slim-trixie"
+    assert status.current == "4.0.9-slim-trixie"
     assert status.latest == "4.1.0-slim-trixie"
     assert status.outdated is True
     assert status.fetch_failed is False
@@ -129,13 +129,13 @@ def test_github_actions_strips_subpath_action_refs(tmp_path: Path):
 
     def tags(url: str) -> list[str]:
         urls.append(url)
-        return ["v4.39.0"]
+        return ["v4.39.1"]
 
     statuses = check_github_actions(tmp_path, list_remote_tags=tags)
     assert urls == ["https://github.com/github/codeql-action"]
     status = next(status for status in statuses if status.name == "github/codeql-action")
     assert status.current == "v4.38.2"
-    assert status.latest == "v4.39.0"
+    assert status.latest == "v4.39.1"
     assert status.outdated is True
 
 
@@ -161,7 +161,7 @@ def test_workflow_tool_pins_reads_direct_download_and_trivy_inputs():
         return {"info": {"version": "1.32.0"}}
 
     def tags(url: str) -> list[str]:
-        return {"rhysd/actionlint": ["v1.7.12"], "aquasecurity/trivy": ["v0.76.0"]}[
+        return {"rhysd/actionlint": ["v1.7.12"], "aquasecurity/trivy": ["v0.76.1"]}[
             url.removeprefix("https://github.com/")
         ]
 
@@ -180,8 +180,8 @@ def test_workflow_tool_pins_reads_direct_download_and_trivy_inputs():
     assert tarball.latest == "v1.7.12"
     assert tarball.outdated is False
     trivy = statuses["trivy (action input)"]
-    assert trivy.current == "v0.76.0"
-    assert trivy.latest == "v0.76.0"
+    assert trivy.current == "v0.76.1"
+    assert trivy.latest == "v0.76.1"
     assert trivy.outdated is False
 
 
