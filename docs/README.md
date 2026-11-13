@@ -63,3 +63,4 @@ protocols, operations, and accepted design decisions.
 - [ADR-0020](adr/0020-structural-coverage.md) — structural coverage gate (C0, C1, C2, MC/DC, boundaries)
 - [ADR-0021](adr/0021-vrp-v2-and-family-hub.md) — VRP v2 port and the UX family hub (aggregation, concern cycles)
 - [ADR-0022](adr/0022-mruby-device-api-spec.md) — UX-authored `*.mruby-api.json` device API specs, rubyness gate, API doc
+- [ADR-0023](adr/0023-jsonschema-tool-input-validation.md) — `jsonschema` restores the mcp 1.x inputSchema validation mcp 2.x dropped

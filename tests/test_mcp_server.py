@@ -51,6 +51,39 @@ def test_handler_exception_is_a_typed_transport_error(
     assert payload["error_type"] == "RuntimeError"
 
 
+def test_missing_required_argument_is_a_validation_error() -> None:
+    result = asyncio.run(_call_tool("ux_render", {}))
+    assert isinstance(result, types.CallToolResult)
+    assert result.is_error is True
+    content = result.content
+    assert content and isinstance(content[0], types.TextContent)
+    assert "Input validation error" in content[0].text
+    assert "'dir'" in content[0].text
+
+
+def test_extra_property_is_a_validation_error() -> None:
+    result = asyncio.run(
+        _call_tool("ux_doctor", {"unexpected": "value"})
+    )
+    assert isinstance(result, types.CallToolResult)
+    assert result.is_error is True
+    content = result.content
+    assert content and isinstance(content[0], types.TextContent)
+    assert "Input validation error" in content[0].text
+
+
+def test_wrong_argument_type_is_a_validation_error() -> None:
+    result = asyncio.run(
+        _call_tool("ux_render", {"dir": 42})
+    )
+    assert isinstance(result, types.CallToolResult)
+    assert result.is_error is True
+    content = result.content
+    assert content and isinstance(content[0], types.TextContent)
+    assert "Input validation error" in content[0].text
+    assert "'dir'" in content[0].text
+
+
 def test_gate_validation_failure_is_not_a_transport_error() -> None:
     result = asyncio.run(_call_tool("ux_validate_contract", {"contract": {}}))
     assert isinstance(result, types.CallToolResult)
