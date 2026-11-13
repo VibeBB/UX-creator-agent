@@ -348,6 +348,7 @@ def test_check_bundled_undici_reports_required_swap(tmp_path: Path):
     assert "still required" in bundled.note
     assert not by_name["undici"].outdated
 
+
 def test_check_bundled_undici_resolves_npm_via_node_index(tmp_path: Path):
     (tmp_path / "docker").mkdir()
     (tmp_path / "docker" / "tools.Dockerfile").write_text(
@@ -371,4 +372,3 @@ def test_check_bundled_undici_resolves_npm_via_node_index(tmp_path: Path):
     assert bundled.latest == "6.29.0 (node v9.9.9 npm 1.2.3)"
     assert not bundled.outdated
     assert "still required" in bundled.note
-
