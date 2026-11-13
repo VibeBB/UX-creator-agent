@@ -1,24 +1,23 @@
-ARG UV_VERSION=0.13.6
-ARG UV_DIGEST=sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0
+ARG UV_VERSION=0.13.8
+ARG UV_DIGEST=sha256:5cc1805e2426484abca4ad46ea783bab281fdb225fd82d8ce6d66a81254bac85
 FROM ghcr.io/astral-sh/uv:${UV_VERSION}@${UV_DIGEST} AS uv
 
 # ruby:4.0.7-slim-trixie — Debian 13 with Ruby 4.0.7 (YJIT+ZJIT).
 FROM ruby:4.0.9-slim-trixie@sha256:32fdd19c0a001077d1711f1afa6d8a0ac9d497c4eac20e47ae7e1c7f7a8c49df
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG UV_VERSION=0.13.6
+ARG UV_VERSION=0.13.8
 ARG IMAGE_REVISION=unknown
-ARG SEMERU_JRE_VERSION=27.0.0.0
-ARG SEMERU_JRE_SHA256=9e6d9c1131da124bd08eb4183f7787a9f90111fc3d62c1231976c2d37372d59e
-ARG PLANTUML_VERSION=1.2026.9
-ARG PLANTUML_SHA256=835b2f2eb1d756da3f03bffdbd0baf252b4b858547a741ac8e972958a09c7f91
+ARG SEMERU_JRE_VERSION=27.0.1.0
+ARG SEMERU_JRE_SHA256=484ca80a21a1e967889c39d66c1b8dac518ca08070d6e1a2829e3411df4c36f1
+ARG PLANTUML_VERSION=1.2026.10
+ARG PLANTUML_SHA256=30a66b81a16127fd3ec560992f31964fe9ae3f1233c614ef4558a4558a21489e
 ARG MRUBY_VERSION=4.0.0
 ARG MRUBY_SHA256=e2ea271dbed14e9f2b33df773ae447b747dbc242ce2675022c0a57efea85a7b4
-ARG NODE_VERSION=26.13.0
-# sha256 of https://nodejs.org/dist/v26.13.0/node-v26.13.0-linux-x64.tar.xz
-ARG NODE_SHA256=d28a96af6c38596f6d9d97c0ee531c13d238d757742387d1928de822d959e997
-# npm bundled with Node 26.13.0 vendors vulnerable deps whose fixes no
-# npm release carries yet (npm 12.2.1 still ships undici 6.29.0);
+ARG NODE_VERSION=26.13.1
+# sha256 of https://nodejs.org/dist/v26.13.1/node-v26.13.1-linux-x64.tar.xz
+ARG NODE_SHA256=5c063e46bab0fbc1c17cc445d7ff129cbdcd0471be6ed83b6ab864f8143bc864
+# npm bundled with Node 26.13.1 (npm 11.20.0) vendors vulnerable deps;
 # patched in place below from sha256-verified registry tarballs.
 ARG BRACE_EXPANSION_VERSION=5.0.12
 # sha256 of https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.12.tgz
@@ -26,11 +25,11 @@ ARG BRACE_EXPANSION_SHA256=ef8448ec78f20b692f04fa6d01f39b5ab34c66404bea3429f5a39
 ARG UNDICI_VERSION=6.29.1
 # sha256 of https://registry.npmjs.org/undici/-/undici-6.29.1.tgz
 ARG UNDICI_SHA256=29c4b8e0b2d86cb8795571c1959012ce057a14ecfd34858335f47c31e770a04f
-ARG MERMAID_CLI_VERSION=12.0.0
-# sha256 of https://registry.npmjs.org/@mermaid-js/mermaid-cli/-/mermaid-cli-12.0.0.tgz
-ARG MERMAID_CLI_SHA256=b5b43bc60c2e6bc87f7d12ab3e6e78883c799213ea5b015363fecdd5e6363c84
+ARG MERMAID_CLI_VERSION=12.2.0
+# sha256 of https://registry.npmjs.org/@mermaid-js/mermaid-cli/-/mermaid-cli-12.2.0.tgz
+ARG MERMAID_CLI_SHA256=5aea6d89f3c54cfdff969430e1bcdc0212459806d74fd450d4a36d3144869a3b
 ARG RUBOCOP_VERSION=1.92.2
-ARG MINITEST_VERSION=6.0.6
+ARG MINITEST_VERSION=6.1.0
 ARG JSON_VERSION=3.1.0
 
 # Fail the build when the left side of a verification pipe (curl|sha256sum)

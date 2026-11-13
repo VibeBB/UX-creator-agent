@@ -4,6 +4,28 @@ This document records the pinned versions in use, where they come from, and
 the adoption decision for each. Update it in the same change that touches
 `pyproject.toml`, a workflow pin, or a new external source.
 
+## 2026-11-14 update (sdk 1.62.0, mcp 2.3.0, uv 0.13.8, node 26.13.1, semeru 27.0.1.0)
+
+sdk `==1.59.0` -> `==1.62.0` (sdk + tools), uv `==0.13.6` -> `==0.13.8`,
+ruff `0.17.3` -> `0.17.5`, mcp `>=1.29,<2` -> `>=2` (the mcp-2.x deferral
+was consumed: SDK 1.62.0 requires fastmcp>=4 whose fastmcp-slim[client]
+pins mcp>=2, making the `<2` cap unsatisfiable; `mcp_server.py` and its
+tests migrated to the v2 API), trivy `v0.76.1` -> `v0.76.2`, codeql-action
+v4.39.1 -> v4.39.3, harden-runner v2.22.3 -> v2.22.4, docker/login-action
+v4.7.0 -> v4.8.0, zizmor `1.31.1` -> `1.32.0`; `pydantic` floated to
+2.14.3 in the lock. Full changelog review:
+[SDK v1.62.0 feature evaluation](research/sdk-v1.62.0-feature-evaluation.md).
+Deferrals: mcp entry removed (adopted); Python 3.15 default remains.
+
+ux-tools image: Semeru JRE `27.0.0.0` -> `27.0.1.0`, PlantUML `1.2026.9`
+-> `1.2026.10`, Node.js `26.13.0` -> `26.13.1`, mermaid-cli `12.0.0` ->
+`12.2.0`, minitest `6.0.6` -> `6.1.0` (sha256/digest pins re-verified).
+The undici/brace-expansion npm swaps stay: Node 26.13.1 bundles npm
+11.20.0, which still vendors undici 6.28.0 and brace-expansion 5.0.9 —
+`check_dependency_updates.py` now resolves the npm under test from
+`NODE_VERSION` via the nodejs.org release index instead of comparing
+against the latest npm release.
+
 ## 2026-10-29 update (sdk 1.59.0, uv 0.13.6, node 26.13.0, rubocop 1.92.2, ruby 4.0.9)
 
 sdk `==1.55.1` -> `==1.59.0` (sdk + tools), uv `==0.13.1` -> `==0.13.6`,

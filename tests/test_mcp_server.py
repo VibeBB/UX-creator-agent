@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import pytest
 from mcp import types
@@ -13,7 +13,9 @@ from ux_creator.sisters import SISTERS
 
 
 async def _call_tool(name: str, arguments: dict[str, Any]) -> object:
-    return await mcp_server.call_tool(name, arguments)
+    return await mcp_server.call_tool(
+        None, mcp_server.types.CallToolRequestParams(name=name, arguments=arguments)
+    )
 
 
 def _payload(result: types.CallToolResult) -> dict[str, Any]:
@@ -30,7 +32,7 @@ def _dispatch_payload(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
 def test_unknown_tool_is_a_transport_error() -> None:
     result = asyncio.run(_call_tool("ux_unknown", {}))
     assert isinstance(result, types.CallToolResult)
-    assert result.isError is True
+    assert result.is_error is True
     assert _payload(result) == {"verdict": "fail", "detail": "unknown tool ux_unknown"}
 
 
@@ -43,16 +45,45 @@ def test_handler_exception_is_a_typed_transport_error(
     monkeypatch.setattr(mcp_server, "dispatch_tool", fail)
     result = asyncio.run(_call_tool("ux_doctor", {}))
     assert isinstance(result, types.CallToolResult)
-    assert result.isError is True
+    assert result.is_error is True
     payload = _payload(result)
     assert payload["detail"] == "ux_doctor error: handler failed"
     assert payload["error_type"] == "RuntimeError"
 
 
+def test_missing_required_argument_is_a_validation_error() -> None:
+    result = asyncio.run(_call_tool("ux_render", {}))
+    assert isinstance(result, types.CallToolResult)
+    assert result.is_error is True
+    content = result.content
+    assert content and isinstance(content[0], types.TextContent)
+    assert "Input validation error" in content[0].text
+    assert "'dir'" in content[0].text
+
+
+def test_extra_property_is_a_validation_error() -> None:
+    result = asyncio.run(_call_tool("ux_doctor", {"unexpected": "value"}))
+    assert isinstance(result, types.CallToolResult)
+    assert result.is_error is True
+    content = result.content
+    assert content and isinstance(content[0], types.TextContent)
+    assert "Input validation error" in content[0].text
+
+
+def test_wrong_argument_type_is_a_validation_error() -> None:
+    result = asyncio.run(_call_tool("ux_render", {"dir": 42}))
+    assert isinstance(result, types.CallToolResult)
+    assert result.is_error is True
+    content = result.content
+    assert content and isinstance(content[0], types.TextContent)
+    assert "Input validation error" in content[0].text
+    assert "'dir'" in content[0].text
+
+
 def test_gate_validation_failure_is_not_a_transport_error() -> None:
     result = asyncio.run(_call_tool("ux_validate_contract", {"contract": {}}))
-    assert isinstance(result, list)
-    content = cast(list[types.ContentBlock], result)
+    assert isinstance(result, types.CallToolResult)
+    content = result.content
     assert content and isinstance(content[0], types.TextContent)
     payload = json.loads(content[0].text)
     assert payload["verdict"] == "fail"
@@ -63,7 +94,7 @@ def test_path_escape_is_a_transport_error(monkeypatch: pytest.MonkeyPatch, tmp_p
     monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
     result = asyncio.run(_call_tool("ux_render", {"dir": "../outside"}))
     assert isinstance(result, types.CallToolResult)
-    assert result.isError is True
+    assert result.is_error is True
     payload = _payload(result)
     assert payload["error_type"] == "ValueError"
     assert "outside the workspace" in payload["detail"]
@@ -80,21 +111,21 @@ def test_record_tools_are_declared_append_only() -> None:
     for name in append_tools:
         annotations = tools[name].annotations
         assert annotations is not None
-        assert annotations.readOnlyHint is False
-        assert annotations.destructiveHint is False
-        assert annotations.idempotentHint is False
+        assert annotations.read_only_hint is False
+        assert annotations.destructive_hint is False
+        assert annotations.idempotent_hint is False
     status_annotations = tools["ux_records_status"].annotations
     assert status_annotations is not None
-    assert status_annotations.readOnlyHint is True
+    assert status_annotations.read_only_hint is True
     delegate_annotations = tools["ux_delegate"].annotations
     assert delegate_annotations is not None
-    assert delegate_annotations.readOnlyHint is True
-    assert delegate_annotations.destructiveHint is False
+    assert delegate_annotations.read_only_hint is True
+    assert delegate_annotations.destructive_hint is False
     render_annotations = tools["ux_render"].annotations
     assert render_annotations is not None
-    assert render_annotations.readOnlyHint is False
-    assert render_annotations.destructiveHint is False
-    assert render_annotations.idempotentHint is True
+    assert render_annotations.read_only_hint is False
+    assert render_annotations.destructive_hint is False
+    assert render_annotations.idempotent_hint is True
 
 
 def test_mcp_tools_have_explicit_descriptions() -> None:

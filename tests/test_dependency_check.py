@@ -163,7 +163,7 @@ def test_workflow_tool_pins_reads_direct_download_and_trivy_inputs():
         return {"info": {"version": "1.32.0"}}
 
     def tags(url: str) -> list[str]:
-        return {"rhysd/actionlint": ["v1.7.12"], "aquasecurity/trivy": ["v0.76.1"]}[
+        return {"rhysd/actionlint": ["v1.7.12"], "aquasecurity/trivy": ["v0.76.2"]}[
             url.removeprefix("https://github.com/")
         ]
 
@@ -173,17 +173,17 @@ def test_workflow_tool_pins_reads_direct_download_and_trivy_inputs():
     }
     wheel = statuses["zizmor (wheel)"]
     assert wheel.surface == "workflow-pin"
-    assert wheel.current == "1.31.1"
+    assert wheel.current == "1.32.0"
     assert wheel.latest == "1.32.0"
-    assert wheel.outdated is True
+    assert wheel.outdated is False
     assert wheel.source == "workflow-lint.yml"
     tarball = statuses["actionlint (tarball)"]
     assert tarball.current == "1.7.12"
     assert tarball.latest == "v1.7.12"
     assert tarball.outdated is False
     trivy = statuses["trivy (action input)"]
-    assert trivy.current == "v0.76.1"
-    assert trivy.latest == "v0.76.1"
+    assert trivy.current == "v0.76.2"
+    assert trivy.latest == "v0.76.2"
     assert trivy.outdated is False
 
 
@@ -347,3 +347,28 @@ def test_check_bundled_undici_reports_required_swap(tmp_path: Path):
     assert not bundled.outdated
     assert "still required" in bundled.note
     assert not by_name["undici"].outdated
+
+
+def test_check_bundled_undici_resolves_npm_via_node_index(tmp_path: Path):
+    (tmp_path / "docker").mkdir()
+    (tmp_path / "docker" / "tools.Dockerfile").write_text(
+        "FROM scratch\nARG NODE_VERSION=9.9.9\nARG UNDICI_VERSION=6.29.1\n",
+        encoding="utf-8",
+    )
+
+    def fetch_json(url: str) -> Any:
+        if url == "https://nodejs.org/dist/index.json":
+            return [{"version": "v9.9.8", "npm": "1.0.0"}, {"version": "v9.9.9", "npm": "1.2.3"}]
+        if url == "https://registry.npmjs.org/undici":
+            return {"versions": {"6.29.1": {}}}
+        raise AssertionError(url)
+
+    def fetch_bytes(url: str) -> bytes:
+        assert url == "https://registry.npmjs.org/npm/-/npm-1.2.3.tgz"
+        return _npm_tarball("6.29.0")
+
+    statuses = check_bundled_undici(tmp_path, fetch_json=fetch_json, fetch_bytes=fetch_bytes)
+    bundled = {s.name: s for s in statuses}["npm-bundled-undici"]
+    assert bundled.latest == "6.29.0 (node v9.9.9 npm 1.2.3)"
+    assert not bundled.outdated
+    assert "still required" in bundled.note

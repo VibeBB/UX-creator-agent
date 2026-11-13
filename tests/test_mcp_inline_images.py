@@ -23,14 +23,16 @@ EXAMPLE = Path(__file__).resolve().parents[1] / "examples/smart-kettle/smart-ket
 
 
 async def _call_tool(name: str, arguments: dict[str, Any]) -> object:
-    return await mcp_server.call_tool(name, arguments)
+    return await mcp_server.call_tool(
+        None, mcp_server.types.CallToolRequestParams(name=name, arguments=arguments)
+    )
 
 
 def _content_payload(
     result: object,
 ) -> tuple[dict[str, Any], list[types.ContentBlock]]:
-    assert isinstance(result, list)
-    content = cast(list[types.ContentBlock], result)
+    assert isinstance(result, types.CallToolResult)
+    content = result.content
     assert content and isinstance(content[0], types.TextContent)
     return cast(dict[str, Any], json.loads(content[0].text)), content
 
@@ -215,5 +217,5 @@ def test_liaison_status_attaches_answered_image_artifacts(
         }
     ]
     assert len(images) == 1
-    assert images[0].mimeType == "image/jpeg"
+    assert images[0].mime_type == "image/jpeg"
     assert base64.b64decode(images[0].data) == image_bytes
