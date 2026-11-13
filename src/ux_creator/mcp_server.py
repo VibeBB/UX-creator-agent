@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from mcp import types
-from mcp.server import Server
+from mcp.server import Server, ServerRequestContext
 from mcp.server.lowlevel import NotificationOptions
 from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
@@ -64,8 +64,6 @@ from .sisters import PRODUCT_STAGES, TARGET_AGENTS
 from .vrp_hub import escalate as records_escalate
 from .vrp_hub import hub as records_hub
 from .workspace import workspace_path
-
-server: Server = Server(f"ux-mcp/{__version__}")
 
 _SCHEMAS: dict[str, dict[str, Any]] = {
     "ux_record_decision": DecisionInput.model_json_schema(),
@@ -426,7 +424,7 @@ def _render_content(
                             types.ImageContent(
                                 type="image",
                                 data=base64.b64encode(data).decode("ascii"),
-                                mimeType=mime,
+                                mime_type=mime,
                             )
                         )
             except OSError:
@@ -476,22 +474,23 @@ def tool_specs() -> list[types.Tool]:
             types.Tool(
                 name=name,
                 description=_DESCRIPTIONS[name],
-                inputSchema=schema,
+                input_schema=schema,
                 annotations=types.ToolAnnotations(
                     title=name,
-                    readOnlyHint=name not in _WRITE_TOOLS,
-                    destructiveHint=False,
-                    idempotentHint=name not in _APPEND_RECORD_TOOLS,
-                    openWorldHint=False,
+                    read_only_hint=name not in _WRITE_TOOLS,
+                    destructive_hint=False,
+                    idempotent_hint=name not in _APPEND_RECORD_TOOLS,
+                    open_world_hint=False,
                 ),
             )
         )
     return specs
 
 
-@server.list_tools()
-async def list_tools() -> list[types.Tool]:
-    return tool_specs()
+async def list_tools(
+    ctx: ServerRequestContext | None, params: types.PaginatedRequestParams | None
+) -> types.ListToolsResult:
+    return types.ListToolsResult(tools=tool_specs())
 
 
 async def dispatch_tool(
@@ -761,14 +760,14 @@ async def dispatch_tool(
     return {"verdict": FAIL, "detail": f"unknown tool {name}"}
 
 
-@server.call_tool()
 async def call_tool(
-    name: str, arguments: dict[str, Any]
-) -> types.CallToolResult | list[types.ContentBlock]:
+    ctx: ServerRequestContext | None, params: types.CallToolRequestParams
+) -> types.CallToolResult:
+    name, arguments = params.name, params.arguments or {}
     if name not in _SCHEMAS:
         return types.CallToolResult(
             content=_text({"verdict": FAIL, "detail": f"unknown tool {name}"}),
-            isError=True,
+            is_error=True,
         )
     try:
         payload = await dispatch_tool(name, arguments or {})
@@ -781,9 +780,9 @@ async def call_tool(
                     "error_type": type(exc).__name__,
                 }
             ),
-            isError=True,
+            is_error=True,
         )
-    return payload if isinstance(payload, list) else _text(payload)
+    return types.CallToolResult(content=payload if isinstance(payload, list) else _text(payload))
 
 
 async def _run() -> None:
@@ -800,6 +799,9 @@ async def _run() -> None:
                 ),
             ),
         )
+
+
+server: Server = Server(f"ux-mcp/{__version__}", on_list_tools=list_tools, on_call_tool=call_tool)
 
 
 def main() -> None:
