@@ -62,9 +62,7 @@ def test_missing_required_argument_is_a_validation_error() -> None:
 
 
 def test_extra_property_is_a_validation_error() -> None:
-    result = asyncio.run(
-        _call_tool("ux_doctor", {"unexpected": "value"})
-    )
+    result = asyncio.run(_call_tool("ux_doctor", {"unexpected": "value"}))
     assert isinstance(result, types.CallToolResult)
     assert result.is_error is True
     content = result.content
@@ -73,9 +71,7 @@ def test_extra_property_is_a_validation_error() -> None:
 
 
 def test_wrong_argument_type_is_a_validation_error() -> None:
-    result = asyncio.run(
-        _call_tool("ux_render", {"dir": 42})
-    )
+    result = asyncio.run(_call_tool("ux_render", {"dir": 42}))
     assert isinstance(result, types.CallToolResult)
     assert result.is_error is True
     content = result.content
