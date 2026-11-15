@@ -80,3 +80,9 @@ Always check `identity_status` before using the claimed owner or revision.
 the image nor that its review was accepted. This metadata describes the
 returned image; original-image ancestry for crops/tiles and downstream
 review-record/Stop integration remain separate work.
+
+The image-observation hook checks actual inline bytes against attachment
+metadata and preserves the producer claim and observer session. Text-only
+paths and withheld images do not count as delivered images. Returned-byte
+hashes survive later file rewrites; unassociated bytes retain an unknown
+identity and a null path. See the [observation boundary research](research/session-reassessment-2026-11-15/image-observation-delivery.md).

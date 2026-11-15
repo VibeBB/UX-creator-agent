@@ -54,7 +54,8 @@ LLM inspection, GUI behavior, or product acceptance.
 
 This is producer and delivered-image identity, not a completed image-lineage
 protocol. Explicit crop/tile parent revisions, multiple-source lineage,
-reviewer/source revision binding, persisted observation propagation, and
-shared Stop ownership logic still need implementation. A producer claim is
+reviewer/source revision binding, and shared Stop ownership logic still need
+implementation. [Observation propagation](image-observation-delivery.md)
+preserves returned bytes and producer claims at the hook boundary. A producer claim is
 advisory metadata; it is not cryptographic authentication. Existing artifact
 review obligations and deterministic gate verdicts remain unchanged.
