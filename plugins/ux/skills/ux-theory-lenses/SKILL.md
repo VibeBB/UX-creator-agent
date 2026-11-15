@@ -1,7 +1,7 @@
 ---
 name: ux-theory-lenses
 description: Theory lenses for UX decisions — Apple HIG, game design (MDA, flow, core loop, feedback, onboarding, SDT), JTBD/ODI, CJM/service blueprint, QCD.
-version: 0.1.0
+version: 1.0.0
 license: BSD-3-Clause
 triggers:
   - HIG

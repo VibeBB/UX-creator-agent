@@ -1,7 +1,7 @@
 ---
 name: ux-cmf
 description: Industrial design / CMF authoring — form language, palette roles, materials, finishes, per-surface parts, and markings in the UX contract's cmf block, with deterministic coverage and contrast gates.
-version: 0.1.0
+version: 1.0.0
 license: BSD-3-Clause
 triggers:
   - cmf

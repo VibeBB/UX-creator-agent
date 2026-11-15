@@ -1,7 +1,7 @@
 ---
 name: ux-diagrams
 description: Projection formats emitted by ux-creator — Mermaid journey/state, PlantUML state + Salt wireframe, XState v5, SCXML, Storybook story requirements, and how Figma fits.
-version: 0.1.0
+version: 1.0.0
 license: BSD-3-Clause
 triggers:
   - mermaid

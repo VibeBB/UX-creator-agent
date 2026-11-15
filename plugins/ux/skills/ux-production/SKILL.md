@@ -1,7 +1,7 @@
 ---
 name: ux-production
 description: Producer / orchestrator rules for the product-level <product>.production.json plan — stages, owners, dependencies, decisions, blockers, sibling request tracking, and the evidence loop back into design.
-version: 0.1.0
+version: 1.0.0
 license: BSD-3-Clause
 triggers:
   - production plan

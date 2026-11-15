@@ -1,7 +1,7 @@
 ---
 name: ux-jtbd
 description: Jobs-to-be-done and ODI opportunity scoring — how to write jobs, journeys, and the opportunity table.
-version: 0.1.0
+version: 1.0.0
 license: BSD-3-Clause
 triggers:
   - JTBD
