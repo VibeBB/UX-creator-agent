@@ -42,17 +42,27 @@ against a writer who can replace files and recompute hashes.
 | Action | Additional inputs | Behavior |
 | --- | --- | --- |
 | `status` | None | Deterministic inspection; never consumes an attempt or rewrites the checkpoint. |
-| `start` | None | Reserves one eligible pair, increments its attempts, and returns `delegate`. Primary precedes blind. |
+| `start` | None | Recovers intact records from stopped attempts, then reserves an eligible pair if needed. Primary precedes blind. |
 | `collect` | `pair_id`, `review_event_id` | Accepts only the active pair's newly written, source/role/session/delivery-bound VRP record. |
 | `pause` | `reason` | Retains an explicit provider, timeout, budget, cancellation, missing-image or interruption gap; attempts remain consumed. |
 | `tiebreak` | An image's primary or blind `pair_id` | Adds one tiebreak pair only after an intact coordinator reconciliation records a round-1 disagreement. |
 
-Pass the returned `delegate` fields to native `task_tool_set`. Do not add
+If `delegate` is non-null, pass its fields to native `task_tool_set`. Do not add
 `resume` or send the work to an old child. Both reviewer definitions use
 20 iterations and native budget 1.5. Wait for the child; task success alone
 does not collect evidence. Submit the returned event ID with `collect`.
-An old review predating `start`, another role, another path, another
+An old review predating the pair's first `start`, another role, another path, another
 coordinator, or an unbound image delivery cannot complete the pair.
+
+After a stopped child wrote its record but lost its final reply, pause with
+the interruption reason and call `start` again. The collector revalidates
+uncollected evidence from that pair's first reservation before spending
+another attempt. A unique intact match is collected without a new attempt,
+including after the second attempt; ambiguous matches fail closed. It may
+then reserve the next pair, or return `collected` with `delegate: null`.
+The original sequence boundary and all attempt-gap reasons survive retries.
+Valid event-only reviews remain in the sequence history but cannot complete
+an image-review pair; they do not block unrelated image collection.
 
 Only one pair may be active in a checkpoint, with at most two fresh attempts
 per image/checklist/role. A failed collection leaves the pair active until

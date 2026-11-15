@@ -129,6 +129,119 @@ def _collect(root: Path, started: dict[str, Any], event: str) -> dict[str, Any]:
     return _call(root, "collect", pair_id=_active(started)["id"], review_event_id=event)
 
 
+def test_event_only_review_preserves_history_without_blocking_image_collection(
+    workspace: Path,
+) -> None:
+    event = _write_review(
+        workspace, "primary", image_path=None, source_event_id="a" * 64, coordinator_session_id=None
+    )
+    assert _create(workspace)["status"] == "paused"
+    assert _call(workspace, "status")["status"] == "paused"
+    started = _call(workspace, "start")
+    assert _active(started)["after_sequence"] == 1
+    with pytest.raises(ValueError, match="review evidence unknown"):
+        _collect(workspace, started, event)
+    assert _call(workspace, "status")["status"] == "running"
+
+
+def _start_role(root: Path, role: str) -> tuple[dict[str, Any], str | None]:
+    _create(root)
+    started = _call(root, "start")
+    if role == "primary":
+        return started, None
+    primary = _write_review(root, "primary")
+    _collect(root, started, primary)
+    started = _call(root, "start")
+    if role == "blind":
+        return started, primary
+    blind = _write_review(
+        root,
+        "blind",
+        primary,
+        findings=[{"category": "spacing", "severity": "error", "note": "Idle label overlap"}],
+    )
+    _collect(root, started, blind)
+    assert (
+        record_reconcile({"session_id": "coordinator", "reviews": [primary, blind]}, root)[
+            "record"
+        ]["outcome"]
+        == "disagree"
+    )
+    _call(root, "tiebreak", pair_id=_active(started)["id"])
+    return _call(root, "start"), primary
+
+
+@pytest.mark.parametrize("role", ["primary", "blind", "tiebreak"])
+@pytest.mark.parametrize("attempt", [1, 2])
+def test_start_recovers_written_evidence_after_interruption_without_spending_an_attempt(
+    workspace: Path, role: str, attempt: int
+) -> None:
+    started, primary = _start_role(workspace, role)
+    if attempt == 2:
+        _call(workspace, "pause", reason="first attempt timed out before writing")
+        started = _call(workspace, "start")
+    event = _write_review(workspace, role, primary)
+    _call(workspace, "pause", reason="record written, final native reply interrupted")
+    recovered = _call(workspace, "start")
+    pair = next(p for p in recovered["pairs"] if p["id"] == _active(started)["id"])
+    assert pair["review_event_id"] == event and pair["attempts"] == attempt
+    assert pair["after_sequence"] == _active(started)["after_sequence"]
+    assert not pair["active"] and pair["gap"] is None
+    assert len(pair["attempt_gaps"]) == attempt
+    assert recovered["acceptance"] == "unknown"
+    if role == "primary":
+        assert _active(recovered)["role"] == "blind"
+    else:
+        assert recovered["status"] == "collected" and recovered["delegate"] is None
+    assert _call(workspace, "status")["pairs"] == recovered["pairs"]
+
+
+def test_retry_recovery_rejects_evidence_from_before_the_first_reservation(workspace: Path) -> None:
+    event = _write_review(workspace, "primary")
+    _create(workspace)
+    _call(workspace, "start")
+    _call(workspace, "pause", reason="interrupted without writing a fresh record")
+    retry = _call(workspace, "start")
+    assert _active(retry)["attempts"] == 2
+    with pytest.raises(ValueError, match="review evidence unknown"):
+        _collect(workspace, retry, event)
+
+
+def test_retry_recovery_rejects_ambiguous_matching_records(workspace: Path) -> None:
+    _start_role(workspace, "primary")
+    _write_review(workspace, "primary", session_id="first-child")
+    _write_review(
+        workspace,
+        "primary",
+        session_id="second-child",
+        impression=(
+            "Idle names the token used to ground this second synthetic inspection in its source. "
+            "A separate narrative distinguishes two structurally valid primary records "
+            "so recovery must refuse to choose between them without additional information. "
+            "Neither entry establishes perceptual quality because the underlying bytes are only "
+            "a test fixture for event identity and coordinator relationships. "
+            "The expected outcome is an ambiguity error with no attempt consumed or state edited."
+        ),
+    )
+    _call(workspace, "pause", reason="multiple returned records need investigation")
+    checkpoint = workspace / "observations/ux/review-checkpoints/test.json"
+    before = checkpoint.read_bytes()
+    with pytest.raises(ValueError, match="ambiguous uncollected review evidence"):
+        _call(workspace, "start")
+    assert checkpoint.read_bytes() == before
+
+
+def test_retry_recovery_cannot_promote_a_record_without_delivery_evidence(workspace: Path) -> None:
+    _start_role(workspace, "primary")
+    _write_review(workspace, "primary")
+    _call(workspace, "pause", reason="reply interrupted after writing")
+    (workspace / "observations/ux/image-observations.jsonl").unlink()
+    retry = _call(workspace, "start")
+    assert _active(retry)["attempts"] == 2
+    assert not any(p["review_event_id"] for p in retry["pairs"])
+    assert retry["acceptance"] == "unknown"
+
+
 def test_restart_reuses_collected_sha_role_and_blind_brief_is_opaque(workspace: Path) -> None:
     assert _create(workspace)["acceptance"] == "unknown"
     started = _call(workspace, "start")

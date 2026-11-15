@@ -90,8 +90,8 @@ class _Review(_Strict):
     event_id: str
     sequence: int
     session_id: str
-    image_path: str
-    image_sha256: str
+    image_path: str | None = None
+    image_sha256: str | None = None
     checklist: str
     reviewer: Role
     coordinator_session_id: str | None = None
@@ -143,6 +143,7 @@ def _reviews(base: Path) -> dict[str, _Review]:
     )
     if problems:
         raise ValueError("review evidence unknown: " + problems[0])
+    # Event-only records retain their sequence but cannot complete an image pair.
     # Legacy records without native session/delivery cannot complete this collection.
     return {
         str(row["event_id"]): _Review.model_validate(
@@ -164,7 +165,8 @@ def _evidence_gap(
     if review is None:
         return "missing_review_evidence"
     if (
-        review.sequence <= pair.after_sequence
+        not review.image_path
+        or review.sequence <= pair.after_sequence
         or workspace_path(review.image_path, base) != base / pair.image.path
         or review.image_sha256 != pair.image.sha256
         or review.checklist != pair.checklist
@@ -236,6 +238,26 @@ def _eligible(state: _Checkpoint) -> list[_Pair]:
         and p.attempts < state.max_attempts_per_pair
         and (p.role == "primary" or _primary(state, p).review_event_id)
     ]
+
+
+def _recover(state: _Checkpoint, reviews: dict[str, _Review], base: Path) -> _Checkpoint:
+    """Collect intact records left by stopped children before spending another attempt."""
+    for pair in state.pairs:
+        if pair.review_event_id or pair.attempts == 0:
+            continue
+        candidates: list[_Pair] = []
+        for event_id in reviews:
+            candidate = pair.model_copy(update={"review_event_id": event_id})
+            if not _evidence_gap(state, candidate, reviews, base):
+                candidates.append(candidate)
+        if len(candidates) > 1:
+            raise ValueError("ambiguous uncollected review evidence: " + pair.id)
+        if candidates:
+            recovered = candidates[0].model_copy(update={"gap": None})
+            state = state.model_copy(
+                update={"pairs": [recovered if p == pair else p for p in state.pairs]}
+            )
+    return state
 
 
 def _brief(state: _Checkpoint, pair: _Pair) -> dict[str, str]:
@@ -348,21 +370,32 @@ def review_checkpoint(
         if request.action in {"start", "collect", "tiebreak"} and gaps:
             raise ValueError("checkpoint blocked: " + "; ".join(gaps))
         if request.action == "start":
-            if active or not _eligible(state):
-                raise ValueError("no eligible pair: active child, exhausted attempts or collected")
-            pair = _eligible(state)[0]
-            active = pair.model_copy(
-                update={
-                    "active": True,
-                    "attempts": pair.attempts + 1,
-                    "after_sequence": max((r.sequence for r in reviews.values()), default=0),
-                    "gap": None,
-                }
-            )
-            state = state.model_copy(
-                update={"pairs": [active if p == pair else p for p in state.pairs]}
-            )
-            brief = _brief(state, active)
+            if active:
+                raise ValueError("no eligible pair: active child")
+            recovered = _recover(state, reviews, base)
+            eligible = _eligible(recovered)
+            if not eligible and recovered == state:
+                raise ValueError("no eligible pair: exhausted attempts or collected")
+            state = recovered
+            if eligible:
+                pair = eligible[0]
+                active = pair.model_copy(
+                    update={
+                        "active": True,
+                        "attempts": pair.attempts + 1,
+                        # Preserve the first reservation for interrupted-record recovery.
+                        "after_sequence": (
+                            pair.after_sequence
+                            if pair.attempts
+                            else max((r.sequence for r in reviews.values()), default=0)
+                        ),
+                        "gap": None,
+                    }
+                )
+                state = state.model_copy(
+                    update={"pairs": [active if p == pair else p for p in state.pairs]}
+                )
+                brief = _brief(state, active)
         elif request.action in {"collect", "pause"}:
             if active is None or (request.action == "collect" and request.pair_id != active.id):
                 raise ValueError("operation requires the active pair")

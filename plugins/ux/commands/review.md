@@ -14,7 +14,7 @@ your native coordinator `session_id`, the contract path, and each image's
 revalidate completed source/role pairs; never reset an existing checkpoint.
 See [bounded review collection](../../../docs/review-checkpoints.md).
 
-Call `start` only when no child is active. Invoke its `delegate` with the
+Call `start` only when no child is active. Invoke a non-null `delegate` with the
 existing `task_tool_set`, omitting `resume`; do not append messages to an
 older child. Both reviewer definitions apply 20 iterations and budget 1.5.
 Wait for that child before issuing another review. Collect its returned
@@ -27,6 +27,9 @@ does not cancel a native task. At most two fresh attempts are available per
 source/role. A running checkpoint after coordinator interruption needs
 native child status checked before pausing; never launch overlapping children.
 SDK/provider retries and cancellation stay with the SDK; add no retry loop.
+On the next `start`, intact records written before interruption are recovered
+before another attempt is spent. Recovery preserves the first reservation
+boundary, rejects ambiguous evidence, and can finish with `delegate: null`.
 
 After primary/blind collection, reconcile their event IDs with
 `ux_record_reconcile` using your coordinator session. Only an intact
