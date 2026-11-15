@@ -1,0 +1,196 @@
+{
+  "captured_at": "2026-11-15T14:03:32.767929+00:00",
+  "implementation_commit": "800290a7a2b2f050cdacbe92834b7158f8da007e",
+  "base_commit": "86b395f6ea6a6dd3b50db6e19f3b77b83d3b6255",
+  "branch": "devin/1794749888-bounded-review-checkpoints",
+  "clean_before": true,
+  "python": "3.14.10",
+  "versions": {
+    "openhands-sdk": "1.62.0",
+    "openhands-tools": "1.62.0",
+    "mcp": "2.3.0",
+    "ruff": "0.17.5",
+    "pyright": "1.1.414",
+    "pytest": "9.2.0",
+    "uv": "uv 0.13.8 (x86_64-unknown-linux-gnu)"
+  },
+  "source_sha256": {
+    "docker/image-digests.json": "dd1ef7e2389d16d3f10e19ec3a1f4f38c9b9987888c7452192ccbcfd62adbf49",
+    "docs/README.md": "68f23e2b1ee4db03e3bd0368276c82072dd0aada93565f534b57b56770afeffd",
+    "docs/agents.md": "695684475adb20e134e13f0ebf02ae045a4c2379dbd63cf9478aecdc58a274f0",
+    "docs/commands.md": "22d7613611edb207ae988a60c1ed40333a9df4456c0c1ea69e9cd08c0930594c",
+    "docs/mcp.md": "24cdf8f4f6c1b58aac1fa2de9222bc16511a8361eb45d7d13f6982896447be77",
+    "docs/performance-and-limits.md": "979209970dc81b4825e679cc1e4f6b96056b2abfc323e54cd040e25ad8d06e2e",
+    "docs/research/session-reassessment-2026-11-15/README.md": "667c9c73fbe0958b73eb7dc275890f017be930b6a903ebb3b618e38f4a9cf40f",
+    "docs/research/session-reassessment-2026-11-15/bounded-review-checkpoints.md": "c82dc5569768bad63b139b879d71c302b8e306a993ab3533044397f8cc66fb29",
+    "docs/research/session-reassessment-2026-11-15/bounded-review-validation.json": "cd93e4808b6653828a2dd95b07f78a1c36d71249ee439d1b9f8590bde71287f9",
+    "docs/research/session-reassessment-2026-11-15/implementation-plan.md": "06c1abd1f2ac68d974c55d4925c0142dfdf46a65af439403420421c9e7b1ac3c",
+    "docs/research/session-reassessment-2026-11-15/post-merge-ci-validation.json": "851b9473f842950886552d9492fd262bd0dc03f6d4755b29aee074cd948ce5cb",
+    "docs/research/session-reassessment-2026-11-15/post-merge-ci.md": "d2bde167b4e90416a5fdd16f5e05854094090632ef7fa48d321f6b9ed8a0d292",
+    "docs/research/session-reassessment-2026-11-15/sdk-native-review-limits.md": "c165843f6b865098191368f5f5cab6dc2a61ed070df1d5a3b90e9305816b2235",
+    "docs/review-checkpoints.md": "a7c8f977bcaaf2ba370d11a720989c926703523d734653780faef0e246596faa",
+    "plugins/ux/agents/ux-blind-review.md": "43dab76fba56a76d0c11ad6202e89db71853ba367f0a4bc5df4fcacfb21aec68",
+    "plugins/ux/agents/ux-review.md": "7407234f28b19193ddd4c086492f9ebb0bc1aafbf27ed75c266c7471f6b952f8",
+    "plugins/ux/commands/review.md": "1b9a6a76ee2ae417d9e4c82bdc09cfc8f96434123f0cd20a4fc422d750bafe00",
+    "plugins/ux/hooks/scripts/blind_guard.py": "f7325ad7afc427cb66179d56a5bf53f8bb222f0b773b70bc6ec913d85632cf63",
+    "plugins/ux/hooks/scripts/protect_generated.py": "d78e66e480dc04af75b314930845ffeb6371a67aea99552eb4e191a2be578c19",
+    "plugins/ux/skills/ux-workflow/tools-image.json": "cdd2c391de650a606bbbc892d42f1a3e243dece857fa229e7c4b2c0f27bab2dc",
+    "src/ux_creator/cli.py": "7a733ba54ddc62e7a77b0c35e4c74c9e19291322cc670213e2a8af3a069de0ac",
+    "src/ux_creator/mcp_server.py": "b0545b7bff1a332d0744407475643f0ea587db075e51c353dd5bb6f27b489773",
+    "src/ux_creator/review_checkpoint.py": "1b151db70fc4c6bb362addc150cb0dd2fbb8bc9617cf06d7add6eda6d75d791c",
+    "tests/test_hooks.py": "abaec1c2b3a69e36c66e4cc3fc9e3f68ff90992e15f184af69096d62e3711c44",
+    "tests/test_review_checkpoint.py": "c5f03e6c12acdc8a58695df13410b51147d6c79b30aed801c76e203b3e9f3da6",
+    "tests/test_sdk_review_limits.py": "641845fc5ad7f983bb0623d40f90f2dc0bd8dc109102640b530d17fb59a15456"
+  },
+  "checks": [
+    {
+      "command": "uv run ruff check .",
+      "exit_code": 0,
+      "seconds": 0.031,
+      "log": "check-01.log",
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "command": "uv run ruff format --check .",
+      "exit_code": 0,
+      "seconds": 0.029,
+      "log": "check-02.log",
+      "log_sha256": "2c4b768286e17cda517ae9db713c30a0a2a586356b1d5e3c9a172febf0e63ba6"
+    },
+    {
+      "command": "uv run pyright",
+      "exit_code": 0,
+      "seconds": 7.197,
+      "log": "check-03.log",
+      "log_sha256": "6d88a1b220adb7a3d62092b6e38431f0b3fe8babe9864fab90e5849766260332"
+    },
+    {
+      "command": "uv run pytest tests/test_image_observations.py tests/test_hooks.py tests/test_record_stop_scope.py -q",
+      "exit_code": 0,
+      "seconds": 5.14,
+      "log": "check-04.log",
+      "log_sha256": "435cd0dd07f00ede74250c1ea189195a0b933fa69fba88199e6d63b027af1ab7"
+    },
+    {
+      "command": "uv run python scripts/verify_docs.py",
+      "exit_code": 0,
+      "seconds": 0.164,
+      "log": "check-05.log",
+      "log_sha256": "5fdf546167baf5bdc4f619c1af10c1e37213d323a8196b34f4125c38449975d3"
+    },
+    {
+      "command": "uv run python scripts/verify_all.py --stage fast",
+      "exit_code": 0,
+      "seconds": 29.709,
+      "log": "check-06.log",
+      "log_sha256": "e61b222015df24920de50ed695d945dcce5658b5fe49fbc7326ad7b3c90a81bf"
+    },
+    {
+      "command": "uv run --group sdk-check python scripts/check_plugin_load.py",
+      "exit_code": 0,
+      "seconds": 8.518,
+      "log": "check-07.log",
+      "log_sha256": "9cf3cd031d25b593f0674ec9cbc09f44defcd1cbd401bcd44f1b6149b8cdd0f4"
+    },
+    {
+      "command": "uv run --group sdk-check pytest -o addopts= -q tests/test_review_checkpoint.py tests/test_sdk_review_limits.py tests/test_sdk_delegated_context.py",
+      "exit_code": 0,
+      "seconds": 12.141,
+      "log": "check-08.log",
+      "log_sha256": "eff5a9e69accac298d140d108849a488b2723c2d8426240837635aada0e9fe06"
+    },
+    {
+      "command": "uv run --group sdk-check pytest -o addopts= -q tests/test_review_checkpoint.py tests/test_sdk_review_limits.py tests/test_sdk_delegated_context.py",
+      "exit_code": 0,
+      "seconds": 12.226,
+      "log": "check-09.log",
+      "log_sha256": "55f7b430213bc9a1baf2981d59275f5c45a5fd5cb8605391c5798ea6ae1b61d6"
+    },
+    {
+      "command": "uv run --group sdk-check pytest -o addopts= -q tests/test_review_checkpoint.py tests/test_sdk_review_limits.py tests/test_sdk_delegated_context.py",
+      "exit_code": 0,
+      "seconds": 12.157,
+      "log": "check-10.log",
+      "log_sha256": "42fa11d1d5fe86fde087771c04d8f001615c8c082e9c1270de536b3de65640b7"
+    },
+    {
+      "command": "uv run --group sdk-check pytest -o addopts= -q tests/test_review_checkpoint.py tests/test_sdk_review_limits.py tests/test_sdk_delegated_context.py",
+      "exit_code": 0,
+      "seconds": 12.119,
+      "log": "check-11.log",
+      "log_sha256": "02153c84d5913cdfa3aa907b806852d250471480df4518e4938431d9dcef6f60"
+    },
+    {
+      "command": "uv run --group sdk-check pytest -o addopts= -q tests/test_review_checkpoint.py tests/test_sdk_review_limits.py tests/test_sdk_delegated_context.py",
+      "exit_code": 0,
+      "seconds": 12.071,
+      "log": "check-12.log",
+      "log_sha256": "e4320276b06e668c4f36b5854d76a9660b3964c8428f171b24bb2b89fb7ec343"
+    }
+  ],
+  "clean_after": true,
+  "head_unchanged": true,
+  "scope": "Bounded image-review record collection with interrupted-record recovery; acceptance remains unknown",
+  "criteria": "Same twelve-check driver, clean immutable commit, five focused repeats, all checks exit zero",
+  "full_fast_tests_passed": 805,
+  "focused_tests_passed_each": 50,
+  "focused_repeats": 5,
+  "driver_sha256": "eb8fa096e5afcb1b414dbc4a2912033941c631fea07e69d0591959c857683b39",
+  "wrapper_sha256": "fc66a7675ac92f21329036107b3084568277f563733ef921ef017f5e9ec7dd4c",
+  "scope_audit_main_commit": "62f90b202c82e1ebc3d026f3d21ce9b4274a1105",
+  "prior_validations": [
+    {
+      "implementation_commit": "f45464fe78cc72b9280f7fd7bc796d4d9fce941e",
+      "validation_sha256": "aa3d27f7dbc823114910ca8c8b045cd2a668baeaf831832ea8ef4791061f5200",
+      "checks_passed": 12,
+      "focused_tests_each": 38,
+      "focused_repeats": 5
+    },
+    {
+      "implementation_commit": "5bcf52fb10e8eaa3c2511c8309d9f24bdb2d09f3",
+      "validation_sha256": "2f4f016f15697a38a5b63398dec4fd3b252c74692138fa099b93e422c8659409",
+      "checks_passed": 12,
+      "focused_tests_each": 48,
+      "focused_repeats": 5
+    }
+  ],
+  "review_regressions": [
+    {
+      "log": "checkpoint-event-only-before.log",
+      "sha256": "7baaa3bace759454690b738d3cda085176bdea22c6de3bc2f3e64524b2cebccb"
+    },
+    {
+      "log": "checkpoint-event-only-after.log",
+      "sha256": "d726f297c026d59f3b64870cdfc3f41eaff06478fdcd7605438cac9aa3dd27bb"
+    },
+    {
+      "log": "checkpoint-recovery-before.log",
+      "sha256": "ce22fa276e93201dee05f3bbd6a4fe3333bd71ac4d58d1a6b99ecab721a2d5e9"
+    },
+    {
+      "log": "checkpoint-recovery-after.log",
+      "sha256": "252d32449a4bfa3aff68f2bda3470012d2b8044b72944229f2afc460a9499094"
+    },
+    {
+      "log": "checkpoint-unrelated-path-before.log",
+      "sha256": "111c4a90835c517c03d69ba1ad4123e6284be96a62dc7ec052d2771742c56905"
+    },
+    {
+      "log": "checkpoint-unrelated-path-before-confirmed.log",
+      "sha256": "404f0f35383610c2a5b6397f89301c06b99a02ff9692276a3765ca7b9058d271"
+    },
+    {
+      "log": "checkpoint-unrelated-path-after.log",
+      "sha256": "35f02d2565e836d677100eef7a47ac3dd339befa4ed6e1fc3306e31c29092a22"
+    },
+    {
+      "log": "checkpoint-unrelated-path-final.log",
+      "sha256": "02fb3fc1beaeb9d649a120fe3c6e2fc919022ddc33114613c86685f709a13c47"
+    }
+  ],
+  "limitations": [
+    "Synthetic agent steps/costs and isolated model/MCP setup; no provider calls, perception or retry/backoff timing claim",
+    "One active pair and two attempts per source/checklist/role within the same checkpoint/coordinator run",
+    "Shared owner-policy/crop lineage, broader stage recovery and clean release-install acceptance remain unfinished"
+  ]
+}

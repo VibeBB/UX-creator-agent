@@ -4,8 +4,9 @@ The approved strategy reuses completed records only after revalidating
 their source hashes and evidence, and gives unfinished image/reviewer
 pairs fresh native children. This implements the image-review portion of
 work package D in UX. It does not complete the broader product workflow.
-The [validation record](bounded-review-validation.json) identifies the
-implementation commit, source digests, commands, log hashes and repeats.
+The [initial validation](bounded-review-validation.json) and
+[review-fix validation](bounded-review-followup-validation.json) identify
+implementation commits, source digests, commands, log hashes and repeats.
 
 ## Implementation and scope
 
@@ -28,6 +29,11 @@ authentication mechanism against arbitrary filesystem writers.
 pair is active in the checkpoint. Each source/checklist/role has two
 fresh attempts. `pause` preserves failure reasons and attempt counts;
 the coordinator must first establish that the native task has stopped.
+Before another attempt, `start` recovers a unique intact record written
+after that pair's first reservation. This also works after attempt two,
+without consuming another attempt. Ambiguous records remain an error;
+pre-reservation records remain ineligible. A completed recovery may return
+`delegate: null`, which the coordinator must not launch as another child.
 The collector neither launches nor cancels tasks and adds no provider
 retry loop. Both shipped reviewer definitions use 20 native iterations
 and budget 1.5. Budget checks occur after a step, so one call can exceed
@@ -47,17 +53,34 @@ deterministic gates, Stop permission and product acceptance remain separate.
 
 ## Validation
 
-The committed implementation passed all 793 tests in the fast stage,
+The final reviewed implementation passed all 805 tests in the fast stage,
 including the configured structural coverage floors. Ruff, formatting,
 Pyright, required image/hook/Stop regressions, docs verification and SDK
 plugin loading also passed. Source was clean before and after the captured
 run, and HEAD did not change during it.
 
-Five independent focused runs each passed 38 tests: 23 checkpoint cases,
+Five independent focused runs each passed 50 tests: 35 checkpoint cases,
 eight native-limit/failure cases, and seven delegated-context cases.
 Checkpoint cases include stale or damaged evidence, interruption, attempt
 caps, blind isolation, path/SHA/session/role mismatch, tampered authorizing
-reconciliations and unresolved second-round disagreement.
+reconciliations and unresolved second-round disagreement. The original
+793-test/38-focused-test snapshot remains unchanged; an intermediate fix
+passed 803/48 before the final source-path isolation regression was added.
+
+Review found and reproduced three additional boundary defects:
+
+- A legitimate event-only native review lacked required image fields and
+  prevented all checkpoint actions. Optional image fields retain sequence
+  history while event-only records remain ineligible as image evidence.
+- A child could write a valid independent review and fail before returning
+  its ID. Replacing the sequence boundary on retry stranded that record
+  while the writer correctly refused another same-role review. Recovery
+  now revalidates it before another reservation, retaining the original
+  boundary and prior failure reasons for every reviewer role.
+- Recovery inspected unrelated review paths. A symlink at such a path
+  aborted retries for another image. Unsafe candidate paths now produce
+  a local evidence gap; they cannot complete a pair or stop unrelated work.
+  Both matching-hash and different-hash cases are covered.
 
 The eight native cases exercise `TaskExecutor` -> `TaskManager` ->
 `LocalConversation.run()` for both shipped reviewer definitions. Synthetic
@@ -77,7 +100,10 @@ test drafts incorrectly expected unconsumed SessionStart context and event
 codes in returned error text, and initially registered synthetic metrics
 twice. Fixtures were corrected against observed SDK/VRP behavior; the SDK
 and production record requirements were not weakened. All checks on the
-committed implementation passed.
+committed implementation passed. Follow-up fixture drafts also repeated
+primary prose or named the wrong/missing claim anchor; their failures are
+retained alongside the corrected behavioral regressions, rather than
+reported as production regressions.
 
 ## Remaining boundaries
 
