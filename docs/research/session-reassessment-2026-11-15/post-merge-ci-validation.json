@@ -1172,5 +1172,20 @@
     "Firmware image publish remains in progress at the captured snapshot; it is not counted as successful publication.",
     "Skipped jobs remain skipped.",
     "Check conclusions do not prove LLM perception, audio, hardware, release installation or product acceptance."
+  ],
+  "follow_ups": [
+    {
+      "captured_at": "2026-11-15T13:54:30.502780+00:00",
+      "repository": "VibeBB/firmware-agent",
+      "merge_commit": "7ff6c32cdd0864ae615c16016125ecad1a638857",
+      "run_id": 43712338143,
+      "job_id": 132815455575,
+      "job_url": "https://github.com/VibeBB/firmware-agent/actions/runs/43712338143/job/132815455575",
+      "status": "completed",
+      "conclusion": "success",
+      "completed_at": "2026-11-15T13:37:15Z",
+      "private_snapshot_sha256": "5db0f353770fa82ffdf25ece216d6cb8f3195971da61b540218e2b87c9affd22",
+      "boundary": "Publication job success only; release-install acceptance remains unverified"
+    }
   ]
 }

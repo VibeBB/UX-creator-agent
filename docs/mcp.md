@@ -7,6 +7,7 @@ workspace; the server validates paths before reading or writing.
 
 | Tool | Inputs | Reads and writes | Result |
 | --- | --- | --- | --- |
+| `ux_review_checkpoint` | `action`, `checkpoint_id`, coordinator `session_id`; action-specific contract/sources, pair/event IDs or pause reason. | Hashes sources, verifies VRP/image evidence, maintains `observations/ux/review-checkpoints/`. | Record-collection status, gaps, pair attempts, fresh-task brief; acceptance stays unknown. |
 | `ux_record_decision` | VRP decision fields: `id`, `stage`, `question`, `principles`, `options`, `chosen`, `rationale`, `risks`, `revisit_when`, and `evidence`; optional assumptions/unknowns/decided_by. | Reads and hashes cited workspace evidence; appends to `observations/ux/decisions.jsonl`. | `verdict`, log path, validated event. |
 | `ux_record_impression` | `stage`, artifact paths, and long-form `impression`. | Reads and hashes artifact files/directories; appends to the stage-impression log. | `verdict`, log path, event. |
 | `ux_record_vision_review` | Image path or source event ID, model, checklist, findings, and impression. | Reads and hashes an image when supplied; appends to the vision-review log. | `verdict`, log path, event. |
@@ -42,6 +43,12 @@ workspace; the server validates paths before reading or writing.
 `readOnlyHint: false`; all tools advertise `destructiveHint: false`. These
 annotations describe the tool's expected behavior, not permission to bypass
 workspace safeguards.
+
+`ux_review_checkpoint` also advertises `idempotentHint: false`: `start`
+consumes a finite attempt. Only its `status` action is read-only. It is a
+coordinator tool, denied to blind reviewers. See
+[bounded review collection](review-checkpoints.md) for action inputs and
+the distinction between collected records and accepted work.
 
 ## Outputs and errors
 

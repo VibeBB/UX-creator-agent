@@ -101,10 +101,13 @@ agent-frontmatter hooks against the adopted SDK before relying on either.
 
 ## D: bounded work and recovery
 
-Proposed starting budgets, subject to maintainer decision and measurement:
-one concurrent blind reviewer; one review per reviewer role/source
-revision; one explicit disagreement follow-up; 20 minutes or 120 tool
-calls per child. These are proposed defaults, not measured performance.
+The approved [image-review collector](bounded-review-checkpoints.md) uses
+one active review pair per checkpoint, 20 native iterations and budget 1.5
+per fresh child, two attempts per source/checklist/role, and one explicit
+disagreement follow-up. Completed evidence is revalidated and reused;
+unfinished pairs receive fresh children without SDK `resume`. These bounds
+supersede the initial 20-minute/120-call proposal for image reviews. No
+plugin wall-clock timeout is introduced.
 
 Split design, liaison, domain gates, review and collection into checkpoints
 containing artifact hashes, response states, remaining work and usage.
@@ -112,6 +115,11 @@ Use existing SDK timeout/iteration/cancellation and provider retry/backoff;
 respect Retry-After where supported. Do not layer unbounded plugin retries.
 After exhaustion, persist paused/blocked state and gaps. Resume only missing
 work for the same source revision and reviewer role.
+
+The image-review portion is implemented and locally validated. Broader
+design/liaison/domain-stage checkpointing and live provider/backoff timing
+remain separate verification work; do not infer their completion from the
+synthetic review-collection tests.
 
 Keep bounded stop refusals. Surface their final gap record in status and
 reports. Acceptance requires sequential review, finite behavior under

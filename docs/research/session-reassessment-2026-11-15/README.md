@@ -167,8 +167,12 @@ those claims and the actual delivered revision in the native observer log. The
 to those observations and documents the native inspector's unknown source
 selection. The
 [native SDK limit probe](sdk-native-review-limits.md) records the D-stage
-resume limitation and the decision still required before adopting a
-checkpoint strategy.
+resume limitation. The selected
+[bounded fresh-child collector](bounded-review-checkpoints.md) now reuses
+validated completed records and limits unfinished pairs to fresh native
+children. Its [initial validation](bounded-review-validation.json) and
+[review-fix validation](bounded-review-followup-validation.json) remain
+separate from product acceptance and the unfinished C3/F/G work packages.
 
 The complete raw conversations, operational logs, original attachments,
 workspace, runtime hooks, pinned source archives, audit scripts, Japanese

@@ -25,6 +25,15 @@ Firmware's [tools-image publication](https://github.com/VibeBB/firmware-agent/ac
 was still building. Its publication and new image installation remain
 unverified. No job was rerun, cancelled or bypassed for this audit.
 
+Follow-up: that same firmware publication job completed successfully at
+`2026-11-15T13:37:15Z` on the captured merge revision
+`7ff6c32cdd0864ae615c16016125ecad1a638857`. The machine-readable record
+retains this follow-up separately from the original snapshot. The tools
+build, scans, attestations, smoke checks and digest-lock step report
+success. This closes that pending publication job; clean installation of
+the resulting release and product acceptance remain unverified. No
+external workflow, branch, setting or merge was changed by this follow-up.
+
 These are scoped workflow conclusions. They do not prove release-install
 compatibility, provider perception, GUI quality, real audio, hardware or
 product acceptance. The remaining release/feature matrix in the

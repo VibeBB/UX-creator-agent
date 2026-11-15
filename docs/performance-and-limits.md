@@ -15,11 +15,20 @@ there is no background queue or persistent database.
 | `render_all` | Processes sorted top-level `*.mmd` and `*.puml` files; default formats are SVG and PNG. It does not recursively scan subdirectories. |
 | MCP inline images | Up to 8 rendered images, PNG/JPEG only, with a 4 MiB per-image limit. Oversized or unsupported images are not inlined. |
 | Plugin image pull | The launcher uses bounded Docker inspection, attestation, and pull subprocesses; image pulls may wait up to 900 seconds. This is not an authoring-tool timeout. |
+| Bounded image reviews | One active child per checkpoint; at most two fresh attempts per image/checklist/role. Each reviewer uses 20 native iterations and budget 1.5. |
 
 A timeout or missing external tool produces an explicit failure/unknown
 render result; the report must not imply that an image was checked when it
 was not. PNG rendering uses a 2× scale for Mermaid. Rendering cost therefore
 depends on the number and complexity of generated diagrams and formats.
+
+Review collection uses native `task_tool_set` without `resume`. Completed
+records are revalidated by source path/SHA and role; incomplete work gets a
+fresh child. The checkpoint does not execute or cancel tasks. SDK/provider
+retry, timeout and cancellation behavior remains native, and the coordinator
+must confirm a prior child has stopped before pausing/retrying. The native
+budget is checked after a step, so it is not a guarantee against a single
+call exceeding that amount. See [review checkpoints](review-checkpoints.md).
 
 ## Schema and workspace bounds
 

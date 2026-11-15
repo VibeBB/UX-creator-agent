@@ -63,6 +63,7 @@ from .render import render_all
 from .report import write_report
 from .requests import build_request, load_request, write_request
 from .responses import liaison_status
+from .review_checkpoint import review_checkpoint
 from .ruby_bridge import contract_from_ruby, mruby_check
 from .sisters import PRODUCT_STAGES, TARGET_AGENTS
 from .vrp_hub import escalate as records_escalate
@@ -533,6 +534,13 @@ def _cmd_produce(args: argparse.Namespace) -> int:
     return 0 if report.verdict == PASS else 1
 
 
+def _cmd_review_checkpoint(args: argparse.Namespace) -> int:
+    payload = json.loads(workspace_path(args.json).read_text(encoding="utf-8"))
+    result = review_checkpoint(payload)
+    _print(result)
+    return 0 if result["status"] == "collected" else 1
+
+
 def _cmd_review_reconcile(args: argparse.Namespace) -> int:
     try:
         contract = load_contract(args.contract)
@@ -810,6 +818,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--contract", required=True)
     p.add_argument("--out-dir", required=True)
     p.set_defaults(func=_cmd_intake_reconcile)
+
+    p = sub.add_parser("review-checkpoint", help="collect bounded, SHA-bound review records")
+    p.add_argument("--json", required=True, help="workspace JSON request for the checkpoint")
+    p.set_defaults(func=_cmd_review_checkpoint)
 
     p = sub.add_parser("record", help="append a VibeBB Record Protocol record")
     p.add_argument(

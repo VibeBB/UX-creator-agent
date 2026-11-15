@@ -60,6 +60,7 @@ from .render import ImageIdentity, RenderResult, render_all
 from .report import write_report
 from .requests import build_request, load_request, write_request
 from .responses import LiaisonStatus, UXResponse, liaison_status
+from .review_checkpoint import ReviewCheckpointInput, review_checkpoint
 from .ruby_bridge import contract_from_ruby, mruby_check
 from .sisters import PRODUCT_STAGES, TARGET_AGENTS
 from .vrp_hub import escalate as records_escalate
@@ -67,6 +68,7 @@ from .vrp_hub import hub as records_hub
 from .workspace import workspace_path
 
 _SCHEMAS: dict[str, dict[str, Any]] = {
+    "ux_review_checkpoint": ReviewCheckpointInput.model_json_schema(),
     "ux_record_decision": DecisionInput.model_json_schema(),
     "ux_record_impression": StageImpressionInput.model_json_schema(),
     "ux_record_vision_review": VisionReviewInput.model_json_schema(),
@@ -266,6 +268,10 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
 }
 
 _DESCRIPTIONS = {
+    "ux_review_checkpoint": (
+        "Persist bounded review collection checkpoints, revalidate SHA/session/delivery evidence, "
+        "and issue one fresh native task brief. Coordinator only; never executes or resumes tasks."
+    ),
     "ux_record_decision": "Append a validated, evidence-bound UX decision record.",
     "ux_record_impression": (
         "Record the impression that closes a stage: 400+ chars and 3+ sentences of prose, "
@@ -336,6 +342,7 @@ _DESCRIPTIONS = {
 }
 
 _WRITE_TOOLS = {
+    "ux_review_checkpoint",
     "ux_record_reconcile",
     "ux_record_insight",
     "ux_record_song_receipt",
@@ -352,6 +359,7 @@ _WRITE_TOOLS = {
     "ux_record_vision_review",
 }
 _APPEND_RECORD_TOOLS = {
+    "ux_review_checkpoint",  # start consumes a finite attempt; it is not idempotent.
     "ux_record_reconcile",
     "ux_record_insight",
     "ux_record_song_receipt",
@@ -510,6 +518,8 @@ async def list_tools(
 async def dispatch_tool(
     name: str, arguments: dict[str, Any]
 ) -> dict[str, Any] | list[types.ContentBlock]:
+    if name == "ux_review_checkpoint":
+        return review_checkpoint(arguments)
     if name == "ux_record_decision":
         return record_decision(arguments)
     if name == "ux_record_impression":

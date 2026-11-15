@@ -26,6 +26,9 @@ transport. An agent's narrative is not a gate verdict.
   are only for agents working through the UX plugin.
 - Generated projections are protected from hand editing. Change the contract
   or plan and regenerate them.
+- Reviewers use 20 native iterations and budget 1.5. Coordinators collect
+  SHA-bound reviews with [review checkpoints](review-checkpoints.md) and
+  fresh `task_tool_set` children; they do not use SDK `resume` for this path.
 - Use the relevant skill from `plugins/ux/skills/` for domain guidance. See
   [Skills](skills.md) for the complete list.
 - Record user-approved choices and evidence with VRP tools. A prompt's

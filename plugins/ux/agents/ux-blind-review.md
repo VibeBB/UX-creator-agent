@@ -27,7 +27,7 @@ hooks:
           name: require-records
           command: "p=$(for c in  \"${UX_PLUGIN_ROOT:-}\" \"${PLUGIN_ROOT:-}\" \"${OPENHANDS_PROJECT_DIR:-.}/plugins/ux\" \"${HOME:-}/.agents/plugins/ux\" \"${HOME:-}/.openhands/plugins/installed/ux\" \"${HOME:-}/plugins/installed/ux\" \"${OH_PERSISTENCE_DIR:-/nonexistent}/plugins/installed/ux\"; do [ -f \"$c/hooks/scripts/require_records.py\" ] && printf %s \"$c\" && break; done); [ -n \"$p\" ] || { echo \"ux plugin root unresolved\" >&2; exit 1; }; exec python3 \"$p/hooks/scripts/require_records.py\" record-context"
   pre_tool_use:
-    - matcher: file_editor|apply_patch|terminal|grep|glob
+    - matcher: file_editor|apply_patch|terminal|grep|glob|.*ux_review_checkpoint$
       hooks:
         - type: command
           name: blind-guard
@@ -96,6 +96,9 @@ and a split that stays unresolved after the tiebreak counts as
 Use the native `session_id` supplied by your SessionStart record context for VRP
 writes. For an independent blind/tiebreak review, pass `primary_event_id` from
 the delegation brief; the writer binds it to the same image path and SHA-256.
+For a bounded task, verify image and contract SHA-256 against the brief;
+missing or changed sources are explicit gaps. Checkpoints belong to the
+coordinator and must not be read or accessed through CLI/MCP calls.
 When delegating, provide only that opaque ID, the image identity and task facts;
 never disclose the earlier review prose. Each reviewer keeps its own native
 session ID, and the primary's session performs reconciliation.
