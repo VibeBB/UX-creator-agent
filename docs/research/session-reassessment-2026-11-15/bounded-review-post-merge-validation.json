@@ -1,0 +1,99 @@
+{
+  "captured_date_utc": "2026-11-15",
+  "scope": "Post-merge bounded-review checks and single-plugin Docker CLI smoke",
+  "acceptance": "unknown",
+  "implementation_pr": "https://github.com/VibeBB/UX-creator-agent/pull/199",
+  "pr_head": "ed97cf368b102e3dec50988ee66d5264280141a6",
+  "pr_head_checks": {"passed": 16, "failed": 0, "pending": 0, "skipped": 0},
+  "merge_commit": "ea08596ecd4ca1d2b2125c35f5f78883aa2ddc2a",
+  "merge_checks": {"passed": 15, "failed": 0, "pending": 0, "skipped": 1},
+  "merge_skipped_check": "reconcile",
+  "merge_local_checks": [
+    {
+      "command": "uv run python scripts/verify_all.py --stage fast",
+      "exit_code": 0,
+      "tests_passed": 805,
+      "private_log": "bounded-merge-fast.log",
+      "log_sha256": "6e3955ffc2866101462f4865924c1d4cc8fe1d5a74933ea83976626df3fe5a06"
+    },
+    {
+      "command": "uv run --group sdk-check python scripts/check_plugin_load.py",
+      "exit_code": 0,
+      "private_log": "bounded-merge-plugin.log",
+      "log_sha256": "da7c47d7076378ea2c209c22eed9508f8533d72aaa7c37d3e89455a41bba1704"
+    },
+    {
+      "command": "uv run --group sdk-check pytest -o addopts= -q tests/test_review_checkpoint.py tests/test_sdk_review_limits.py tests/test_sdk_delegated_context.py",
+      "exit_code": 0,
+      "tests_passed": 50,
+      "private_log": "bounded-merge-focused.log",
+      "log_sha256": "e4320276b06e668c4f36b5854d76a9660b3964c8428f171b24bb2b89fb7ec343"
+    }
+  ],
+  "publication": {
+    "workflow_run": "https://github.com/VibeBB/UX-creator-agent/actions/runs/43723462167",
+    "job_id": 132842147565,
+    "conclusion": "success",
+    "head_sha": "ea08596ecd4ca1d2b2125c35f5f78883aa2ddc2a",
+    "private_log": "bounded-ci-logs/132842147565.txt",
+    "log_sha256": "88221875e70a8148d256972f789414ac5af628d1962786ebd7f592e51cf99600",
+    "pin_pr": "https://github.com/VibeBB/UX-creator-agent/pull/200",
+    "pin_pr_state": "merged",
+    "pin_commit": "2171eee13674ec51e8e15b67348f711db2235124",
+    "pin_merge_commit": "d52c055db442808805ffdfbb23063b210f01d7de",
+    "image": "ghcr.io/vibebb/ux-tools",
+    "digest": "sha256:f10c9523ca48c73b393d5b48a16ca4691fdbeb827f35eefeeb4f61e643f03de9",
+    "verified_provenance_source_commit": "ea08596ecd4ca1d2b2125c35f5f78883aa2ddc2a",
+    "provenance_command": "gh attestation verify oci://ghcr.io/vibebb/ux-tools@sha256:f10c9523ca48c73b393d5b48a16ca4691fdbeb827f35eefeeb4f61e643f03de9 --repo VibeBB/UX-creator-agent --signer-workflow VibeBB/UX-creator-agent/.github/workflows/publish-ux-images.yml --format json",
+    "provenance_exit_code": 0,
+    "private_provenance_result": "bounded-baked-image-attestation.json",
+    "provenance_result_sha256": "36cb8ed4767d016af14af68be697e065d441cd8a4ae233319d3be154c1bff848",
+    "pin_changes_only": ["docker/image-digests.json", "plugins/ux/skills/ux-workflow/tools-image.json"]
+  },
+  "launcher_smoke": {
+    "attestation_mode": "require",
+    "fixture": "Empty JSON contract and synthetic non-image bytes with a .png suffix; identity bookkeeping only",
+    "commands": [
+      {"arguments": ["prewarm"], "expected_exit_code": 0},
+      {"arguments": ["review-checkpoint", "--json", "create.json"], "expected_exit_code": 1},
+      {"arguments": ["review-checkpoint", "--json", "status.json"], "expected_exit_code": 1},
+      {"arguments": ["review-checkpoint", "--json", "start.json"], "expected_exit_code": 1},
+      {"arguments": ["review-checkpoint", "--json", "pause.json"], "expected_exit_code": 1}
+    ],
+    "exit_code_note": "Uncollected checkpoints intentionally return 1; JSON state and assertions determine this smoke result",
+    "assertions": [
+      "Two primary/blind pairs created with acceptance unknown",
+      "Status preserves checkpoint bytes and mtime",
+      "Start reserves one primary pair and returns a ux-review brief without resume",
+      "Pause clears active state and preserves attempt count 1"
+    ],
+    "runs": [
+      {
+        "mode": "Existing locked image plus merge-source overlay",
+        "source_commit": "ea08596ecd4ca1d2b2125c35f5f78883aa2ddc2a",
+        "image_digest": "sha256:d56a11a49617aa3de740ffab649bf0060cafac7db48362704d43d332120e48f1",
+        "host_source_overlay": true,
+        "all_commands_and_assertions_passed": true,
+        "private_result": "bounded-locked-launcher/result.json",
+        "result_sha256": "ef4fa57833b092ca720473cc087a7ab171907d676aba0061b7f44cc08e847656"
+      },
+      {
+        "mode": "Published baked image with plugin assets only",
+        "plugin_source_commit": "2171eee13674ec51e8e15b67348f711db2235124",
+        "image_digest": "sha256:f10c9523ca48c73b393d5b48a16ca4691fdbeb827f35eefeeb4f61e643f03de9",
+        "host_source_overlay": false,
+        "launcher_resolve_source": null,
+        "all_commands_and_assertions_passed": true,
+        "private_result": "bounded-baked-launcher/result.json",
+        "result_sha256": "fe22be509c942f670f55582b049981e371aba60237838facc6fca312a23d9772"
+      }
+    ]
+  },
+  "limits": [
+    "The launcher smoke starts no native child and makes no provider call",
+    "No image decoding, visual perception, GUI, audio or hardware validation",
+    "No AgentCanvas install, published-release install or eleven-plugin cooperation acceptance",
+    "C3 ancestry/shared ownership and broader D/F/G/H acceptance remain incomplete",
+    "Private runtime identities and raw logs are excluded from this public record"
+  ]
+}
