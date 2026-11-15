@@ -1,7 +1,7 @@
 ---
 name: ux-workflow
 description: Execute a conversational UX design workflow with deterministic verification — contract, gates, projections, advisory review.
-version: 0.1.0
+version: 1.0.0
 license: BSD-3-Clause
 triggers:
   - ux design

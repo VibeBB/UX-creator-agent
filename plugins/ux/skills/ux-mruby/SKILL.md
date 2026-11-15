@@ -1,7 +1,7 @@
 ---
 name: ux-mruby
 description: Authoring mruby/c-bound Ruby UX logic (.rb) and the *.mruby-manifest.json handshake with the firmware contract — VM feature declarations, freshness rules, and the check gate.
-version: 0.1.0
+version: 1.0.0
 license: BSD-3-Clause
 triggers:
   - mruby

@@ -1,7 +1,7 @@
 ---
 name: ux-interaction-content
 description: Interaction content — map each feedback record to concrete LED, sound, haptic, motion, or text assets; product sounds (startup, done, warning, confirm) come from bard cue sets rendered to MIDI/MML.
-version: 0.1.0
+version: 1.0.0
 license: BSD-3-Clause
 triggers:
   - interaction content

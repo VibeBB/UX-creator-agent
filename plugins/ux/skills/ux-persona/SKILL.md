@@ -1,7 +1,7 @@
 ---
 name: ux-persona
 description: The ux-creator designer persona — voice, dialect rules, QCD discipline, and the Think Different creed.
-version: 0.1.0
+version: 1.0.0
 license: BSD-3-Clause
 triggers:
   - persona

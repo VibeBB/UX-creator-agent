@@ -1,7 +1,7 @@
 ---
 name: ux-ruby-style
 description: Idiomatic Ruby authoring with the ux-dsl library — DSL reference and style rules (blocks, keyword args, frozen string literal, no method_missing).
-version: 0.1.0
+version: 1.0.0
 license: BSD-3-Clause
 triggers:
   - ruby dsl

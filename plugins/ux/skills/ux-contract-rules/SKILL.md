@@ -1,7 +1,7 @@
 ---
 name: ux-contract-rules
 description: Path rule — contract schema and provenance reminders injected whenever a *.ux.json or *.ux.rb file is touched.
-version: 0.1.0
+version: 1.0.0
 license: BSD-3-Clause
 paths:
   - "**/*.ux.json"

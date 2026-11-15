@@ -1,7 +1,7 @@
 ---
 name: ux-sibling-cooperation
 description: How ux-creator imports sister artifacts and coordinates hash-bound SLP v2 requests with all ten VibeBB sisters.
-version: 0.1.0
+version: 1.0.0
 license: BSD-3-Clause
 triggers:
   - import connectivity

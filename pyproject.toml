@@ -1,6 +1,6 @@
 [project]
 name = "ux-creator-agent"
-version = "0.1.0"
+version = "1.0.0"
 description = "OpenHands plugin for conversational UX design (personas, JTBD/ODI, customer journeys, statecharts, wireframe and story projections)"
 license = "BSD-3-Clause"
 requires-python = ">=3.12"

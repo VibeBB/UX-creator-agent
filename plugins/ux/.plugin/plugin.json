@@ -1,6 +1,6 @@
 {
   "name": "ux",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "OpenHands plugin for conversational UX design (personas, JTBD/ODI, journeys, statecharts, CMF, interaction content, product-level production planning, wireframe and story projections)",
   "author": {
     "name": "VibeBB",
