@@ -56,3 +56,26 @@ Input schemas are the protocol source of truth. This table is a human index;
 inspect `tool_specs()` or MCP's `tools/list` response for the precise JSON
 Schema and annotations. `tests/test_mcp_server.py` checks descriptions,
 annotations, read/write safety, and round trips.
+
+## Inline image identity
+
+`ux_render`, `ux_author`, `ux_produce`, and `ux_liaison_status` return
+`inline_images` metadata alongside any attached PNG/JPEG content. An
+`image_identity` contains a resolved image `path`, its producer's `sha256`,
+`owner_plugin`, and `origin` (`renderer` or `liaison-response`). UX renderers
+capture this identity after producing each output. Liaison attachments use
+the strict SLP response's responder and artifact SHA, checked against the
+entry that was scanned. Ownership never comes from a path fragment.
+
+`sha256` at the top of each entry hashes the bytes actually read for the
+response. `identity_status` is `bound` only when that digest and the resolved
+path match the producer's identity. A `mismatch` suppresses the attachment
+and reports `reason: source_identity_mismatch`. Missing producer identity
+remains `unknown`; a legacy image may still be attached for inspection.
+Always check `identity_status` before using the claimed owner or revision.
+
+`attached` reports delivery separately: a bound image may exceed the
+4 MiB or eight-image cap. Binding proves neither that the model inspected
+the image nor that its review was accepted. This metadata describes the
+returned image; original-image ancestry for crops/tiles and downstream
+review-record/Stop integration remain separate work.

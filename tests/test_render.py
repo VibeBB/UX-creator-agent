@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -95,6 +96,12 @@ def test_render_passes_timeout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
     result = render.render_mermaid(source, tmp_path, timeout=7)
     assert result.status == "ok"
     assert recorded["timeout"] == 7
+    assert result.image_identity == render.ImageIdentity(
+        path=str((tmp_path / "diagram.svg").resolve()),
+        sha256=hashlib.sha256(b"<svg/>").hexdigest(),
+        owner_plugin="ux",
+        origin="renderer",
+    )
 
 
 def test_render_all_renders_each_source_in_every_format(
@@ -165,6 +172,39 @@ def test_same_stem_mermaid_and_plantuml_renders_have_distinct_paths(
         tmp_path / "diagram.puml.png",
     ]
     assert all(result.status == "ok" for result in results)
+    assert len({result.image_identity.path for result in results if result.image_identity}) == 4
+    assert all(
+        result.image_identity is not None
+        and result.image_identity.owner_plugin == "ux"
+        and result.image_identity.sha256 == hashlib.sha256(b"rendered").hexdigest()
+        for result in results
+    )
+
+
+def test_unreadable_rendered_output_has_unknown_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "diagram.mmd"
+    source.write_text("stateDiagram-v2\n[*] --> off", encoding="utf-8")
+
+    def which(_name: str) -> str:
+        return "/usr/bin/mmdc"
+
+    monkeypatch.setattr(render.shutil, "which", which)
+
+    def fake_run(cmd: list[str], timeout: int) -> subprocess.CompletedProcess[str]:
+        Path(cmd[cmd.index("-o") + 1]).write_text("<svg/>", encoding="utf-8")
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    def unavailable(*_args: object, **_kwargs: object) -> None:
+        raise PermissionError("rendered output is unreadable")
+
+    monkeypatch.setattr(render, "_run", fake_run)
+    monkeypatch.setattr(render.hashlib, "file_digest", unavailable)
+    result = render.render_mermaid(source, tmp_path)
+    assert result.status == "unknown"
+    assert result.output is None
+    assert result.image_identity is None
 
 
 def test_mermaid_background_and_scale_are_format_specific(

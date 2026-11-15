@@ -12,7 +12,7 @@ import base64
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from jsonschema import Draft202012Validator
 from mcp import types
@@ -56,10 +56,10 @@ from .records import (
     records_search,
     records_summary,
 )
-from .render import RenderResult, render_all
+from .render import ImageIdentity, RenderResult, render_all
 from .report import write_report
 from .requests import build_request, load_request, write_request
-from .responses import LiaisonStatus, liaison_status
+from .responses import LiaisonStatus, UXResponse, liaison_status
 from .ruby_bridge import contract_from_ruby, mruby_check
 from .sisters import PRODUCT_STAGES, TARGET_AGENTS
 from .vrp_hub import escalate as records_escalate
@@ -402,6 +402,10 @@ def _render_content(
             "path": str(path),
             "sha256": None,
             "attached": False,
+            "image_identity": (
+                render.image_identity.model_dump() if render.image_identity is not None else None
+            ),
+            "identity_status": "unknown",
         }
         if len(images) >= _MAX_INLINE_IMAGES:
             try:
@@ -432,6 +436,18 @@ def _render_content(
                         )
             except OSError:
                 entry["reason"] = "unavailable"
+        if render.image_identity is not None and entry["sha256"] is not None:
+            if (
+                Path(render.image_identity.path).resolve() == path.resolve()
+                and render.image_identity.sha256 == entry["sha256"]
+            ):
+                entry["identity_status"] = "bound"
+            else:
+                if entry["attached"]:
+                    images.pop()
+                entry["attached"] = False
+                entry["identity_status"] = "mismatch"
+                entry["reason"] = "source_identity_mismatch"
         inline_images.append(entry)
     payload["inline_images"] = inline_images
     return [
@@ -449,24 +465,25 @@ def _liaison_image_renders(status: LiaisonStatus, workspace: Path) -> list[Rende
         if entry.state != "answered" or not entry.response_path:
             continue
         response_path = workspace_path(entry.response_path, workspace)
-        response: object = json.loads(response_path.read_text(encoding="utf-8"))
-        if not isinstance(response, dict):
-            continue
-        response_data = cast(dict[str, object], response)
-        artifacts = response_data.get("artifacts")
-        if not isinstance(artifacts, list):
-            continue
-        for artifact in cast(list[object], artifacts):
-            if isinstance(artifact, dict):
-                artifact_data = cast(dict[str, object], artifact)
-                value: object = artifact_data.get("path")
-            else:
-                value = artifact
-            if not isinstance(value, str):
-                continue
-            image = workspace_path(value, workspace)
+        response = UXResponse.model_validate_json(response_path.read_text(encoding="utf-8"))
+        if (
+            response.request != entry.request
+            or response.responder != entry.target_agent
+            or response.responder != entry.responder
+            or response.status != entry.response_status
+            or response.responded_at != entry.responded_at
+        ):
+            raise ValueError(f"liaison response changed since status scan: {entry.response_path}")
+        for artifact in response.artifacts:
+            image = workspace_path(artifact.path, workspace)
             if image.suffix.lower() in _IMAGE_MIME:
-                renders.append(RenderResult(image, image, "ok", ""))
+                identity = ImageIdentity(
+                    path=str(image.resolve()),
+                    sha256=artifact.sha256,
+                    owner_plugin=response.responder,
+                    origin="liaison-response",
+                )
+                renders.append(RenderResult(image, image, "ok", "", identity))
     return renders
 
 

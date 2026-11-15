@@ -7,6 +7,7 @@ records `unknown` in the render report instead (fail-closed).
 
 from __future__ import annotations
 
+import hashlib
 import os
 import shutil
 import subprocess
@@ -14,6 +15,22 @@ import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from .sisters import SHA256, TargetAgent
+
+
+class ImageIdentity(BaseModel):
+    """A producer's image claim, bound to one resolved path and byte revision."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
+
+    path: str = Field(min_length=1)
+    sha256: str = Field(pattern=SHA256.pattern)
+    owner_plugin: Literal["ux"] | TargetAgent
+    origin: Literal["renderer", "liaison-response"]
 
 
 @dataclass(frozen=True)
@@ -22,6 +39,19 @@ class RenderResult:
     output: Path | None
     status: str  # "ok" | "unknown"
     detail: str
+    image_identity: ImageIdentity | None = None
+
+
+def _rendered(source: Path, output: Path) -> RenderResult:
+    try:
+        with output.open("rb") as stream:
+            digest = hashlib.file_digest(stream, "sha256").hexdigest()
+    except OSError as exc:
+        return RenderResult(source, None, "unknown", f"rendered output unavailable: {exc}")
+    identity = ImageIdentity(
+        path=str(output.resolve()), sha256=digest, owner_plugin="ux", origin="renderer"
+    )
+    return RenderResult(source, output, "ok", "", identity)
 
 
 def _plantuml_jar() -> Path | None:
@@ -72,7 +102,7 @@ def render_mermaid(
         return RenderResult(source, None, "unknown", "mmdc timed out")
     if proc.returncode != 0 or not output.is_file():
         return RenderResult(source, None, "unknown", proc.stderr.strip() or "mmdc failed")
-    return RenderResult(source, output, "ok", "")
+    return _rendered(source, output)
 
 
 def render_plantuml(
@@ -109,7 +139,7 @@ def render_plantuml(
         return RenderResult(source, None, "unknown", "plantuml timed out")
     if proc.returncode != 0 or not output.is_file():
         return RenderResult(source, None, "unknown", proc.stderr.strip() or "plantuml failed")
-    return RenderResult(source, output, "ok", "")
+    return _rendered(source, output)
 
 
 def render_all(
