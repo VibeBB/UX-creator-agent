@@ -32,6 +32,8 @@ def test_e2e_authoring_reconciles_v2_example_files(tmp_path: Path) -> None:
     liaison = report["lenses"]["liaison"]
     assert liaison["requests"] == 2
     assert liaison["answered"] == 1
+    assert liaison["completed"] == 0
+    assert liaison["directory"] == "."
     assert liaison["open"] == 1
     assert liaison["by_state"]["answered"] == 1
     assert liaison["by_state"]["open"] == 1

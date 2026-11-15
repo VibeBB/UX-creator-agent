@@ -2,20 +2,22 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 import pytest
 from pydantic import ValidationError
 
+from ux_creator import mcp_server
 from ux_creator.contract import load_contract
 from ux_creator.gates import run_gates
 from ux_creator.records import tree_sha256
-from ux_creator.report import build_report
+from ux_creator.report import build_report, liaison_lens
 from ux_creator.requests import UXRequest, build_request, write_request
 from ux_creator.responses import (
     ArtifactRef,
@@ -40,6 +42,7 @@ def _request(
     risk: str = "low",
     depends_on: list[str] | None = None,
     inputs: list[str] | None = None,
+    workspace: Path | None = None,
 ) -> UXRequest:
     contract = load_contract(CONTRACT)
     rationale = "job boil supports the requested change" if risk == "high" else ""
@@ -56,7 +59,7 @@ def _request(
         expected_deliverables=["updated design artifact"],
         acceptance=["deliverable satisfies the requested change"],
         depends_on=depends_on or [],
-        workspace=directory,
+        workspace=workspace or directory,
         now=FIXED,
     )
     write_request(request, directory)
@@ -266,7 +269,9 @@ def test_liaison_lens_has_all_state_and_status_counts(
         status="needs_info",
         questions_for_user=["Which cue should be prioritized?"],
     )
-    lens = build_report(contract, report, out_dir=tmp_path)["lenses"]["liaison"]
+    lens = build_report(
+        contract, report, out_dir=tmp_path, workspace=tmp_path, liaison_dir=tmp_path
+    )["lenses"]["liaison"]
     assert set(lens["by_state"]) == {
         "open",
         "answered",
@@ -295,6 +300,127 @@ def _run(*args: str) -> subprocess.CompletedProcess[str]:
         text=True,
         check=False,
     )
+
+
+def test_report_uses_explicit_workspace_and_product_liaison(tmp_path: Path) -> None:
+    root = tmp_path / "workspace"
+    root.mkdir()
+    directory = root / "product" / "requests"
+    out = tmp_path / "report"
+    out.mkdir()
+    _request(root / "liaison", "root-only", "wire")
+    _request(out, "output-only", "doc")
+    _request(directory, "running", "bard", workspace=root)
+    _response(directory, "running", "bard", status="in_progress")
+    artifact = root / "result.txt"
+    artifact.write_text("delivered", encoding="utf-8")
+    _request(directory, "finished", "doc", workspace=root)
+    _response(
+        directory,
+        "finished",
+        "doc",
+        status="done",
+        artifacts=[{"path": "result.txt", "sha256": tree_sha256(artifact)}],
+    )
+    source = root / "input.txt"
+    source.write_text("original", encoding="utf-8")
+    stale = _request(directory, "stale-one", "sim", inputs=["input.txt"], workspace=root)
+    _response(directory, "stale-one", "sim", input_hashes={"input.txt": stale.inputs[0].sha256})
+    source.write_text("changed", encoding="utf-8")
+    _request(directory, "wrong-owner", "bard", workspace=root)
+    _response(directory, "wrong-owner", "wire")
+    _response(directory, "orphan", "doc")
+    (directory / "bad.ux-response.json").write_text("{oops", encoding="utf-8")
+    contract = load_contract(CONTRACT)
+    lens = build_report(
+        contract,
+        run_gates(contract, root),
+        out_dir=out,
+        workspace=root,
+        liaison_dir=Path("product/requests"),
+    )["lenses"]["liaison"]
+    assert lens["directory"] == "product/requests"
+    assert lens["requests"] == 4
+    assert lens["answered"] == 2
+    assert lens["completed"] == 1
+    assert lens["by_state"]["stale"] == 1
+    assert lens["by_state"]["mismatched"] == 1
+    assert len(lens["orphans"]) == 1
+    assert len(lens["malformed"]) == 1
+    assert {entry["request"] for entry in lens["entries"]} == {
+        "running",
+        "finished",
+        "stale-one",
+        "wrong-owner",
+    }
+
+
+@pytest.mark.parametrize("legacy_key", ["existing_responses", "response_files"])
+def test_report_rejects_legacy_coop_dictionary(legacy_key: str) -> None:
+    # The historical ad hoc generator disagreed on these keys. Neither is
+    # an alternative contract for the strict, reconciled v2 status.
+    legacy = cast(Any, {"open_requests": [], legacy_key: []})
+    with pytest.raises(ValidationError):
+        liaison_lens(legacy)
+
+
+@pytest.mark.parametrize("command", ["gates", "author"])
+@pytest.mark.parametrize("directory", ["liaison", "product/requests"])
+def test_cli_report_liaison_context(
+    tmp_path: Path,
+    command: str,
+    directory: str,
+) -> None:
+    root = tmp_path / "workspace"
+    root.mkdir()
+    _request(root / directory, "cli-report", "bard", workspace=root)
+    _response(root / directory, "cli-report", "bard", status="in_progress")
+    out = tmp_path / "report"
+    proc = _run(
+        command,
+        str(CONTRACT),
+        "--workspace",
+        str(root),
+        "--out",
+        str(out),
+        "--liaison-dir",
+        directory,
+    )
+    assert proc.returncode == 0, proc.stderr + proc.stdout
+    lens = json.loads((out / "ux-report.json").read_text(encoding="utf-8"))["lenses"]["liaison"]
+    assert lens["requests"] == lens["answered"] == 1
+    assert lens["completed"] == 0
+    assert lens["by_status"]["in_progress"] == 1
+
+
+def test_mcp_author_uses_selected_workspace_and_liaison(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    contract = tmp_path / "contract.ux.json"
+    contract.write_bytes(CONTRACT.read_bytes())
+    root = tmp_path / "product"
+    root.mkdir()
+    _request(root / "requests", "mcp-report", "doc", workspace=root)
+    out = tmp_path / "report"
+    result = asyncio.run(
+        mcp_server.dispatch_tool(
+            "ux_author",
+            {
+                "contract_path": str(contract),
+                "out_dir": str(out),
+                "workspace": "product",
+                "liaison_dir": "requests",
+            },
+        )
+    )
+    assert isinstance(result, dict)
+    assert result["verdict"] == "pass"
+    lens = json.loads((out / "ux-report.json").read_text(encoding="utf-8"))["lenses"]["liaison"]
+    assert lens["directory"] == "requests"
+    assert lens["requests"] == 1
+    assert lens["by_state"]["open"] == 1
 
 
 def test_cli_liaison_round_trip(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

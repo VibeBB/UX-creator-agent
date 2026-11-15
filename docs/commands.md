@@ -1,5 +1,14 @@
 # Commands
 
+Reports reconcile liaison files under `<workspace>/liaison` by default.
+`author` and `gates --out` accept `--liaison-dir product/requests` to select
+a product directory relative to `--workspace`. The output directory does not
+implicitly select the evidence root. Artifact and input hashes
+are checked against the selected workspace. The liaison lens preserves
+per-request states, response statuses, malformed files and orphan responses.
+`answered` counts valid responses, while `completed` counts only reconciled
+`done` responses; neither count establishes product acceptance.
+
 The deterministic CLI is `python -m ux_creator`. The OpenHands plugin also
 provides slash commands. For tools that write files, use a workspace copy and
 review the diff; `protect-generated` blocks direct edits to generated output.
@@ -9,8 +18,8 @@ review the diff; `protect-generated` blocks direct edits to generated output.
 | Subcommand | Inputs and effect |
 | --- | --- |
 | `doctor` | Probe Ruby, mruby, Mermaid, PlantUML, and plugin image availability; `--warn` is a non-blocking session-start probe. |
-| `gates` | Read a contract and report deterministic checks; optional `--out` writes a report and `--workspace` sets the path boundary. |
-| `author` | Read a contract, run gates, write projections/report to required `--out`; optional `--render` produces previews. |
+| `gates` | Read a contract and report deterministic checks; optional `--out` writes a report, `--workspace` sets the path boundary, and `--liaison-dir` selects requests. |
+| `author` | Read a contract, run gates, write projections/report to required `--out`; optional `--workspace`, `--liaison-dir`, and `--render`. |
 | `render` | Render top-level `*.mmd` and `*.puml` files in a directory. |
 | `import` | Read a supported `circuit`, `mech`, `wire`, `bard`, or `csv` input and update contract import provenance. |
 | `from-ruby` | Compile a Ruby DSL source to the required `--out` contract JSON. |

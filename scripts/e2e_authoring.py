@@ -48,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
             _copy_if_distinct(record, out_dir / record.name)
     for intake in args.contract.parent.glob("intake-touchpoints-*.advisory.json"):
         _copy_if_distinct(intake, out_dir / intake.name)
-    report = run_gates(contract, args.contract.parent)
+    report = run_gates(contract, out_dir)
     paths = write_projections(contract, name, out_dir)
     renders = render_all(out_dir) if args.render else []
     write_provenance(contract, paths, out_dir)
@@ -73,7 +73,8 @@ def main(argv: list[str] | None = None) -> int:
         blocked = [t.id for t in triage(contract, proposals) if t.status != "auto_send"]
         print(json.dumps({"stage": "propose", "blocked": blocked}))
 
-    write_report(contract, report, out_dir, renders)
+    # This smoke driver explicitly assembles a self-contained workspace in out_dir.
+    write_report(contract, report, out_dir, renders, workspace=out_dir, liaison_dir=Path("."))
     print(json.dumps({"verdict": report.verdict, "out": str(out_dir)}))
     return 0 if report.verdict == "pass" else 1
 
