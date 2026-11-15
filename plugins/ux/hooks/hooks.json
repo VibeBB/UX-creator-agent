@@ -99,7 +99,7 @@
       ]
     },
     {
-      "matcher": "file_editor|ux_render|ux_author",
+      "matcher": "file_editor|ux_render|ux_author|ux_produce|ux_liaison_status",
       "hooks": [
         {
           "type": "command",

@@ -168,7 +168,7 @@ def test_profiles_hook_exits_zero() -> None:
     assert payload["hook"] == "ensure-llm-profiles"
 
 
-def test_record_image_observation_logs_ux_author_png_path(tmp_path: Path) -> None:
+def test_record_image_observation_ignores_ux_author_text_only_png_path(tmp_path: Path) -> None:
     image = tmp_path / "out" / "example" / "statechart.png"
     image.parent.mkdir(parents=True)
     image.write_bytes(b"png")
@@ -190,7 +190,4 @@ def test_record_image_observation_logs_ux_author_png_path(tmp_path: Path) -> Non
 
     assert proc.returncode == 0
     observations = tmp_path / "observations" / "ux" / "image-observations.jsonl"
-    records = [json.loads(line) for line in observations.read_text(encoding="utf-8").splitlines()]
-    assert len(records) == 1
-    assert records[0]["tool_name"] == "ux_author"
-    assert records[0]["image_path"] == str(image)
+    assert not observations.exists()
