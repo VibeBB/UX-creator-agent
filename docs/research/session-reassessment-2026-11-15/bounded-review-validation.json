@@ -1,0 +1,158 @@
+{
+  "captured_at": "2026-11-15T13:51:27.627750+00:00",
+  "implementation_commit": "f45464fe78cc72b9280f7fd7bc796d4d9fce941e",
+  "base_commit": "86b395f6ea6a6dd3b50db6e19f3b77b83d3b6255",
+  "branch": "devin/1794749888-bounded-review-checkpoints",
+  "clean_before": true,
+  "python": "3.14.10",
+  "versions": {
+    "openhands-sdk": "1.62.0",
+    "openhands-tools": "1.62.0",
+    "mcp": "2.3.0",
+    "ruff": "0.17.5",
+    "pyright": "1.1.414",
+    "pytest": "9.2.0",
+    "uv": "uv 0.13.8 (x86_64-unknown-linux-gnu)"
+  },
+  "source_sha256": {
+    "docs/README.md": "68f23e2b1ee4db03e3bd0368276c82072dd0aada93565f534b57b56770afeffd",
+    "docs/agents.md": "695684475adb20e134e13f0ebf02ae045a4c2379dbd63cf9478aecdc58a274f0",
+    "docs/commands.md": "22d7613611edb207ae988a60c1ed40333a9df4456c0c1ea69e9cd08c0930594c",
+    "docs/mcp.md": "24cdf8f4f6c1b58aac1fa2de9222bc16511a8361eb45d7d13f6982896447be77",
+    "docs/performance-and-limits.md": "979209970dc81b4825e679cc1e4f6b96056b2abfc323e54cd040e25ad8d06e2e",
+    "docs/review-checkpoints.md": "61928a78096c60390eef72cf1d5f575e78bdd9b4ea99f38e0911cc385008b8e4",
+    "plugins/ux/agents/ux-blind-review.md": "43dab76fba56a76d0c11ad6202e89db71853ba367f0a4bc5df4fcacfb21aec68",
+    "plugins/ux/agents/ux-review.md": "7407234f28b19193ddd4c086492f9ebb0bc1aafbf27ed75c266c7471f6b952f8",
+    "plugins/ux/commands/review.md": "46bfc32964d35fb36ffb6984cf55ba5b317124dd7fd8f4a5bc504ed72da2637c",
+    "plugins/ux/hooks/scripts/blind_guard.py": "f7325ad7afc427cb66179d56a5bf53f8bb222f0b773b70bc6ec913d85632cf63",
+    "plugins/ux/hooks/scripts/protect_generated.py": "d78e66e480dc04af75b314930845ffeb6371a67aea99552eb4e191a2be578c19",
+    "src/ux_creator/cli.py": "7a733ba54ddc62e7a77b0c35e4c74c9e19291322cc670213e2a8af3a069de0ac",
+    "src/ux_creator/mcp_server.py": "b0545b7bff1a332d0744407475643f0ea587db075e51c353dd5bb6f27b489773",
+    "src/ux_creator/review_checkpoint.py": "3b2ee17bef48031024ec50acda34c7bf61cccfb7e8c84d7007a60bc76e7a7908",
+    "tests/test_hooks.py": "abaec1c2b3a69e36c66e4cc3fc9e3f68ff90992e15f184af69096d62e3711c44",
+    "tests/test_review_checkpoint.py": "cbad8aea89fce50b43232d21c905cf9c1585fde677765fe4b7506c134cc10c8f",
+    "tests/test_sdk_review_limits.py": "641845fc5ad7f983bb0623d40f90f2dc0bd8dc109102640b530d17fb59a15456"
+  },
+  "checks": [
+    {
+      "command": "uv run ruff check .",
+      "exit_code": 0,
+      "seconds": 0.03,
+      "log": "check-01.log",
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "command": "uv run ruff format --check .",
+      "exit_code": 0,
+      "seconds": 0.029,
+      "log": "check-02.log",
+      "log_sha256": "c90f684ccee760f54bc3d79f420f5faafb24e12a103e375749fa94089852e5e6"
+    },
+    {
+      "command": "uv run pyright",
+      "exit_code": 0,
+      "seconds": 7.14,
+      "log": "check-03.log",
+      "log_sha256": "6d88a1b220adb7a3d62092b6e38431f0b3fe8babe9864fab90e5849766260332"
+    },
+    {
+      "command": "uv run pytest tests/test_image_observations.py tests/test_hooks.py tests/test_record_stop_scope.py -q",
+      "exit_code": 0,
+      "seconds": 5.231,
+      "log": "check-04.log",
+      "log_sha256": "435cd0dd07f00ede74250c1ea189195a0b933fa69fba88199e6d63b027af1ab7"
+    },
+    {
+      "command": "uv run python scripts/verify_docs.py",
+      "exit_code": 0,
+      "seconds": 0.165,
+      "log": "check-05.log",
+      "log_sha256": "5fdf546167baf5bdc4f619c1af10c1e37213d323a8196b34f4125c38449975d3"
+    },
+    {
+      "command": "uv run python scripts/verify_all.py --stage fast",
+      "exit_code": 0,
+      "seconds": 28.885,
+      "log": "check-06.log",
+      "log_sha256": "da11ffedbd9255a0ecea990955f3bd909bec5016bfed9b5919c7ca7df5b061ba"
+    },
+    {
+      "command": "uv run --group sdk-check python scripts/check_plugin_load.py",
+      "exit_code": 0,
+      "seconds": 8.485,
+      "log": "check-07.log",
+      "log_sha256": "718743c0cb3374ab2503e0c5e3f99eab2aa42fe11618975f4a75e9b06e72189a"
+    },
+    {
+      "command": "uv run --group sdk-check pytest -o addopts= -q tests/test_review_checkpoint.py tests/test_sdk_review_limits.py tests/test_sdk_delegated_context.py",
+      "exit_code": 0,
+      "seconds": 11.376,
+      "log": "check-08.log",
+      "log_sha256": "a1d112d13ba056018e034502a5427b7c9842215989dfe22c287f068bf9a7ccc2"
+    },
+    {
+      "command": "uv run --group sdk-check pytest -o addopts= -q tests/test_review_checkpoint.py tests/test_sdk_review_limits.py tests/test_sdk_delegated_context.py",
+      "exit_code": 0,
+      "seconds": 11.5,
+      "log": "check-09.log",
+      "log_sha256": "e5b019386a1b522403bc73882b139e85c1b11d9c2562cb7a70c31317d8408c16"
+    },
+    {
+      "command": "uv run --group sdk-check pytest -o addopts= -q tests/test_review_checkpoint.py tests/test_sdk_review_limits.py tests/test_sdk_delegated_context.py",
+      "exit_code": 0,
+      "seconds": 11.326,
+      "log": "check-10.log",
+      "log_sha256": "c1f94f788fc3f5eea1a7dfd3079e850add5c56303f80f777f42f94c012dd77d2"
+    },
+    {
+      "command": "uv run --group sdk-check pytest -o addopts= -q tests/test_review_checkpoint.py tests/test_sdk_review_limits.py tests/test_sdk_delegated_context.py",
+      "exit_code": 0,
+      "seconds": 11.349,
+      "log": "check-11.log",
+      "log_sha256": "2f8388e668de6338607e84e2baf1555cd4044a6e5dfe9d0c85c9ea45dfd440a1"
+    },
+    {
+      "command": "uv run --group sdk-check pytest -o addopts= -q tests/test_review_checkpoint.py tests/test_sdk_review_limits.py tests/test_sdk_delegated_context.py",
+      "exit_code": 0,
+      "seconds": 11.384,
+      "log": "check-12.log",
+      "log_sha256": "160d458f2c1e00d53c23b10aa545d698b49447ef4a66742783c43aa3fea22bd5"
+    }
+  ],
+  "clean_after": true,
+  "head_unchanged": true,
+  "scope": "UX image-review record collection with bounded fresh native children; product acceptance remains unknown",
+  "criteria": "Twelve zero-exit checks, clean committed source, five focused repeats, no provider calls",
+  "failed_committed_checks": 0,
+  "full_fast_tests_passed": 793,
+  "focused_tests_passed_each": 38,
+  "focused_repeats": 5,
+  "driver_sha256": "eb8fa096e5afcb1b414dbc4a2912033941c631fea07e69d0591959c857683b39",
+  "limitations": [
+    "Synthetic steps and costs; no live provider/perception or retry/backoff timing validation",
+    "Native definitions/hooks tested with inherited model and empty MCP configuration",
+    "One active pair and attempt caps are scoped to one checkpoint/coordinator review run",
+    "Shared owner-policy consumption and crop/tile ancestry remain unfinished",
+    "No clean release-install, GUI, real audio, hardware or product acceptance claim"
+  ],
+  "development_native_runs": [
+    {
+      "log": "native-limits-initial.log",
+      "sha256": "dd30e6785d409bbc734dc7c45e6a7124f9f155e67b294c5bae8f462e8b0cb6f5",
+      "passed": 0,
+      "failed": 8
+    },
+    {
+      "log": "native-limits-second.log",
+      "sha256": "3eb1c63af3b96140390fe8f9be1c0a9c5029389b63b8bdee8a99e2b97cccf3d5",
+      "passed": 4,
+      "failed": 4
+    },
+    {
+      "log": "native-limits-third.log",
+      "sha256": "06955fb47f16312e5d13266c774a2aa4648c46e423cbe6564a92e25b68e39131",
+      "passed": 8,
+      "failed": 0
+    }
+  ]
+}

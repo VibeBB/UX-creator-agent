@@ -45,7 +45,10 @@ The proposed alternative is a coordinator checkpoint that reuses completed
 reviews by source revision and creates a fresh native child for each
 unfinished image/reviewer pair. Fresh children apply the definition limits
 without preserving the earlier child's message history. This is a proposed
-design awaiting the user's choice; it is not implemented by the image
-identity change. Same-child history requires a supported SDK fix or version
+design at the time of the probe; the user subsequently selected it. The
+[bounded-review implementation](bounded-review-checkpoints.md) and
+[validation record](bounded-review-validation.json) document its later
+implementation and synthetic native-exhaustion tests. Same-child history
+requires a supported SDK fix or version
 that preserves the definition limit. No SDK patch, custom executor, task
 transport, or event-history platform has been introduced.
