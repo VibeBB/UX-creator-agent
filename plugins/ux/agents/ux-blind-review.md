@@ -43,6 +43,11 @@ hooks:
           name: safety-rail
           command: 'p=$(for c in  "${UX_PLUGIN_ROOT:-}" "${PLUGIN_ROOT:-}" "${OPENHANDS_PROJECT_DIR:-.}/plugins/ux" "${HOME:-}/.agents/plugins/ux" "${HOME:-}/.openhands/plugins/installed/ux"; do [ -f "$c/hooks/scripts/safety_rail.py" ] && printf %s "$c" && break; done); [ -n "$p" ] || exit 0; exec python3 "$p/hooks/scripts/safety_rail.py"'
   post_tool_use:
+    - matcher: file_editor|ux_render|ux_author|ux_produce|ux_liaison_status
+      hooks:
+        - type: command
+          name: record-image-observation
+          command: 'p=$(for c in  "${UX_PLUGIN_ROOT:-}" "${PLUGIN_ROOT:-}" "${OPENHANDS_PROJECT_DIR:-.}/plugins/ux" "${HOME:-}/.agents/plugins/ux" "${HOME:-}/.openhands/plugins/installed/ux"; do [ -f "$c/hooks/scripts/record_image_observation.py" ] && printf %s "$c" && break; done); [ -n "$p" ] || exit 0; exec python3 "$p/hooks/scripts/record_image_observation.py"'
     - matcher: inspect_image_with_vision
       hooks:
         - type: command

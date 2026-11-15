@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 from contextlib import closing
 from datetime import UTC, datetime
@@ -131,6 +132,28 @@ def test_sdk_delegate_receives_only_own_record_context(
             assert (
                 json.loads(marker.read_text(encoding="utf-8"))["scope_origin"] == "record-context"
             )
+            image = tmp_path / "delegated-image.png"
+            image.write_bytes(b"fixture-image-bytes")
+            image_results = child._hook_processor.hook_manager.run_post_tool_use(
+                "file_editor",
+                {"command": "view", "path": str(image)},
+                {
+                    "content": [
+                        {
+                            "type": "image",
+                            "image_urls": [
+                                "data:image/png;base64,"
+                                + base64.b64encode(image.read_bytes()).decode("ascii")
+                            ],
+                        }
+                    ]
+                },
+            )
+            assert image_results and all(result.success for result in image_results)
+            image_log = tmp_path / "observations/ux/image-observations.jsonl"
+            delivered = json.loads(image_log.read_text(encoding="utf-8"))
+            assert delivered["session_id"] == str(child.state.id)
+            assert delivered["image_path"] == str(image)
             results = child._hook_processor.hook_manager.run_post_tool_use(
                 "inspect_image_with_vision",
                 {"image_index": 0, "question": "Read the image"},
