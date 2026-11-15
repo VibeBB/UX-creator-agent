@@ -33,7 +33,18 @@ from pydantic import SecretStr
 PLUGIN_DIR = Path(__file__).resolve().parents[1] / "plugins/ux"
 
 
-@pytest.mark.parametrize("name", ["ux-review", "ux-blind-review"])
+@pytest.mark.parametrize(
+    "name",
+    [
+        "ux-review",
+        "ux-blind-review",
+        "ux-creator",
+        "ux-research",
+        "ux-statechart",
+        "ux-liaison",
+        "ux-producer",
+    ],
+)
 def test_sdk_delegate_receives_only_own_record_context(
     name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -154,16 +165,17 @@ def test_sdk_delegate_receives_only_own_record_context(
             delivered = json.loads(image_log.read_text(encoding="utf-8"))
             assert delivered["session_id"] == str(child.state.id)
             assert delivered["image_path"] == str(image)
-            results = child._hook_processor.hook_manager.run_post_tool_use(
-                "inspect_image_with_vision",
-                {"image_index": 0, "question": "Read the image"},
-                {"answer": "Independent findings", "profile_name": "vision", "model": "test"},
-            )
-            assert results and all(result.success for result in results)
-            events_path = tmp_path / "observations/ux/vision-tool-events.jsonl"
-            event = json.loads(events_path.read_text(encoding="utf-8"))
-            assert event["session_id"] == str(child.state.id)
-            assert event["source_image_status"] == "unknown"
+            if name in {"ux-review", "ux-blind-review"}:
+                results = child._hook_processor.hook_manager.run_post_tool_use(
+                    "inspect_image_with_vision",
+                    {"image_index": 0, "question": "Read the image"},
+                    {"answer": "Independent findings", "profile_name": "vision", "model": "test"},
+                )
+                assert results and all(result.success for result in results)
+                events_path = tmp_path / "observations/ux/vision-tool-events.jsonl"
+                event = json.loads(events_path.read_text(encoding="utf-8"))
+                assert event["session_id"] == str(child.state.id)
+                assert event["source_image_status"] == "unknown"
             if name == "ux-blind-review":
                 allowed, results = child._hook_processor.hook_manager.run_pre_tool_use(
                     "file_editor",
