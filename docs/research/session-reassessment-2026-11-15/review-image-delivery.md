@@ -106,3 +106,20 @@ its delivered severities for that exact commit. The validation JSON keeps
 both source revisions, fix commits, command digests and the expected failing
 pre-fix reproduction. Documentation-only follow-ups do not replace the
 immutable revision associated with these results.
+
+The same native SDK regression was then expanded to all seven UX agent
+roles. It reproduced five further missing hooks (creator, research,
+statechart, liaison and producer). Commit
+`69585a937f777bb9d178fbe3d509dcacd34f80e5` adds their local image-observation
+hooks. All seven native child roles now record their own inline returns,
+retain their session context, and exclude parent recall; the blind guard
+and coordinator record debt remain covered. Inspector-event assertions
+apply to the two review roles that declare that tool.
+
+At that clean source revision, all nine commands passed: 761 fast tests,
+SDK loading, both native probes and five runs of 187 focused tests. CI
+reported 15 successful checks with no failures or pending checks; Devin
+Review returned zero findings in delivered severities for that exact
+commit. The additional pre-fix reproduction and source digests are retained
+in the validation JSON. [Post-merge CI](post-merge-ci.md) separately audits
+the preceding C2 changes; it does not establish release-install acceptance.

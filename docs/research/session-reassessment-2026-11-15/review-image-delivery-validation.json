@@ -197,5 +197,122 @@
       ]
     },
     "limitations": "The original limits still apply. Synthetic SDK events do not establish provider perception or release-install acceptance."
+  },
+  "all_delegate_capture": {
+    "implementation_commit": "69585a937f777bb9d178fbe3d509dcacd34f80e5",
+    "captured_at": "2026-11-15T13:09:45.076637+00:00",
+    "clean_before": true,
+    "clean_after": true,
+    "regression_reproduction": {
+      "source_commit": "a9a21b6285e000430fff805604d4bf9964d62ba9",
+      "working_tree": "all seven native child roles parametrized before adding the five missing hooks",
+      "expected_failures": 5,
+      "other_passes": 2,
+      "log_sha256": "74ee55e76e15deec50ef275c2fd70bffcc3daed8c0267d5f1d06dec42176a079"
+    },
+    "source_sha256": {
+      "src/ux_creator/records.py": "df37c5995605f63dc20e2a2f1ac626ded21167fc4fc6bcef25f56db5202bf4a5",
+      "src/ux_creator/image_delivery.py": "c917c262759df43d5749ab842ed3747c8e93e03faaefb765827043e8bd88d800",
+      "plugins/ux/hooks/scripts/record_image_observation.py": "f32531101d81daaa3d32907130d4a7e94bac039fb2ef3ea5407816596119b13e",
+      "plugins/ux/hooks/scripts/record_vision_tool_event.py": "cce1d327404201849185e1f59b3dadc18f9f061136870f90b66c7e2742eea0e8",
+      "tests/test_records.py": "1742a6dd30f54295f7d2e84d0191298ba544b910c749a568952c4d567642f60c",
+      "tests/test_sdk_delegated_context.py": "58649da605e464894d81a95b758f2a030fc9513c9919ed91e175306c3f8ad4ea",
+      "plugins/ux/agents/ux-review.md": "6783589246fd4e5bda3070eadd3abe57f053cd6ebf006687a85d682ba89d3bae",
+      "plugins/ux/agents/ux-blind-review.md": "531bc56d2db9d5b54b56294ddd40987b744120ef2c0dd32b298445966af23135",
+      "plugins/ux/agents/ux-creator.md": "0ca63b8e1ea085245d59bacd3acc391738b051388ed92d7c8a42db30cf434b61",
+      "plugins/ux/agents/ux-research.md": "5602ed6647fc982a654f4d4e606bbf8eb0ca4944b26a808c808a2f2ef90160dd",
+      "plugins/ux/agents/ux-statechart.md": "0f3684cc7a725c5c48315aaf29509654f8465a92be73f2a6feeab466ce90c2d0",
+      "plugins/ux/agents/ux-liaison.md": "6101883b32673d50b20de5d252bc3372317fbac62d8ba1b462f6e58bd8037ac6",
+      "plugins/ux/agents/ux-producer.md": "4839292f1605ddfb0b2239e90fff641d3975d032929376b920f885f9d1cf6932"
+    },
+    "checks": [
+      {
+        "command": "uv run python scripts/verify_all.py --stage fast",
+        "exit_code": 0,
+        "duration_s": 23.522,
+        "log_sha256": "01656296d5bf3f199d6dc9478704563244269af72255b2d76b20e0a1b552139b",
+        "tests_passed": 761
+      },
+      {
+        "command": "uv run --group sdk-check python scripts/check_plugin_load.py",
+        "exit_code": 0,
+        "duration_s": 8.264,
+        "log_sha256": "944c87629dfc03ff41e90bba4af37f55e537a89be11b2c0a885dd3b82a70864d"
+      },
+      {
+        "command": "uv run python probe_native_vision_selection.py",
+        "exit_code": 0,
+        "duration_s": 3.72,
+        "log_sha256": "81e1873de806fd5838e325b6295ccc49eadc57572a7316ab1c2174b7555862fe",
+        "script_storage": "private implementation evidence"
+      },
+      {
+        "command": "uv run python probe_native_image_observations.py",
+        "exit_code": 0,
+        "duration_s": 4.251,
+        "log_sha256": "f0477771f4d7d786fe129f7664d9b4c14104921854c2387b638bea3b6ec1539a",
+        "script_storage": "private implementation evidence"
+      },
+      {
+        "command": "uv run pytest -o addopts= -q tests/test_image_observations.py tests/test_records.py tests/test_sdk_delegated_context.py tests/test_hooks.py tests/test_record_stop_scope.py",
+        "exit_code": 0,
+        "duration_s": 11.434,
+        "log_sha256": "074c73f9e6ae7dc0112b2686819b2241bcac1c45c8b04e9f8438ed027870f309",
+        "tests_passed": 187
+      },
+      {
+        "command": "uv run pytest -o addopts= -q tests/test_image_observations.py tests/test_records.py tests/test_sdk_delegated_context.py tests/test_hooks.py tests/test_record_stop_scope.py",
+        "exit_code": 0,
+        "duration_s": 12.371,
+        "log_sha256": "2b8f9dbb58cd2acaaf14478af64443d52dddfc17c04dde4b3b91bf1add0dc485",
+        "tests_passed": 187
+      },
+      {
+        "command": "uv run pytest -o addopts= -q tests/test_image_observations.py tests/test_records.py tests/test_sdk_delegated_context.py tests/test_hooks.py tests/test_record_stop_scope.py",
+        "exit_code": 0,
+        "duration_s": 13.782,
+        "log_sha256": "82dcb1ddbc69e48619b634f9cbc1e14ee525344a3636e081b1a98d647ad9fac8",
+        "tests_passed": 187
+      },
+      {
+        "command": "uv run pytest -o addopts= -q tests/test_image_observations.py tests/test_records.py tests/test_sdk_delegated_context.py tests/test_hooks.py tests/test_record_stop_scope.py",
+        "exit_code": 0,
+        "duration_s": 11.67,
+        "log_sha256": "6bd77e0fc1b248d8f54de642ddb9d93e1eb0ffec97fca8993b97338bc3501237",
+        "tests_passed": 187
+      },
+      {
+        "command": "uv run pytest -o addopts= -q tests/test_image_observations.py tests/test_records.py tests/test_sdk_delegated_context.py tests/test_hooks.py tests/test_record_stop_scope.py",
+        "exit_code": 0,
+        "duration_s": 11.671,
+        "log_sha256": "6bd77e0fc1b248d8f54de642ddb9d93e1eb0ffec97fca8993b97338bc3501237",
+        "tests_passed": 187
+      }
+    ],
+    "native_delegation": {
+      "roles": 7,
+      "own_session_capture": true,
+      "parent_context_excluded": true,
+      "blind_guard_retained": true,
+      "provider_calls": 0
+    },
+    "ci": {
+      "commit": "69585a937f777bb9d178fbe3d509dcacd34f80e5",
+      "passed": 15,
+      "failed": 0,
+      "pending": 0,
+      "skipped": 0
+    },
+    "devin_review": {
+      "commit": "69585a937f777bb9d178fbe3d509dcacd34f80e5",
+      "findings": 0,
+      "severities": [
+        "bug",
+        "code_quality",
+        "flag",
+        "reviewer"
+      ]
+    },
+    "limits": "Delivery remains advisory; source selection, ownership policy consumption, crop/tile lineage, finite resume and release acceptance retain their documented gaps."
   }
 }

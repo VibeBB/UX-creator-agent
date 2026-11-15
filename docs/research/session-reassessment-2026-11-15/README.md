@@ -155,6 +155,9 @@ regression remains necessary after the fixes.
 The [review-boundary implementation follow-up](review-boundaries.md) records
 subsequent identity, coordinator and Stop corrections and their verification
 limits. Those source changes do not alter the historical findings above.
+The [post-merge CI audit](post-merge-ci.md) binds subsequent workflow
+snapshots to the eleven immutable C2 merge commits and preserves incomplete
+publication as a gap.
 
 The [image-identity foundation](image-identity-foundation.md) describes the
 first C3 producer/path/SHA binding at the MCP image boundary. The
