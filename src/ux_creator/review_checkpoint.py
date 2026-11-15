@@ -167,12 +167,17 @@ def _evidence_gap(
     if (
         not review.image_path
         or review.sequence <= pair.after_sequence
-        or workspace_path(review.image_path, base) != base / pair.image.path
         or review.image_sha256 != pair.image.sha256
         or review.checklist != pair.checklist
         or review.reviewer != pair.role
         or review.session_id == state.session_id
     ):
+        return "review_scope_mismatch"
+    try:
+        image = workspace_path(review.image_path, base)
+    except (OSError, ValueError):
+        return "unavailable_review_path"
+    if image != base / pair.image.path:
         return "review_scope_mismatch"
     primary = _primary(state, pair)
     if pair.role == "primary":

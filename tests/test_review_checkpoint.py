@@ -54,7 +54,7 @@ def _active(result: dict[str, Any]) -> dict[str, Any]:
 def _write_review(root: Path, role: str, primary: str | None = None, **fields: Any) -> str:
     """Synthetic fixtures exercise evidence contracts, never visual perception."""
     session = fields.pop("session_id", role + "-native-child")
-    image = root / "diagram.png"
+    image = root / (fields.get("image_path") or "diagram.png")
     observed = subprocess.run(
         [sys.executable, str(HOOK)],
         input=json.dumps(
@@ -240,6 +240,36 @@ def test_retry_recovery_cannot_promote_a_record_without_delivery_evidence(worksp
     assert _active(retry)["attempts"] == 2
     assert not any(p["review_event_id"] for p in retry["pairs"])
     assert retry["acceptance"] == "unknown"
+
+
+@pytest.mark.parametrize("same_bytes", [False, True])
+def test_unrelated_symlinked_review_image_does_not_block_retry(
+    workspace: Path, same_bytes: bool
+) -> None:
+    _start_role(workspace, "primary")
+    _call(workspace, "pause", reason="provider unavailable before a record was written")
+    other = workspace / "other.png"
+    other.write_bytes(
+        (workspace / "diagram.png").read_bytes()
+        if same_bytes
+        else b"Idle Ready: another synthetic image"
+    )
+    _write_review(
+        workspace,
+        "primary",
+        image_path="other.png",
+        session_id="unrelated-child",
+        claims=[{"text": "Other fixture names Idle", "anchor": "Idle", "artifact": "other.png"}],
+    )
+    rows, problems = _vrp.verify_log(
+        workspace / "observations/ux/vision-reviews.jsonl", "vision_review"
+    )
+    assert not problems and rows[0]["image_delivery"]["status"] == "bound"
+    other.unlink()
+    other.symlink_to(workspace / "diagram.png")
+    retry = _call(workspace, "start")
+    assert _active(retry)["attempts"] == 2
+    assert retry["delegate"] is not None and retry["acceptance"] == "unknown"
 
 
 def test_restart_reuses_collected_sha_role_and_blind_brief_is_opaque(workspace: Path) -> None:
