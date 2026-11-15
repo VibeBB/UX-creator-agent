@@ -22,6 +22,12 @@ when_to_use_examples:
   - What is blocked and what should each agent do next?
   - 製品全体の工程を計画してステータスを出す
 hooks:
+  session_start:
+    - matcher: "*"
+      hooks:
+        - type: command
+          name: require-records
+          command: "p=$(for c in  \"${UX_PLUGIN_ROOT:-}\" \"${PLUGIN_ROOT:-}\" \"${OPENHANDS_PROJECT_DIR:-.}/plugins/ux\" \"${HOME:-}/.agents/plugins/ux\" \"${HOME:-}/.openhands/plugins/installed/ux\" \"${HOME:-}/plugins/installed/ux\" \"${OH_PERSISTENCE_DIR:-/nonexistent}/plugins/installed/ux\"; do [ -f \"$c/hooks/scripts/require_records.py\" ] && printf %s \"$c\" && break; done); [ -n \"$p\" ] || { echo \"ux plugin root unresolved\" >&2; exit 1; }; exec python3 \"$p/hooks/scripts/require_records.py\" record-context"
   pre_tool_use:
     - matcher: file_editor|apply_patch|terminal
       hooks:
@@ -174,3 +180,11 @@ at most twice, then lets the session end and leaves the gaps in
 `records-status.json`. `ux_records_status` shows what is still owed;
 `ux_records_search` and `ux_records_digest` show what every sister
 thought.
+
+
+Use the native `session_id` supplied by your SessionStart record context for VRP
+writes. For an independent blind/tiebreak review, pass `primary_event_id` from
+the delegation brief; the writer binds it to the same image path and SHA-256.
+When delegating, provide only that opaque ID, the image identity and task facts;
+never disclose the earlier review prose. Each reviewer keeps its own native
+session ID, and the primary's session performs reconciliation.
