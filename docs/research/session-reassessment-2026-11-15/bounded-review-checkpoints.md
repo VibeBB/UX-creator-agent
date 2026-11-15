@@ -105,6 +105,35 @@ primary prose or named the wrong/missing claim anchor; their failures are
 retained alongside the corrected behavioral regressions, rather than
 reported as production regressions.
 
+## Post-merge publication and launcher check
+
+PR [#199](https://github.com/VibeBB/UX-creator-agent/pull/199) merged as
+`ea08596ecd4ca1d2b2125c35f5f78883aa2ddc2a`. Its final head has 16 successful
+checks. The merge has 15 successful checks and one skipped reconcile;
+local fast verification again passed 805 tests, plugin loading passed,
+and the focused suite passed 50 tests.
+
+Image publication run
+[43723462167](https://github.com/VibeBB/UX-creator-agent/actions/runs/43723462167)
+completed successfully. Its automatically merged
+[pin PR #200](https://github.com/VibeBB/UX-creator-agent/pull/200) changes
+only the two image lock files. Verified provenance binds the published
+image digest to the implementation merge above.
+
+The shipped launcher passed prewarm/create/status/start/pause twice with
+attestation required: first using the previous locked image and merge-source
+overlay, then using the newly published image and only copied plugin assets.
+The latter run asserted that source resolution returned `None`, preventing
+host source from masking the baked package. Both preserved checkpoint bytes
+and mtime on status, reserved one primary pair and retained attempt 1 after
+pause. Uncollected states intentionally returned CLI exit code 1.
+
+These were synthetic byte-identity checks with an empty JSON contract and
+non-image fixture bytes. They launched no native child or provider and do
+not establish product validity or visual review. Exact commits, digest,
+commands and private-log hashes are recorded in the
+[post-merge validation](bounded-review-post-merge-validation.json).
+
 ## Remaining boundaries
 
 - Delivery references prove returned bytes and record consistency, not
