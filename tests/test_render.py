@@ -192,14 +192,14 @@ def test_unreadable_rendered_output_has_unknown_identity(
 
     monkeypatch.setattr(render.shutil, "which", which)
 
-    def fake_run(cmd: list[str], timeout: int) -> subprocess.CompletedProcess[str]:
+    def fake_run(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
         Path(cmd[cmd.index("-o") + 1]).write_text("<svg/>", encoding="utf-8")
         return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
 
     def unavailable(*_args: object, **_kwargs: object) -> None:
         raise PermissionError("rendered output is unreadable")
 
-    monkeypatch.setattr(render, "_run", fake_run)
+    monkeypatch.setattr(render.subprocess, "run", fake_run)
     monkeypatch.setattr(render.hashlib, "file_digest", unavailable)
     result = render.render_mermaid(source, tmp_path)
     assert result.status == "unknown"
