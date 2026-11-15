@@ -264,13 +264,24 @@ def test_vision_record_cannot_accept_caller_delivery_assertion(workspace: Path) 
 
 
 @pytest.mark.parametrize("inherited_session", [False, True])
+@pytest.mark.parametrize("redirected_log", ["default", "absolute", "relative"])
 def test_vision_writer_binds_real_hook_observation(
-    workspace: Path, monkeypatch: pytest.MonkeyPatch, inherited_session: bool
+    workspace: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    inherited_session: bool,
+    redirected_log: str,
 ) -> None:
     image = workspace / "out/demo.journey.png"
     session = "native-reviewer"
     if inherited_session:
         monkeypatch.setenv("OPENHANDS_SESSION_ID", session)
+    observation_log = workspace / "observations/ux/image-observations.jsonl"
+    if redirected_log != "default":
+        observation_log = workspace / "redirected-image-observations.jsonl"
+        monkeypatch.setenv(
+            "UX_IMAGE_OBSERVATIONS",
+            str(observation_log) if redirected_log == "absolute" else observation_log.name,
+        )
     payload = {
         "working_dir": str(workspace),
         "session_id": session,
@@ -299,9 +310,7 @@ def test_vision_writer_binds_real_hook_observation(
     assert proc.returncode == 0, proc.stderr
     review = _vision() if inherited_session else _vision(session_id=session)
     record = records.record_vision_review(review)["record"]
-    observation = json.loads(
-        (workspace / "observations/ux/image-observations.jsonl").read_text(encoding="utf-8")
-    )
+    observation = json.loads(observation_log.read_text(encoding="utf-8"))
     delivery = record["image_delivery"]
     assert delivery["status"] == "bound"
     assert delivery["observation_event_id"] == observation["event_id"]

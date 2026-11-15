@@ -459,8 +459,14 @@ def record_vision_review(payload: Mapping[str, Any], root: Path | None = None) -
     errors += _round_errors(body, own, base)
     if errors:
         raise ValueError("; ".join(errors))
+    observation_override = os.environ.get("UX_IMAGE_OBSERVATIONS")
+    observation_log = (
+        Path(observation_override).expanduser()
+        if observation_override
+        else Path("observations/ux/image-observations.jsonl")
+    )
     delivery = review_image_delivery(
-        records_dir(base) / "image-observations.jsonl",
+        observation_log if observation_log.is_absolute() else base / observation_log,
         base / body["image_path"] if review.image_path is not None else None,
         body.get("image_sha256"),
         _session_id(body),
