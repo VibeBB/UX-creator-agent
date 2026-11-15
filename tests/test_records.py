@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import importlib.util
 import json
@@ -247,6 +248,70 @@ def workspace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     (tmp_path / "out" / "demo.journey.mmd").write_text("W1,C1.1,C2.1\n", encoding="utf-8")
     (tmp_path / "out" / "demo.journey.png").write_bytes(b"\x89PNG fake")
     return tmp_path
+
+
+def test_vision_record_preserves_unknown_delivery_without_observation(workspace: Path) -> None:
+    record = records.record_vision_review(_vision(session_id="native-reviewer"))["record"]
+    assert record["image_delivery"]["status"] == "unknown"
+    assert record["image_delivery"]["scope"] == "tool-return"
+    assert record["image_delivery"]["reason"] == "no_matching_delivery"
+    assert not _vrp.record_errors("vision_review", record)
+
+
+def test_vision_record_cannot_accept_caller_delivery_assertion(workspace: Path) -> None:
+    with pytest.raises(ValueError, match="image_delivery"):
+        records.record_vision_review(_vision(image_delivery={"status": "bound"}))
+
+
+@pytest.mark.parametrize("inherited_session", [False, True])
+def test_vision_writer_binds_real_hook_observation(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch, inherited_session: bool
+) -> None:
+    image = workspace / "out/demo.journey.png"
+    session = "native-reviewer"
+    if inherited_session:
+        monkeypatch.setenv("OPENHANDS_SESSION_ID", session)
+    payload = {
+        "working_dir": str(workspace),
+        "session_id": session,
+        "action_id": "native-editor-action",
+        "tool_name": "file_editor",
+        "tool_input": {"command": "view", "path": str(image)},
+        "tool_response": {
+            "content": [
+                {
+                    "type": "image",
+                    "image_urls": [
+                        "data:image/png;base64,"
+                        + base64.b64encode(image.read_bytes()).decode("ascii")
+                    ],
+                }
+            ],
+        },
+    }
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPTS / "record_image_observation.py")],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    review = _vision() if inherited_session else _vision(session_id=session)
+    record = records.record_vision_review(review)["record"]
+    observation = json.loads(
+        (workspace / "observations/ux/image-observations.jsonl").read_text(encoding="utf-8")
+    )
+    delivery = record["image_delivery"]
+    assert delivery["status"] == "bound"
+    assert delivery["observation_event_id"] == observation["event_id"]
+    assert delivery["session_id"] == record["session_id"] == session
+    assert delivery["image_sha256"] == record["image_sha256"]
+    assert delivery["tool_call_id"] == "native-editor-action"
+    assert delivery["producer_identity_status"] == "unknown"
+    assert not _vrp.chain_errors([record], "vision-reviews.jsonl")
+    delivery["observation_event_id"] = "0" * 64
+    assert _vrp.chain_errors([record], "vision-reviews.jsonl")
 
 
 def _connectivity(root: Path) -> Path:

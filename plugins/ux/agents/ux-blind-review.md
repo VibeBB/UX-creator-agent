@@ -64,9 +64,11 @@ around it, and do not ask the caller what the first reviewer thought.
 Earlier verdicts anchor a model even when it is told to ignore them, so
 an independent review is only worth anything while it stays blind.
 
-1. Look at the image (it comes back inline from `ux_render`, or
-   ask `inspect_image_with_vision`). Read the contract for the facts it
-   should show.
+1. Look at the inline image returned by `ux_render` or `file_editor` with
+   your configured multimodal model. The native `inspect_image_with_vision`
+   selects user attachments, not a file named in its question. If you cannot
+   see the returned image, report that limitation as unknown; do not claim
+   a completed visual review. Read the contract for the facts it should show.
 2. Apply the checklist of the `ux-review` agent for that image kind and
    list findings with the same categories and severities.
 3. Write two or more claims, each quoting an exact token you can see

@@ -90,6 +90,9 @@ def _record(payload: dict[str, Any]) -> dict[str, Any] | None:
         "profile_name": profile_name,
         "model": model,
         "response_sha256": _response_sha256(answer),
+        # The native inspector selects user images, not MCP/file-editor observations.
+        # Neither a question path nor image_index proves a selected revision.
+        "source_image_status": "unknown",
     }
     return {
         "tool_name": VISION_TOOL_NAME,
@@ -131,6 +134,7 @@ def main() -> int:
             "image_index": candidate["image_index"],
             "question": candidate["question"],
             "response_sha256": identity["response_sha256"],
+            "source_image_status": identity["source_image_status"],
             "recorded_at": datetime.now(UTC).isoformat(),
             "session_id": candidate["session_id"],
             "actor": candidate["actor"],

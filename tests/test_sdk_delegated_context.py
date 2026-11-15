@@ -140,6 +140,7 @@ def test_sdk_delegate_receives_only_own_record_context(
             events_path = tmp_path / "observations/ux/vision-tool-events.jsonl"
             event = json.loads(events_path.read_text(encoding="utf-8"))
             assert event["session_id"] == str(child.state.id)
+            assert event["source_image_status"] == "unknown"
             if name == "ux-blind-review":
                 allowed, results = child._hook_processor.hook_manager.run_pre_tool_use(
                     "file_editor",

@@ -160,6 +160,9 @@ The [image-identity foundation](image-identity-foundation.md) describes the
 first C3 producer/path/SHA binding at the MCP image boundary. The
 [observation delivery correction](image-observation-delivery.md) preserves
 those claims and the actual delivered revision in the native observer log. The
+[review delivery binding](review-image-delivery.md) connects UX review records
+to those observations and documents the native inspector's unknown source
+selection. The
 [native SDK limit probe](sdk-native-review-limits.md) records the D-stage
 resume limitation and the decision still required before adopting a
 checkpoint strategy.
