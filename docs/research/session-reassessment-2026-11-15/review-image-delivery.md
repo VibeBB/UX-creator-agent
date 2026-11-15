@@ -78,3 +78,12 @@ Full committed-source results are recorded separately from working-tree
 regressions. No GUI, provider vision, real audio or hardware result is
 implied. Crop/tile ancestry, ownership policy consumption, finite checkpoint
 resume and release-install acceptance remain open in the implementation plan.
+
+At implementation commit `34507f3aa7e0af02e5acf41725063441f66abd54`, the
+clean-tree verification passed all nine commands: fast verification with
+752 tests, SDK plugin loading, both native probes, and five focused repeats
+of 178 tests each. The native selection probe again produced all 25 expected
+outcomes. Raw logs, source fixtures and command digests remain private;
+[aggregate validation](review-image-delivery-validation.json) records the
+source and reproducible command scope. These results do not close the
+remaining C3/D or release-acceptance work.

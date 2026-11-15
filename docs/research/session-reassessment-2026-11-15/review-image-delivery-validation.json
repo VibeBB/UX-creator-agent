@@ -1,0 +1,76 @@
+{
+  "scope": "UX advisory delivery references; native inspector source selection remains unknown",
+  "implementation_commit": "34507f3aa7e0af02e5acf41725063441f66abd54",
+  "base_commit": "a1a46bf24aa88e8755ac19d6e328e5cc2c910642",
+  "captured_at": "2026-11-15T12:56:27.834174+00:00",
+  "clean_before": true,
+  "clean_after": true,
+  "criteria": "Nine zero-exit commands; clean source before and after; five focused repetitions",
+  "versions": {
+    "python": "3.14.10",
+    "openhands-sdk": "1.62.0",
+    "openhands-tools": "1.62.0",
+    "mcp": "2.3.0",
+    "uv": "0.13.8",
+    "ruff": "0.17.5",
+    "pyright": "1.1.414",
+    "pytest": "9.2.0"
+  },
+  "source_sha256": {
+    "src/ux_creator/records.py": "365f27301412ae8a6030846617c3f45468e0e83af959fd571c4ebe673635b6fb",
+    "src/ux_creator/image_delivery.py": "c917c262759df43d5749ab842ed3747c8e93e03faaefb765827043e8bd88d800",
+    "plugins/ux/hooks/scripts/record_image_observation.py": "f32531101d81daaa3d32907130d4a7e94bac039fb2ef3ea5407816596119b13e",
+    "plugins/ux/hooks/scripts/record_vision_tool_event.py": "cce1d327404201849185e1f59b3dadc18f9f061136870f90b66c7e2742eea0e8"
+  },
+  "checks": [
+    {
+      "command": "uv run python scripts/verify_all.py --stage fast",
+      "exit_code": 0,
+      "tests_passed": 752,
+      "log_sha256": "ef26a6228c97e1a3d05980049f0189622f38545650883c6a058c702a662998eb"
+    },
+    {
+      "command": "uv run --group sdk-check python scripts/check_plugin_load.py",
+      "exit_code": 0,
+      "log_sha256": "50144fcca3ac3b25b51e72ca7200ee1d4fab661dc520556eef482732380bd9f5"
+    },
+    {
+      "command": "uv run python probe_native_vision_selection.py",
+      "script_storage": "private implementation evidence",
+      "exit_code": 0,
+      "cases": 5,
+      "repeats": 5,
+      "expected_outcomes": 25,
+      "provider_calls": 0,
+      "mcp_server_startups": 0,
+      "log_sha256": "80eb48b6f04e8348aaeeca67580c9502c6a2f72e392a47d98d137600a13d48dd"
+    },
+    {
+      "command": "uv run python probe_native_image_observations.py",
+      "script_storage": "private implementation evidence",
+      "exit_code": 0,
+      "log_sha256": "1477cede113d5c8653f0deda67d38c161e48eb5ed0e95c31f2d20a711b43d461"
+    },
+    {
+      "command": "uv run pytest -o addopts= -q tests/test_image_observations.py tests/test_records.py tests/test_sdk_delegated_context.py tests/test_hooks.py tests/test_record_stop_scope.py",
+      "repeats": 5,
+      "tests_passed_each": 178,
+      "exit_codes": [0, 0, 0, 0, 0],
+      "log_sha256": [
+        "f487a8b045e416ebcd55133c9e90439557e1d1d46cfb448f213786bc1b432d86",
+        "eeddf26a23e4385d36a558483e0a153f770120e449790e9c4fca502b8dafbcad",
+        "4dfd372f2e3354bce8c0e629e09996d657aa03a6d6c03bf12e3176e326ff9371",
+        "cd12a64b849f47f0d7ddb3428961bbcdd3b2b771f4cf51bb0daae84969fffa42",
+        "cab8a6636de5d88cc548bc039a5fd9b7219213390f072013172395701f36b1c4"
+      ]
+    }
+  ],
+  "failed_committed_checks": 0,
+  "limitations": [
+    "Observation event hashes check record consistency; producer claims are not authenticated",
+    "Delivery references do not prove perception or selected image identity",
+    "Shared ownership policy and crop/tile ancestry remain unfinished",
+    "Finite checkpoint resume awaits the user's strategy decision",
+    "No provider, GUI, hardware, real audio, release-install or product acceptance claim"
+  ]
+}
