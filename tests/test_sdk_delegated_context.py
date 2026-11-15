@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 from contextlib import closing
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -51,6 +52,26 @@ def test_sdk_delegate_receives_only_own_record_context(
     # Keep the shipped hooks; provider profiles and MCP startup are outside this check.
     definition = definition.model_copy(update={"model": "inherit", "mcp_config": {}})
     register_plugin_agents([definition], tmp_path)
+    liaison = tmp_path / "liaison"
+    liaison.mkdir()
+    (liaison / "pending.bard-song.json").write_text(
+        json.dumps(
+            {
+                "kind": "bard_song_delivery",
+                "schema_version": 1,
+                "id": "pending",
+                "system": "bard",
+                "to": "ux",
+                "title": "Pending song",
+                "verse": "A blind reader follows the lines while a caller gathers the signs.",
+                "song": {"path": "song.md", "sha256": "a" * 64},
+                "impression_refs": [{"system": "ux", "event_id": "b" * 64}],
+                "reason": "The caller owns this song receipt while the reviewer stays blind.",
+                "created_at": datetime.now(UTC).isoformat(),
+            }
+        ),
+        encoding="utf-8",
+    )
     root_hooks = HookConfig.model_validate(
         {
             "session_start": [
@@ -64,7 +85,19 @@ def test_sdk_delegate_receives_only_own_record_context(
                         }
                     ]
                 }
-            ]
+            ],
+            "stop": [
+                {
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": (
+                                f'python3 "{PLUGIN_DIR}/hooks/scripts/require_records.py" stop'
+                            ),
+                        }
+                    ]
+                }
+            ],
         }
     )
     llm = LLM(model="gpt-4o", api_key=SecretStr("unused"))
@@ -79,6 +112,9 @@ def test_sdk_delegate_receives_only_own_record_context(
         parent._ensure_plugins_loaded()
         assert parent._hook_processor is not None
         assert parent._hook_processor._pending_additional_context == ["PARENT_RECALL_SENTINEL"]
+        should_stop, feedback = parent._hook_processor.run_stop()
+        assert not should_stop
+        assert feedback is not None and "record a song receipt" in feedback
         manager = TaskManager()
         manager.attach_parent(parent)
         task = manager._create_task(subagent_type=name, description="Check native startup")
@@ -95,3 +131,24 @@ def test_sdk_delegate_receives_only_own_record_context(
             assert (
                 json.loads(marker.read_text(encoding="utf-8"))["scope_origin"] == "record-context"
             )
+            results = child._hook_processor.hook_manager.run_post_tool_use(
+                "inspect_image_with_vision",
+                {"image_index": 0, "question": "Read the image"},
+                {"answer": "Independent findings", "profile_name": "vision", "model": "test"},
+            )
+            assert results and all(result.success for result in results)
+            events_path = tmp_path / "observations/ux/vision-tool-events.jsonl"
+            event = json.loads(events_path.read_text(encoding="utf-8"))
+            assert event["session_id"] == str(child.state.id)
+            if name == "ux-blind-review":
+                allowed, results = child._hook_processor.hook_manager.run_pre_tool_use(
+                    "file_editor",
+                    {"command": "view", "path": str(liaison / "pending.bard-song.json")},
+                )
+                assert not allowed and any(result.blocked for result in results)
+            should_stop, feedback = child._hook_processor.run_stop()
+            if name == "ux-blind-review":
+                assert should_stop and feedback is None
+            else:
+                assert not should_stop
+                assert feedback is not None and "record a song receipt" in feedback
