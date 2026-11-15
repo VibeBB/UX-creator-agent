@@ -26,6 +26,8 @@ protocols, operations, and accepted design decisions.
 
 ## Research
 
+- [Cooperative-run reassessment](research/session-reassessment-2026-11-15/README.md) —
+  evidence limits, completion/review defects, validation results and implementation plan
 - [UX theory lenses](research/ux-theory.md) — JTBD/ODI, CJM, service blueprint, HIG, game design
 - [Ruby idioms](research/ruby-idioms.md) — the DSL's style contract
 - [SDK v1.50.0 feature evaluation](research/sdk-v1.50.0-feature-evaluation.md) —

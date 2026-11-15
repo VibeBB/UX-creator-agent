@@ -1,0 +1,118 @@
+{
+  "evidence_cutoff": "2026-11-15",
+  "scope": "Aggregate research evidence; not a new product test run",
+  "private_archive": {
+    "bytes": 121067176,
+    "payload_files": 730,
+    "sha256": "610bd3578910ba20d9a9a55a0fda2672079dfc1f08c946fd877cbeccbcb6a723",
+    "zip_crc": "pass",
+    "member_manifest_sha256": "pass",
+    "sidecar_sha256": "pass",
+    "offline_restore": "pass",
+    "offline_audit_reproduction": "pass"
+  },
+  "facts": {
+    "original_files": 398,
+    "original_bytes": 16167688,
+    "recovered_files": 3363,
+    "recovered_bytes": 46160012,
+    "changed_original_files": 0,
+    "conversations": 4,
+    "agentcanvas_events": 59709,
+    "skills": 101,
+    "commands": 79
+  },
+  "source_revisions": [
+    {
+      "repo": "UX-creator-agent",
+      "sha": "d52d620b3baba121a619b4553ce20ad565c61ee1",
+      "latest_release": "v1.0.0"
+    },
+    {
+      "repo": "bard-agent",
+      "sha": "a36aa5d61abb2686be5412eb6978aca81445389c",
+      "latest_release": "v1.1.0"
+    },
+    {
+      "repo": "dashboard-agent",
+      "sha": "8670c9c553ad74133ef303904d19ba0218616ec2",
+      "latest_release": "v1.0.0"
+    },
+    {
+      "repo": "document-agent",
+      "sha": "029ff7b269fd3e5e4e149139889fadf6b6e67fd2",
+      "latest_release": "v1.0.0"
+    },
+    {
+      "repo": "electrical-circuit-agent",
+      "sha": "b3c3047457d08669e5d5bbcbecbb698949cd85ce",
+      "latest_release": "v1.0.0"
+    },
+    {
+      "repo": "firmware-agent",
+      "sha": "392ff762f717ef5c27d77c9747d0810a54a16d4e",
+      "latest_release": "v1.0.0"
+    },
+    {
+      "repo": "fpga-agent",
+      "sha": "cbf2498b9421aab76675eae799ab2fd7bc8b7adc",
+      "latest_release": "v1.0.0"
+    },
+    {
+      "repo": "mechanical-agent",
+      "sha": "96ff08a3bf458a065ebb62081402e4aa2ac32dbe",
+      "latest_release": "v1.0.0"
+    },
+    {
+      "repo": "production-engineering-agent",
+      "sha": "b2e7db5b8ecddce98ea0633c1c022d8aa1327bd3",
+      "latest_release": "v1.0.0"
+    },
+    {
+      "repo": "simulation-agent",
+      "sha": "cae2630bdfe9621d34b6be607b1dfea6a59a94da",
+      "latest_release": "v1.0.0"
+    },
+    {
+      "repo": "wire-agent",
+      "sha": "a1225d392b9e651bf87447f220bda85545bf6e99",
+      "latest_release": "v1.0.0"
+    },
+    {
+      "repo": "www.vibebb.org",
+      "sha": "b2bc9ec70da6debbf12647979e4028813b1d0233",
+      "latest_release": null
+    }
+  ],
+  "validation": {
+    "liaison_binding_references": 25,
+    "liaison_binding_hash_mismatches": 0,
+    "vrp_v2_chain_records": 1376,
+    "vrp_v2_hash_or_chain_mismatches": 0,
+    "response_count": 6,
+    "response_states": {
+      "done": 3,
+      "in_progress": 3
+    },
+    "bard_cue_validator": "rejected",
+    "bard_midi_files": 4,
+    "bard_midi_bytes_each": 26,
+    "bard_note_on_events": 0,
+    "shared_stop_denials": 32,
+    "child_stop_denials": 27,
+    "ux_status_hook_calls": 27,
+    "ux_status_hook_allow": 27,
+    "ux_status_calls_reporting_unreviewed_images": 1,
+    "runtime_main_selected_hook_files_equal": 23,
+    "release_asset_zips": 17,
+    "release_asset_zip_or_digest_failures": 0,
+    "untruncated_recursive_trees": 12,
+    "complete_pr_file_lists": 10
+  },
+  "limitations": [
+    "Original standalone GUI screenshots unavailable",
+    "One historical UX release-run log download returned HTTP 404",
+    "Aggregate evidence requires the privately delivered archive for offline reproduction",
+    "No new complete cooperative UI run, all-feature execution or physical device validation"
+  ]
+}
