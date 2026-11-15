@@ -87,3 +87,22 @@ outcomes. Raw logs, source fixtures and command digests remain private;
 [aggregate validation](review-image-delivery-validation.json) records the
 source and reproducible command scope. These results do not close the
 remaining C3/D or release-acceptance work.
+
+## Review follow-up verification
+
+Review reproduced two gaps before the fixes: redirected observation logs
+were invisible to the writer, and the blind agent did not capture its inline
+image returns. The writer now resolves `UX_IMAGE_OBSERVATIONS` using the
+hook's default/absolute/workspace-relative rules. The blind agent declares
+the same image-observation hook as the ordinary reviewer. Native SDK child
+tests retain blind isolation and bind observations to the child's own
+session; they do not call a provider or demonstrate image perception.
+
+At follow-up commit `f53da44ea899447714944db3a638c117864f3dde`, all nine
+clean-tree commands passed again: 756 fast tests, SDK loading, the two native
+probes, and 182 focused tests in each of five runs. CI completed 14 checks
+with no failures or pending checks. Devin Review returned zero findings in
+its delivered severities for that exact commit. The validation JSON keeps
+both source revisions, fix commits, command digests and the expected failing
+pre-fix reproduction. Documentation-only follow-ups do not replace the
+immutable revision associated with these results.
