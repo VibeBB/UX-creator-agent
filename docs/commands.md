@@ -31,6 +31,7 @@ review the diff; `protect-generated` blocks direct edits to generated output.
 | `propose` | Read a contract and proposal set, write triage and eligible requests to `--out-dir`. |
 | `review-record` | Write an image-bound advisory review with checklist, summary, and repeatable `--finding CATEGORY:SEVERITY:WHERE:OBSERVATION`; use `--not-applicable` if a vision-capable review could not be performed. |
 | `review-reconcile` | Compare review advisories in `--out-dir` with contract and gate truth; findings remain advisory. |
+| `review-checkpoint` | Maintain bounded review collection from `--json`; only `collected` exits zero. |
 | `liaison` | Reconcile requests and responses under `--liaison-dir` (default workspace liaison directory). |
 | `change` | Check that an ECO closes its ECR: positional `<id>.eco.json`, optional `--workspace`; exits 1 unless every check passes. |
 | `produce` | Validate a product plan and write status under required `--out`; `--workspace`, `--liaison-dir`, and `--render` are optional. |
@@ -67,6 +68,12 @@ uv run python -m ux_creator produce examples/smart-kettle-product/smart-kettle.p
 | `propose` (`/ux:propose`) | QCD-triage proposals into sister requests. |
 | `review` (`/ux:review`) | Delegate advisory review of rendered artifacts. |
 | `statechart` (`/ux:statechart`) | Author statecharts and their projections. |
+
+`review-checkpoint --json <request.json>` exposes the
+[bounded review collector](review-checkpoints.md) used by `/ux:review`.
+It writes checkpoint references and fresh-task briefs. It does not run SDK
+children. The CLI exits zero only for `collected`; intermediate states exit
+one with their JSON payload intact.
 
 Slash command descriptions and allowed tools are defined in
 `plugins/ux/commands/`. The CLI and MCP surfaces are documented separately in

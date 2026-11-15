@@ -69,6 +69,7 @@ def test_protect_blocks_direct_vrp_log_writes() -> None:
         "vision-tool-events.jsonl",
         "image-observations.jsonl",
         "records-status.json",
+        "review-checkpoints/test.json",
     ):
         payload = {
             "tool_name": "file_editor",
@@ -78,6 +79,23 @@ def test_protect_blocks_direct_vrp_log_writes() -> None:
             },
         }
         assert _run_hook(PROTECT_SCRIPT, payload).returncode == 2, name
+
+
+def test_protect_blocks_checkpoint_shell_rewrite_but_allows_read() -> None:
+    path = "observations/ux/review-checkpoints/test.json"
+    assert (
+        _run_hook(
+            PROTECT_SCRIPT,
+            {"tool_name": "terminal", "tool_input": {"command": f"echo invalid > {path}"}},
+        ).returncode
+        == 2
+    )
+    assert (
+        _run_hook(
+            PROTECT_SCRIPT, {"tool_name": "terminal", "tool_input": {"command": f"cat {path}"}}
+        ).returncode
+        == 0
+    )
 
     terminal = {
         "tool_name": "terminal",

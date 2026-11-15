@@ -107,6 +107,8 @@ def _path_values(tool_input: dict[str, Any]) -> list[str]:
 def _is_protected(value: str) -> bool:
     normalized = value.replace("\\", "/").lower()
     base = normalized.rsplit("/", 1)[-1]
+    if "/observations/ux/review-checkpoints/" in f"/{normalized.strip('/')}/":
+        return True
     if base in RECORD_LOGS and "/observations/ux/" in f"/{normalized.strip('/')}/":
         return True
     if base in ARTIFACT_NAMES:

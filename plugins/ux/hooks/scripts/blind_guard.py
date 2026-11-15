@@ -40,9 +40,15 @@ def _strings(value: Any) -> list[str]:
 
 
 def hidden_target(payload: dict[str, Any]) -> str | None:
+    if str(payload.get("tool_name", "")).endswith("ux_review_checkpoint"):
+        return "review checkpoint (coordinator only)"
     if payload.get("tool_name") not in GUARDED_TOOLS:
         return None
     for text in _strings(payload.get("tool_input")):
+        if payload.get("tool_name") == "terminal" and re.search(
+            r"\breview-checkpoint(?:\s|$)", text
+        ):
+            return "review checkpoint (coordinator only)"
         match = HIDDEN.search(text.replace("\\", "/"))
         if match is not None:
             return match.group(2)
