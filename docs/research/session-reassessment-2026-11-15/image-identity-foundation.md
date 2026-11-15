@@ -13,8 +13,10 @@ resolved `path`, `sha256`, `owner_plugin`, and `origin`. A successful UX
 render captures these fields from the output with owner `ux`. Failed or
 unreadable output remains `unknown`. Liaison images instead carry the
 validated SLP responder and the artifact's declared SHA. The attachment
-reader revalidates request, responder, status, and timestamp against its
-scanned liaison entry.
+reader compares the entire validated response with the scanned entry's
+canonical `response_sha256`. Changing artifacts, input hashes, gate evidence,
+or any other response field cannot reuse that entry's earlier `answered`
+state. JSON whitespace or key order does not change the fingerprint.
 
 At attachment time MCP hashes the actual bytes and compares both digest and
 resolved path with the producer claim. Metadata reports `bound`, `unknown`,
@@ -29,7 +31,9 @@ Focused regressions cover renderer output identity, same-stem Mermaid and
 PlantUML outputs, unreadable output, responder ownership despite a UX-looking
 filename, changed response identity, changed image bytes, equal bytes at a
 different path, unknown legacy ownership, and the existing inline size/count
-limits. Commands:
+limits. A pre-fix regression reproduced replacement artifacts inheriting an
+earlier `answered` state; the complete-response fingerprint closes that gap.
+Commands:
 
 ```bash
 uv run pytest tests/test_render.py tests/test_mcp_inline_images.py -q

@@ -466,13 +466,7 @@ def _liaison_image_renders(status: LiaisonStatus, workspace: Path) -> list[Rende
             continue
         response_path = workspace_path(entry.response_path, workspace)
         response = UXResponse.model_validate_json(response_path.read_text(encoding="utf-8"))
-        if (
-            response.request != entry.request
-            or response.responder != entry.target_agent
-            or response.responder != entry.responder
-            or response.status != entry.response_status
-            or response.responded_at != entry.responded_at
-        ):
+        if response.content_sha256() != entry.response_sha256:
             raise ValueError(f"liaison response changed since status scan: {entry.response_path}")
         for artifact in response.artifacts:
             image = workspace_path(artifact.path, workspace)

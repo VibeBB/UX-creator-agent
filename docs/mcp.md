@@ -64,8 +64,9 @@ annotations, read/write safety, and round trips.
 `image_identity` contains a resolved image `path`, its producer's `sha256`,
 `owner_plugin`, and `origin` (`renderer` or `liaison-response`). UX renderers
 capture this identity after producing each output. Liaison attachments use
-the strict SLP response's responder and artifact SHA, checked against the
-entry that was scanned. Ownership never comes from a path fragment.
+the strict SLP response's responder and artifact SHA. Its complete validated
+content is checked against the scanned entry's `response_sha256`, including
+artifacts, inputs and gate evidence. Ownership never comes from a path fragment.
 
 `sha256` at the top of each entry hashes the bytes actually read for the
 response. `identity_status` is `bound` only when that digest and the resolved

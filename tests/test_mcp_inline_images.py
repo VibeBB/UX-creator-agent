@@ -178,7 +178,10 @@ def test_produce_render_attaches_production_plan_image(
     assert base64.b64decode(images[0].data) == image_bytes
 
 
-@pytest.mark.parametrize("change_after_scan", [None, "image_bytes", "responder"])
+@pytest.mark.parametrize(
+    "change_after_scan",
+    [None, "image_bytes", "responder", "artifacts", "input_hashes", "format_only"],
+)
 def test_liaison_status_binds_image_to_response_owner_and_hash(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, change_after_scan: str | None
 ) -> None:
@@ -223,9 +226,18 @@ def test_liaison_status_binds_image_to_response_owner_and_hash(
         status = scan(directory, workspace)
         if change_after_scan == "image_bytes":
             image.write_bytes(b"changed after status scan")
-        elif change_after_scan == "responder":
+        elif change_after_scan is not None:
             changed = response.model_dump()
-            changed["responder"] = "doc"
+            if change_after_scan == "responder":
+                changed["responder"] = "doc"
+            elif change_after_scan == "artifacts":
+                replacement = tmp_path / "replacement.png"
+                replacement.write_bytes(b"unscanned replacement artifact")
+                changed["artifacts"] = [
+                    {"path": "replacement.png", "sha256": tree_sha256(replacement)}
+                ]
+            elif change_after_scan == "input_hashes":
+                changed["input_hashes"] = {"never-scanned.txt": "0" * 64}
             response_path.write_text(json.dumps(changed), encoding="utf-8")
         return status
 
@@ -244,7 +256,7 @@ def test_liaison_status_binds_image_to_response_owner_and_hash(
 
     payload, content = _content_payload(result)
     images = [block for block in content if isinstance(block, types.ImageContent)]
-    if change_after_scan == "responder":
+    if change_after_scan in ("responder", "artifacts", "input_hashes"):
         assert payload["verdict"] == "fail"
         assert "response changed since status scan" in payload["detail"]
         assert not images
