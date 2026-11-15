@@ -16,7 +16,8 @@ from .advisory import (
 from .contract import UXContract
 from .gates import GateReport, stage_job_coverage
 from .render import RenderResult
-from .responses import ALL_STATES, ALL_STATUSES, liaison_status
+from .responses import ALL_STATES, ALL_STATUSES, LiaisonStatus, liaison_status
+from .workspace import workspace_root
 
 _REVIEW_IMAGE_SUFFIXES = {".svg", ".png"}
 
@@ -112,9 +113,9 @@ def review_lens(contract: UXContract, gate_report: GateReport, out_dir: Path) ->
     }
 
 
-def liaison_lens(out_dir: Path) -> dict[str, Any]:
-    """Measured sister-agent response coverage; informational only."""
-    status = liaison_status(out_dir, out_dir)
+def liaison_lens(status: LiaisonStatus) -> dict[str, Any]:
+    """Summarize reconciled v2 status without promoting receipt to completion."""
+    status = LiaisonStatus.model_validate(status)
     by_state = {state: 0 for state in ALL_STATES}
     by_status = {response_status: 0 for response_status in ALL_STATUSES}
     for entry in status.entries:
@@ -124,6 +125,10 @@ def liaison_lens(out_dir: Path) -> dict[str, Any]:
     return {
         "requests": len(status.entries),
         "answered": sum(1 for e in status.entries if e.state == "answered"),
+        "completed": sum(
+            1 for e in status.entries if e.state == "answered" and e.response_status == "done"
+        ),
+        "entries": [e.model_dump(mode="json") for e in status.entries],
         "open": sum(1 for e in status.entries if e.state == "open"),
         "mismatched": sum(1 for e in status.entries if e.state == "mismatched"),
         "by_state": by_state,
@@ -181,6 +186,9 @@ def build_report(
     gate_report: GateReport,
     renders: list[RenderResult] | None = None,
     out_dir: Path | None = None,
+    *,
+    workspace: Path | None = None,
+    liaison_dir: Path | None = None,
 ) -> dict[str, Any]:
     report = gate_report.to_dict(contract)
     report["schema_version"] = 1
@@ -229,7 +237,13 @@ def build_report(
     }
     if out_dir is not None and out_dir.is_dir():
         report["lenses"]["review"] = review_lens(contract, gate_report, out_dir)
-        report["lenses"]["liaison"] = liaison_lens(out_dir)
+        root = (workspace or workspace_root()).resolve()
+        directory = root / (liaison_dir or Path("liaison"))
+        lens = liaison_lens(liaison_status(directory, root))
+        lens["directory"] = (
+            str(directory.relative_to(root)) if directory.is_relative_to(root) else str(directory)
+        )
+        report["lenses"]["liaison"] = lens
         report["lenses"]["innovation"] = innovation_lens(contract, out_dir)
         report["vision_points"] = vision_points(out_dir)
     if renders is not None:
@@ -250,8 +264,19 @@ def write_report(
     gate_report: GateReport,
     out_dir: Path,
     renders: list[RenderResult] | None = None,
+    *,
+    workspace: Path | None = None,
+    liaison_dir: Path | None = None,
 ) -> Path:
-    report = build_report(contract, gate_report, renders, out_dir=out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    report = build_report(
+        contract,
+        gate_report,
+        renders,
+        out_dir=out_dir,
+        workspace=workspace,
+        liaison_dir=liaison_dir,
+    )
     path = out_dir / "ux-report.json"
     path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (out_dir / "ux-report.md").write_text(render_markdown(report), encoding="utf-8")
@@ -331,7 +356,8 @@ def render_markdown(report: dict[str, Any]) -> str:
             "## Liaison lens",
             "",
             f"- requests: {liaison['requests']} "
-            f"(answered {liaison['answered']}, open {liaison['open']}, "
+            f"(answered {liaison['answered']}, completed {liaison['completed']}, "
+            f"open {liaison['open']}, "
             f"mismatched {liaison['mismatched']})",
             f"- states: {', '.join(f'{k}={v}' for k, v in liaison['by_state'].items())}",
             f"- response statuses: "

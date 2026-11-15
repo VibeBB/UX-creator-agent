@@ -22,7 +22,7 @@ workspace; the server validates paths before reading or writing.
 | `ux_doctor` | No arguments. | Probes the local environment. | Tool readiness checks. |
 | `ux_validate_contract` | `contract` JSON object. | Validates in memory; no file write. | `verdict: pass` or `fail` and stage/detail. |
 | `ux_gates` | Required `contract_path`; optional `workspace`. | Reads the contract and referenced workspace evidence. | Gate checks, verdict, and summary. |
-| `ux_author` | Required `contract_path`, `out_dir`; optional `render`. | Reads the contract; writes projections, provenance, report, and optional images. | Gate/report payload; rendering may also return image content blocks. |
+| `ux_author` | Required `contract_path`, `out_dir`; optional `workspace`, `liaison_dir`, `render`. | Reads the contract and selected workspace evidence; writes projections, provenance, report, and optional images. | Gate/report payload; rendering may also return image content blocks. |
 | `ux_from_ruby` | `source` and output path `out`. | Executes the UX Ruby DSL through the bridge; writes validated contract JSON. | `verdict`, stage, output contract path. |
 | `ux_import` | `contract_path`, `system` (`circuit`, `mech`, `wire`, `bard`, or `csv`), and `file`. | Reads source; updates authored contract import provenance. | `verdict` and imported references. |
 | `ux_request` | Required contract, request ID, target, stage, risk, purpose, changes, deliverables, and acceptance; optional rationale, input paths, dependencies, workspace, liaison directory, and `replace`. | Reads and hashes inputs; writes a request only if absent, identical, or explicitly replaced. | Request path and deterministic `delegate` brief. |

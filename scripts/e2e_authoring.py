@@ -73,7 +73,8 @@ def main(argv: list[str] | None = None) -> int:
         blocked = [t.id for t in triage(contract, proposals) if t.status != "auto_send"]
         print(json.dumps({"stage": "propose", "blocked": blocked}))
 
-    write_report(contract, report, out_dir, renders)
+    # Report liaison evidence is staged in out_dir; imports stay beside the source contract.
+    write_report(contract, report, out_dir, renders, workspace=out_dir, liaison_dir=Path("."))
     print(json.dumps({"verdict": report.verdict, "out": str(out_dir)}))
     return 0 if report.verdict == "pass" else 1
 

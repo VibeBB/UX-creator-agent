@@ -127,6 +127,8 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
             "contract_path": {"type": "string"},
             "out_dir": {"type": "string"},
             "render": {"type": "boolean"},
+            "workspace": {"type": "string"},
+            "liaison_dir": {"type": "string"},
         },
         "required": ["contract_path", "out_dir"],
         "additionalProperties": False,
@@ -538,11 +540,13 @@ async def dispatch_tool(
         out_dir = _path_arg(arguments, "out_dir")
         contract = load_contract(contract_path)
         name = contract_path.stem.removesuffix(".ux")
-        report = run_gates(contract)
+        root = _workspace_arg(arguments)
+        directory = workspace_path(arguments.get("liaison_dir") or "liaison", root)
+        report = run_gates(contract, root)
         paths = write_projections(contract, name, out_dir)
         renders = render_all(out_dir, fmts=("svg", "png")) if arguments.get("render") else []
         write_provenance(contract, paths, out_dir)
-        write_report(contract, report, out_dir, renders)
+        write_report(contract, report, out_dir, renders, workspace=root, liaison_dir=directory)
         payload = report.to_dict(contract)
         return _render_content(payload, renders) if arguments.get("render") else payload
     if name == "ux_from_ruby":

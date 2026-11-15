@@ -90,11 +90,18 @@ def _cmd_gates(args: argparse.Namespace) -> int:
         contract = load_contract(args.contract)
     except (OSError, ValueError, ValidationError) as exc:
         return _fail("load", exc)
-    report = run_gates(contract, Path(args.workspace or "."))
+    root = Path(args.workspace) if args.workspace else workspace_root()
+    report = run_gates(contract, root)
     if args.out:
         from .report import write_report as _write
 
-        _write(contract, report, Path(args.out))
+        _write(
+            contract,
+            report,
+            Path(args.out),
+            workspace=root,
+            liaison_dir=Path(args.liaison_dir) if args.liaison_dir else None,
+        )
     _print(report.to_dict(contract))
     return 0 if report.verdict == PASS else 1
 
@@ -107,11 +114,19 @@ def _cmd_author(args: argparse.Namespace) -> int:
         return _fail("load", exc)
     out_dir = Path(args.out)
     name = Path(args.contract).stem.removesuffix(".ux")
-    report = run_gates(contract, Path(args.workspace or "."))
+    root = Path(args.workspace) if args.workspace else workspace_root()
+    report = run_gates(contract, root)
     paths = write_projections(contract, name, out_dir)
     renders = render_all(out_dir, fmts=("svg", "png")) if args.render else []
     write_provenance(contract, paths, out_dir)
-    write_report(contract, report, out_dir, renders)
+    write_report(
+        contract,
+        report,
+        out_dir,
+        renders,
+        workspace=root,
+        liaison_dir=Path(args.liaison_dir) if args.liaison_dir else None,
+    )
     _print(report.to_dict(contract))
     return 0 if report.verdict == PASS else 1
 
@@ -631,12 +646,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("contract")
     p.add_argument("--out")
     p.add_argument("--workspace")
+    p.add_argument("--liaison-dir", help="request directory relative to the workspace")
     p.set_defaults(func=_cmd_gates)
 
     p = sub.add_parser("author", help="gates + projections + report")
     p.add_argument("contract")
     p.add_argument("--out", required=True)
     p.add_argument("--workspace")
+    p.add_argument("--liaison-dir", help="request directory relative to the workspace")
     p.add_argument("--render", action="store_true")
     p.set_defaults(func=_cmd_author)
 
