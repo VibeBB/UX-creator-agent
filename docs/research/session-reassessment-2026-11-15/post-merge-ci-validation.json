@@ -1,0 +1,1176 @@
+{
+  "scope": "Point-in-time CI checks on immutable C2 merge commits; moving main and release-install acceptance are separate",
+  "repositories": [
+    {
+      "repository": "VibeBB/UX-creator-agent",
+      "pr_url": "https://github.com/VibeBB/UX-creator-agent/pull/190",
+      "merge_commit": "514673b4d38018d7787f662338b6c03aa1108884",
+      "merged_at": "2026-11-15T12:08:15Z",
+      "captured_at": "2026-11-15T13:01:35.464Z",
+      "passed": 16,
+      "failed": 0,
+      "pending": 0,
+      "skipped": 1,
+      "checks_url": "https://github.com/VibeBB/UX-creator-agent/commit/514673b4d38018d7787f662338b6c03aa1108884/checks",
+      "checks": [
+        {
+          "name": "report",
+          "job_id": "132808543106",
+          "status": "success"
+        },
+        {
+          "name": "e2e",
+          "job_id": "132807609254",
+          "status": "success"
+        },
+        {
+          "name": "cleanup",
+          "job_id": "132807217849",
+          "status": "success"
+        },
+        {
+          "name": "check",
+          "job_id": "132806838956",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (python)",
+          "job_id": "132806329125",
+          "status": "success"
+        },
+        {
+          "name": "changes",
+          "job_id": "132806329027",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.12)",
+          "job_id": "132806329003",
+          "status": "success"
+        },
+        {
+          "name": "dockerfile-lint",
+          "job_id": "132806329000",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.13)",
+          "job_id": "132806328984",
+          "status": "success"
+        },
+        {
+          "name": "plugin-load",
+          "job_id": "132806328922",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.14)",
+          "job_id": "132806328892",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (actions)",
+          "job_id": "132806328873",
+          "status": "success"
+        },
+        {
+          "name": "publish",
+          "job_id": "132806328750",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.15)",
+          "job_id": "132806328739",
+          "status": "success"
+        },
+        {
+          "name": "check-lock",
+          "job_id": "132806328694",
+          "status": "success"
+        },
+        {
+          "name": "analysis",
+          "job_id": "132806328517",
+          "status": "success"
+        },
+        {
+          "name": "reconcile",
+          "job_id": "132808544838",
+          "status": "skipped"
+        }
+      ],
+      "private_snapshot_sha256": "6dd63dd7bdb14479c624600edf7a8dca9d5952a7b3126283e100c00b3fbbb1c3"
+    },
+    {
+      "repository": "VibeBB/bard-agent",
+      "pr_url": "https://github.com/VibeBB/bard-agent/pull/200",
+      "merge_commit": "54585e9422c391f93c2571616ad1742f1579f372",
+      "merged_at": "2026-11-15T12:08:37Z",
+      "captured_at": "2026-11-15T13:01:35.442Z",
+      "passed": 15,
+      "failed": 0,
+      "pending": 0,
+      "skipped": 2,
+      "checks_url": "https://github.com/VibeBB/bard-agent/commit/54585e9422c391f93c2571616ad1742f1579f372/checks",
+      "checks": [
+        {
+          "name": "report",
+          "job_id": "132808627860",
+          "status": "success"
+        },
+        {
+          "name": "cleanup",
+          "job_id": "132807670827",
+          "status": "success"
+        },
+        {
+          "name": "independent-check",
+          "job_id": "132806704423",
+          "status": "success"
+        },
+        {
+          "name": "check",
+          "job_id": "132806660078",
+          "status": "success"
+        },
+        {
+          "name": "dockerfile-lint",
+          "job_id": "132806418179",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.13)",
+          "job_id": "132806418162",
+          "status": "success"
+        },
+        {
+          "name": "plugin-load",
+          "job_id": "132806418113",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.12)",
+          "job_id": "132806418103",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.15)",
+          "job_id": "132806418038",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.14)",
+          "job_id": "132806418017",
+          "status": "success"
+        },
+        {
+          "name": "analysis",
+          "job_id": "132806417911",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (actions)",
+          "job_id": "132806417827",
+          "status": "success"
+        },
+        {
+          "name": "changes",
+          "job_id": "132806417792",
+          "status": "success"
+        },
+        {
+          "name": "check-lock",
+          "job_id": "132806417758",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (python)",
+          "job_id": "132806417638",
+          "status": "success"
+        },
+        {
+          "name": "reconcile",
+          "job_id": "132808629534",
+          "status": "skipped"
+        },
+        {
+          "name": "pin-script-guard",
+          "job_id": "132806705963",
+          "status": "skipped"
+        }
+      ],
+      "private_snapshot_sha256": "c296c0fb884a745d3bc9bfa8b519fb6216cbc716b31bdf7d4f29d4101429ba63"
+    },
+    {
+      "repository": "VibeBB/dashboard-agent",
+      "pr_url": "https://github.com/VibeBB/dashboard-agent/pull/252",
+      "merge_commit": "30d499d8b8f5274f494b8e03423b4a56e1a7c5c8",
+      "merged_at": "2026-11-15T11:52:34Z",
+      "captured_at": "2026-11-15T13:01:35.565Z",
+      "passed": 19,
+      "failed": 0,
+      "pending": 0,
+      "skipped": 1,
+      "checks_url": "https://github.com/VibeBB/dashboard-agent/commit/30d499d8b8f5274f494b8e03423b4a56e1a7c5c8/checks",
+      "checks": [
+        {
+          "name": "report",
+          "job_id": "132807590502",
+          "status": "success"
+        },
+        {
+          "name": "cleanup",
+          "job_id": "132807338532",
+          "status": "success"
+        },
+        {
+          "name": "e2e",
+          "job_id": "132806173967",
+          "status": "success"
+        },
+        {
+          "name": "e2e (bench-meter)",
+          "job_id": "132804791894",
+          "status": "success"
+        },
+        {
+          "name": "e2e (smart-kettle)",
+          "job_id": "132804791845",
+          "status": "success"
+        },
+        {
+          "name": "e2e-examples",
+          "job_id": "132804547483",
+          "status": "success"
+        },
+        {
+          "name": "check",
+          "job_id": "132802465955",
+          "status": "success"
+        },
+        {
+          "name": "python (3.13)",
+          "job_id": "132802380913",
+          "status": "success"
+        },
+        {
+          "name": "python (3.14)",
+          "job_id": "132802380896",
+          "status": "success"
+        },
+        {
+          "name": "python (3.12)",
+          "job_id": "132802380860",
+          "status": "success"
+        },
+        {
+          "name": "runtime",
+          "job_id": "132802380850",
+          "status": "success"
+        },
+        {
+          "name": "changes",
+          "job_id": "132802380845",
+          "status": "success"
+        },
+        {
+          "name": "python (3.15)",
+          "job_id": "132802380832",
+          "status": "success"
+        },
+        {
+          "name": "dockerfile-lint",
+          "job_id": "132802380665",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (actions)",
+          "job_id": "132802380644",
+          "status": "success"
+        },
+        {
+          "name": "check-lock",
+          "job_id": "132802380627",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (python)",
+          "job_id": "132802380420",
+          "status": "success"
+        },
+        {
+          "name": "publish",
+          "job_id": "132802380412",
+          "status": "success"
+        },
+        {
+          "name": "analysis",
+          "job_id": "132802380256",
+          "status": "success"
+        },
+        {
+          "name": "reconcile",
+          "job_id": "132807591620",
+          "status": "skipped"
+        }
+      ],
+      "private_snapshot_sha256": "de6f55488c9235529c1a34f986dd504431c875b956f8acd442e47c805fbd088f"
+    },
+    {
+      "repository": "VibeBB/document-agent",
+      "pr_url": "https://github.com/VibeBB/document-agent/pull/65",
+      "merge_commit": "e1aff38c15060e0739bec376cb378309966b1a5e",
+      "merged_at": "2026-11-15T11:38:29Z",
+      "captured_at": "2026-11-15T13:01:35.526Z",
+      "passed": 10,
+      "failed": 0,
+      "pending": 0,
+      "skipped": 1,
+      "checks_url": "https://github.com/VibeBB/document-agent/commit/e1aff38c15060e0739bec376cb378309966b1a5e/checks",
+      "checks": [
+        {
+          "name": "report",
+          "job_id": "132807281523",
+          "status": "success"
+        },
+        {
+          "name": "cleanup",
+          "job_id": "132807135752",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.13)",
+          "job_id": "132798992887",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.12)",
+          "job_id": "132798992850",
+          "status": "success"
+        },
+        {
+          "name": "plugin-load",
+          "job_id": "132798992798",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.14)",
+          "job_id": "132798992796",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (actions)",
+          "job_id": "132798992787",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.15)",
+          "job_id": "132798992653",
+          "status": "success"
+        },
+        {
+          "name": "analysis",
+          "job_id": "132798992649",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (python)",
+          "job_id": "132798992492",
+          "status": "success"
+        },
+        {
+          "name": "reconcile",
+          "job_id": "132807282978",
+          "status": "skipped"
+        }
+      ],
+      "private_snapshot_sha256": "acbec2107aef4e856c4bd0954aee16e2b30da96fec461a5651a3108180e38520"
+    },
+    {
+      "repository": "VibeBB/electrical-circuit-agent",
+      "pr_url": "https://github.com/VibeBB/electrical-circuit-agent/pull/358",
+      "merge_commit": "9c2b956c1b17c0381bb03ddcadf72bcfe3971c50",
+      "merged_at": "2026-11-15T12:05:21Z",
+      "captured_at": "2026-11-15T13:01:35.555Z",
+      "passed": 35,
+      "failed": 0,
+      "pending": 0,
+      "skipped": 1,
+      "checks_url": "https://github.com/VibeBB/electrical-circuit-agent/commit/9c2b956c1b17c0381bb03ddcadf72bcfe3971c50/checks",
+      "checks": [
+        {
+          "name": "report",
+          "job_id": "132812064305",
+          "status": "success"
+        },
+        {
+          "name": "docker-smoke",
+          "job_id": "132811764294",
+          "status": "success"
+        },
+        {
+          "name": "check",
+          "job_id": "132810418164",
+          "status": "success"
+        },
+        {
+          "name": "real-part-mutation",
+          "job_id": "132810351744",
+          "status": "success"
+        },
+        {
+          "name": "cleanup",
+          "job_id": "132807737167",
+          "status": "success"
+        },
+        {
+          "name": "standard-docker (1)",
+          "job_id": "132807695779",
+          "status": "success"
+        },
+        {
+          "name": "standard-unit",
+          "job_id": "132807695725",
+          "status": "success"
+        },
+        {
+          "name": "standard-smoke",
+          "job_id": "132807695700",
+          "status": "success"
+        },
+        {
+          "name": "standard-docker (0)",
+          "job_id": "132807695697",
+          "status": "success"
+        },
+        {
+          "name": "standard-docker (2)",
+          "job_id": "132807695673",
+          "status": "success"
+        },
+        {
+          "name": "real-part-mutation-shard (1)",
+          "job_id": "132807695668",
+          "status": "success"
+        },
+        {
+          "name": "standard-docker (3)",
+          "job_id": "132807695654",
+          "status": "success"
+        },
+        {
+          "name": "real-part-mutation-shard (0)",
+          "job_id": "132807695653",
+          "status": "success"
+        },
+        {
+          "name": "real-part-mutation-shard (2)",
+          "job_id": "132807695648",
+          "status": "success"
+        },
+        {
+          "name": "standard-lint",
+          "job_id": "132807695633",
+          "status": "success"
+        },
+        {
+          "name": "check-docker (1)",
+          "job_id": "132805786714",
+          "status": "success"
+        },
+        {
+          "name": "check-docker (0)",
+          "job_id": "132805786669",
+          "status": "success"
+        },
+        {
+          "name": "check-docker (2)",
+          "job_id": "132805786667",
+          "status": "success"
+        },
+        {
+          "name": "check-docker (3)",
+          "job_id": "132805786666",
+          "status": "success"
+        },
+        {
+          "name": "check-unit",
+          "job_id": "132805786638",
+          "status": "success"
+        },
+        {
+          "name": "check-smoke",
+          "job_id": "132805786615",
+          "status": "success"
+        },
+        {
+          "name": "check-lint",
+          "job_id": "132805786610",
+          "status": "success"
+        },
+        {
+          "name": "check-attest",
+          "job_id": "132805786597",
+          "status": "success"
+        },
+        {
+          "name": "fast",
+          "job_id": "132805674654",
+          "status": "success"
+        },
+        {
+          "name": "fast (3.13)",
+          "job_id": "132805674651",
+          "status": "success"
+        },
+        {
+          "name": "fast (3.14)",
+          "job_id": "132805674614",
+          "status": "success"
+        },
+        {
+          "name": "fast (3.15)",
+          "job_id": "132805674556",
+          "status": "success"
+        },
+        {
+          "name": "publish",
+          "job_id": "132805582023",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (actions)",
+          "job_id": "132805582008",
+          "status": "success"
+        },
+        {
+          "name": "dockerfile-lint",
+          "job_id": "132805581964",
+          "status": "success"
+        },
+        {
+          "name": "analysis",
+          "job_id": "132805581956",
+          "status": "success"
+        },
+        {
+          "name": "check-lock",
+          "job_id": "132805581916",
+          "status": "success"
+        },
+        {
+          "name": "plugin-load",
+          "job_id": "132805581865",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (python)",
+          "job_id": "132805581704",
+          "status": "success"
+        },
+        {
+          "name": "changes",
+          "job_id": "132805581631",
+          "status": "success"
+        },
+        {
+          "name": "reconcile",
+          "job_id": "132812065942",
+          "status": "skipped"
+        }
+      ],
+      "private_snapshot_sha256": "115dade11702926a7c3cb17fae7b3c602115cc766129aaf29fb3fdd792f6291a"
+    },
+    {
+      "repository": "VibeBB/firmware-agent",
+      "pr_url": "https://github.com/VibeBB/firmware-agent/pull/160",
+      "merge_commit": "7ff6c32cdd0864ae615c16016125ecad1a638857",
+      "merged_at": "2026-11-15T12:08:39Z",
+      "captured_at": "2026-11-15T13:01:35.500Z",
+      "passed": 19,
+      "failed": 0,
+      "pending": 1,
+      "skipped": 1,
+      "checks_url": "https://github.com/VibeBB/firmware-agent/commit/7ff6c32cdd0864ae615c16016125ecad1a638857/checks",
+      "checks": [
+        {
+          "name": "publish",
+          "job_id": "132815455575",
+          "status": "pending"
+        },
+        {
+          "name": "report",
+          "job_id": "132814526269",
+          "status": "success"
+        },
+        {
+          "name": "e2e",
+          "job_id": "132814466180",
+          "status": "success"
+        },
+        {
+          "name": "e2e (mruby-ux)",
+          "job_id": "132808323512",
+          "status": "success"
+        },
+        {
+          "name": "e2e (smart-kettle)",
+          "job_id": "132808323509",
+          "status": "success"
+        },
+        {
+          "name": "e2e (desk-lamp-s3)",
+          "job_id": "132808323501",
+          "status": "success"
+        },
+        {
+          "name": "e2e (pic-blink)",
+          "job_id": "132808323485",
+          "status": "success"
+        },
+        {
+          "name": "e2e-contracts",
+          "job_id": "132808167487",
+          "status": "success"
+        },
+        {
+          "name": "check",
+          "job_id": "132807263032",
+          "status": "success"
+        },
+        {
+          "name": "cleanup",
+          "job_id": "132806916194",
+          "status": "success"
+        },
+        {
+          "name": "check-lock",
+          "job_id": "132806426817",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (python)",
+          "job_id": "132806426643",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (actions)",
+          "job_id": "132806426456",
+          "status": "success"
+        },
+        {
+          "name": "changes",
+          "job_id": "132806426354",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.15)",
+          "job_id": "132806426352",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.12)",
+          "job_id": "132806426324",
+          "status": "success"
+        },
+        {
+          "name": "dockerfile-lint",
+          "job_id": "132806426302",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.14)",
+          "job_id": "132806426273",
+          "status": "success"
+        },
+        {
+          "name": "analysis",
+          "job_id": "132806426242",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.13)",
+          "job_id": "132806426080",
+          "status": "success"
+        },
+        {
+          "name": "reconcile",
+          "job_id": "132814527782",
+          "status": "skipped"
+        }
+      ],
+      "private_snapshot_sha256": "4af5b13b21d8cea15c46b8e94ee8283968fc8f101d50367174c0b82f9f5eae5b"
+    },
+    {
+      "repository": "VibeBB/fpga-agent",
+      "pr_url": "https://github.com/VibeBB/fpga-agent/pull/157",
+      "merge_commit": "7ddab6cfd59a18385d465035df965cb062e567d3",
+      "merged_at": "2026-11-15T11:40:40Z",
+      "captured_at": "2026-11-15T13:01:35.448Z",
+      "passed": 14,
+      "failed": 0,
+      "pending": 0,
+      "skipped": 2,
+      "checks_url": "https://github.com/VibeBB/fpga-agent/commit/7ddab6cfd59a18385d465035df965cb062e567d3/checks",
+      "checks": [
+        {
+          "name": "report",
+          "job_id": "132803122131",
+          "status": "success"
+        },
+        {
+          "name": "check",
+          "job_id": "132800311726",
+          "status": "success"
+        },
+        {
+          "name": "e2e",
+          "job_id": "132799759502",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.12)",
+          "job_id": "132799518007",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.15)",
+          "job_id": "132799517946",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.13)",
+          "job_id": "132799517929",
+          "status": "success"
+        },
+        {
+          "name": "dockerfile-lint",
+          "job_id": "132799517894",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.14)",
+          "job_id": "132799517872",
+          "status": "success"
+        },
+        {
+          "name": "changes",
+          "job_id": "132799517661",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (actions)",
+          "job_id": "132799516960",
+          "status": "success"
+        },
+        {
+          "name": "check-lock",
+          "job_id": "132799516928",
+          "status": "success"
+        },
+        {
+          "name": "analysis",
+          "job_id": "132799516842",
+          "status": "success"
+        },
+        {
+          "name": "publish",
+          "job_id": "132799516733",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (python)",
+          "job_id": "132799516693",
+          "status": "success"
+        },
+        {
+          "name": "reconcile",
+          "job_id": "132803123283",
+          "status": "skipped"
+        },
+        {
+          "name": "pin-script-guard",
+          "job_id": "132799760968",
+          "status": "skipped"
+        }
+      ],
+      "private_snapshot_sha256": "f6d393a82b24d8f4757731f5476d1292c5c4f86f1d94ea0be5c01efaa745bafe"
+    },
+    {
+      "repository": "VibeBB/mechanical-agent",
+      "pr_url": "https://github.com/VibeBB/mechanical-agent/pull/265",
+      "merge_commit": "85e7b1aea7bb1ff0fcc9cc6ab0fd79444fc7ea6b",
+      "merged_at": "2026-11-15T12:08:26Z",
+      "captured_at": "2026-11-15T13:01:35.418Z",
+      "passed": 12,
+      "failed": 0,
+      "pending": 0,
+      "skipped": 1,
+      "checks_url": "https://github.com/VibeBB/mechanical-agent/commit/85e7b1aea7bb1ff0fcc9cc6ab0fd79444fc7ea6b/checks",
+      "checks": [
+        {
+          "name": "report",
+          "job_id": "132807869212",
+          "status": "success"
+        },
+        {
+          "name": "cleanup",
+          "job_id": "132807222827",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (python)",
+          "job_id": "132806371315",
+          "status": "success"
+        },
+        {
+          "name": "publish",
+          "job_id": "132806371302",
+          "status": "success"
+        },
+        {
+          "name": "plugin-load",
+          "job_id": "132806371293",
+          "status": "success"
+        },
+        {
+          "name": "dockerfile-lint",
+          "job_id": "132806371234",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.14)",
+          "job_id": "132806371185",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.12)",
+          "job_id": "132806371135",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.13)",
+          "job_id": "132806371130",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (actions)",
+          "job_id": "132806371073",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.15)",
+          "job_id": "132806370979",
+          "status": "success"
+        },
+        {
+          "name": "analysis",
+          "job_id": "132806370879",
+          "status": "success"
+        },
+        {
+          "name": "reconcile",
+          "job_id": "132807870525",
+          "status": "skipped"
+        }
+      ],
+      "private_snapshot_sha256": "290a56dca0a62604a326d363522afd2312d1630ad1a95b7bab1768e37850dacc"
+    },
+    {
+      "repository": "VibeBB/production-engineering-agent",
+      "pr_url": "https://github.com/VibeBB/production-engineering-agent/pull/185",
+      "merge_commit": "acd3380b167405cfd35ace20b64effb422839f23",
+      "merged_at": "2026-11-15T11:39:43Z",
+      "captured_at": "2026-11-15T13:01:35.612Z",
+      "passed": 13,
+      "failed": 0,
+      "pending": 0,
+      "skipped": 2,
+      "checks_url": "https://github.com/VibeBB/production-engineering-agent/commit/acd3380b167405cfd35ace20b64effb422839f23/checks",
+      "checks": [
+        {
+          "name": "report",
+          "job_id": "132801288263",
+          "status": "success"
+        },
+        {
+          "name": "e2e",
+          "job_id": "132800165980",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.12)",
+          "job_id": "132799278932",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.13)",
+          "job_id": "132799278915",
+          "status": "success"
+        },
+        {
+          "name": "changes",
+          "job_id": "132799278886",
+          "status": "success"
+        },
+        {
+          "name": "dockerfile-lint",
+          "job_id": "132799278840",
+          "status": "success"
+        },
+        {
+          "name": "plugin-load",
+          "job_id": "132799278826",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.14)",
+          "job_id": "132799278784",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.15)",
+          "job_id": "132799278626",
+          "status": "success"
+        },
+        {
+          "name": "publish",
+          "job_id": "132799278546",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (python)",
+          "job_id": "132799278530",
+          "status": "success"
+        },
+        {
+          "name": "analysis",
+          "job_id": "132799278524",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (actions)",
+          "job_id": "132799278288",
+          "status": "success"
+        },
+        {
+          "name": "reconcile",
+          "job_id": "132801289803",
+          "status": "skipped"
+        },
+        {
+          "name": "pin-pr-tests",
+          "job_id": "132800167217",
+          "status": "skipped"
+        }
+      ],
+      "private_snapshot_sha256": "ded5841ee7104e8cb15be656caa5caf34c31c9eb7fe3e43723ed3657ea476284"
+    },
+    {
+      "repository": "VibeBB/simulation-agent",
+      "pr_url": "https://github.com/VibeBB/simulation-agent/pull/154",
+      "merge_commit": "d52394409284805c122e0d084cfa6e1852f2ded1",
+      "merged_at": "2026-11-15T11:45:25Z",
+      "captured_at": "2026-11-15T13:01:35.482Z",
+      "passed": 15,
+      "failed": 0,
+      "pending": 0,
+      "skipped": 1,
+      "checks_url": "https://github.com/VibeBB/simulation-agent/commit/d52394409284805c122e0d084cfa6e1852f2ded1/checks",
+      "checks": [
+        {
+          "name": "report",
+          "job_id": "132803530940",
+          "status": "success"
+        },
+        {
+          "name": "docker-smoke",
+          "job_id": "132802094171",
+          "status": "success"
+        },
+        {
+          "name": "check",
+          "job_id": "132800892041",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.13)",
+          "job_id": "132800649526",
+          "status": "success"
+        },
+        {
+          "name": "changes",
+          "job_id": "132800649425",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.15)",
+          "job_id": "132800649416",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (python)",
+          "job_id": "132800649379",
+          "status": "success"
+        },
+        {
+          "name": "plugin-load",
+          "job_id": "132800649361",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.12)",
+          "job_id": "132800649329",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.14)",
+          "job_id": "132800649317",
+          "status": "success"
+        },
+        {
+          "name": "check-lock",
+          "job_id": "132800649186",
+          "status": "success"
+        },
+        {
+          "name": "publish",
+          "job_id": "132800649163",
+          "status": "success"
+        },
+        {
+          "name": "dockerfile-lint",
+          "job_id": "132800649149",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (actions)",
+          "job_id": "132800649105",
+          "status": "success"
+        },
+        {
+          "name": "analysis",
+          "job_id": "132800648606",
+          "status": "success"
+        },
+        {
+          "name": "reconcile",
+          "job_id": "132803531960",
+          "status": "skipped"
+        }
+      ],
+      "private_snapshot_sha256": "b753483f04cba10b216586a1ba01cf205123188d38f723c9ca5bcc0bd7812e02"
+    },
+    {
+      "repository": "VibeBB/wire-agent",
+      "pr_url": "https://github.com/VibeBB/wire-agent/pull/261",
+      "merge_commit": "64033c40bf8bfdb6fdfcab4fcf8d4bba586134a7",
+      "merged_at": "2026-11-15T12:08:46Z",
+      "captured_at": "2026-11-15T13:01:35.465Z",
+      "passed": 16,
+      "failed": 0,
+      "pending": 0,
+      "skipped": 1,
+      "checks_url": "https://github.com/VibeBB/wire-agent/commit/64033c40bf8bfdb6fdfcab4fcf8d4bba586134a7/checks",
+      "checks": [
+        {
+          "name": "report",
+          "job_id": "132809371368",
+          "status": "success"
+        },
+        {
+          "name": "e2e",
+          "job_id": "132808391185",
+          "status": "success"
+        },
+        {
+          "name": "dockerfile-lint",
+          "job_id": "132808391159",
+          "status": "success"
+        },
+        {
+          "name": "cleanup",
+          "job_id": "132807523534",
+          "status": "success"
+        },
+        {
+          "name": "check",
+          "job_id": "132807507873",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (python)",
+          "job_id": "132806455589",
+          "status": "success"
+        },
+        {
+          "name": "changes",
+          "job_id": "132806455468",
+          "status": "success"
+        },
+        {
+          "name": "Analyze (actions)",
+          "job_id": "132806455354",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.15)",
+          "job_id": "132806455332",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.12)",
+          "job_id": "132806455327",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.14)",
+          "job_id": "132806455306",
+          "status": "success"
+        },
+        {
+          "name": "verify (3.13)",
+          "job_id": "132806455221",
+          "status": "success"
+        },
+        {
+          "name": "analysis",
+          "job_id": "132806455185",
+          "status": "success"
+        },
+        {
+          "name": "plugin-load",
+          "job_id": "132806455167",
+          "status": "success"
+        },
+        {
+          "name": "publish",
+          "job_id": "132806455125",
+          "status": "success"
+        },
+        {
+          "name": "check-lock",
+          "job_id": "132806455073",
+          "status": "success"
+        },
+        {
+          "name": "reconcile",
+          "job_id": "132809372829",
+          "status": "skipped"
+        }
+      ],
+      "private_snapshot_sha256": "f949e7ed5bf302030796995091edc70d12240642bfa630e35738b9e18a82231f"
+    }
+  ],
+  "totals": {
+    "passed": 184,
+    "failed": 0,
+    "pending": 1,
+    "skipped": 14
+  },
+  "limitations": [
+    "Firmware image publish remains in progress at the captured snapshot; it is not counted as successful publication.",
+    "Skipped jobs remain skipped.",
+    "Check conclusions do not prove LLM perception, audio, hardware, release installation or product acceptance."
+  ]
+}

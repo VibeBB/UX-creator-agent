@@ -32,5 +32,11 @@ transport. An agent's narrative is not a gate verdict.
   recommendation does not become a decision unless it is selected and
   recorded.
 
+Every agent declares its own image-observation PostToolUse hook because
+plugin hooks do not propagate to delegated agents. Inline image bytes are
+recorded with the receiving child's native session. A returned image is
+delivery evidence; it does not prove model perception. The native inspector's
+selected tool-returned image remains unknown.
+
 Agent instructions are in `plugins/ux/agents/`. The docs coverage test checks
 that every agent definition remains represented here.

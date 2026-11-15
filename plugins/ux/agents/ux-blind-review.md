@@ -43,6 +43,11 @@ hooks:
           name: safety-rail
           command: 'p=$(for c in  "${UX_PLUGIN_ROOT:-}" "${PLUGIN_ROOT:-}" "${OPENHANDS_PROJECT_DIR:-.}/plugins/ux" "${HOME:-}/.agents/plugins/ux" "${HOME:-}/.openhands/plugins/installed/ux"; do [ -f "$c/hooks/scripts/safety_rail.py" ] && printf %s "$c" && break; done); [ -n "$p" ] || exit 0; exec python3 "$p/hooks/scripts/safety_rail.py"'
   post_tool_use:
+    - matcher: file_editor|ux_render|ux_author|ux_produce|ux_liaison_status
+      hooks:
+        - type: command
+          name: record-image-observation
+          command: 'p=$(for c in  "${UX_PLUGIN_ROOT:-}" "${PLUGIN_ROOT:-}" "${OPENHANDS_PROJECT_DIR:-.}/plugins/ux" "${HOME:-}/.agents/plugins/ux" "${HOME:-}/.openhands/plugins/installed/ux"; do [ -f "$c/hooks/scripts/record_image_observation.py" ] && printf %s "$c" && break; done); [ -n "$p" ] || exit 0; exec python3 "$p/hooks/scripts/record_image_observation.py"'
     - matcher: inspect_image_with_vision
       hooks:
         - type: command
@@ -64,9 +69,11 @@ around it, and do not ask the caller what the first reviewer thought.
 Earlier verdicts anchor a model even when it is told to ignore them, so
 an independent review is only worth anything while it stays blind.
 
-1. Look at the image (it comes back inline from `ux_render`, or
-   ask `inspect_image_with_vision`). Read the contract for the facts it
-   should show.
+1. Look at the inline image returned by `ux_render` or `file_editor` with
+   your configured multimodal model. The native `inspect_image_with_vision`
+   selects user attachments, not a file named in its question. If you cannot
+   see the returned image, report that limitation as unknown; do not claim
+   a completed visual review. Read the contract for the facts it should show.
 2. Apply the checklist of the `ux-review` agent for that image kind and
    list findings with the same categories and severities.
 3. Write two or more claims, each quoting an exact token you can see

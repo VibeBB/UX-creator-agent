@@ -12,7 +12,128 @@ from pathlib import Path
 
 import pytest
 
+from ux_creator.image_delivery import review_image_delivery
+
 HOOK = Path(__file__).parents[1] / "plugins/ux/hooks/scripts/record_image_observation.py"
+
+
+def test_delivery_reference_is_bound_to_returned_revision_and_native_session(
+    tmp_path: Path,
+) -> None:
+    image = tmp_path / "drawing.png"
+    image.write_bytes(b"returned-drawing")
+    observation = _observe(tmp_path, _payload(tmp_path, [_metadata(image)], [image.read_bytes()]))[
+        0
+    ]
+    log = tmp_path / "observations/ux/image-observations.jsonl"
+    digest = hashlib.sha256(image.read_bytes()).hexdigest()
+    delivery = review_image_delivery(log, image, digest, "native-viewer-session")
+    assert delivery.status == "bound"
+    assert delivery.observation_event_id == observation["event_id"]
+    assert delivery.tool_call_id == "native-call-1"
+    assert delivery.producer_identity_status == "bound"
+    assert delivery.image_identity is not None
+    assert delivery.image_identity.owner_plugin == "ux"
+    assert delivery.scope == "tool-return"
+
+    assert review_image_delivery(log, image, digest, "another-session").status == "unknown"
+    assert review_image_delivery(log, image, digest, None).status == "unknown"
+    copied = tmp_path / "copied.png"
+    copied.write_bytes(image.read_bytes())
+    assert review_image_delivery(log, copied, digest, "native-viewer-session").status == "unknown"
+    image.write_bytes(b"rewritten-after-return")
+    current = hashlib.sha256(image.read_bytes()).hexdigest()
+    assert review_image_delivery(log, image, current, "native-viewer-session").status == "unknown"
+    image.unlink()
+    # The source log still proves which revision was delivered, not the current file.
+    assert review_image_delivery(log, image, digest, "native-viewer-session") == delivery
+
+
+@pytest.mark.parametrize(
+    "damage", ["digest", "session", "sequence", "json", "utf8", "deep_json", "large_integer"]
+)
+def test_delivery_reference_preserves_corrupt_log_as_unknown(tmp_path: Path, damage: str) -> None:
+    image = tmp_path / "drawing.png"
+    image.write_bytes(b"drawing")
+    observation = _observe(tmp_path, _payload(tmp_path, [_metadata(image)], [image.read_bytes()]))[
+        0
+    ]
+    log = tmp_path / "observations/ux/image-observations.jsonl"
+    digest = hashlib.sha256(image.read_bytes()).hexdigest()
+    if damage == "json":
+        with log.open("a", encoding="utf-8") as stream:
+            stream.write("{broken\n")
+    elif damage == "utf8":
+        log.write_bytes(b"\xff")
+    elif damage == "deep_json":
+        log.write_text('{"actor":' + "[" * 2000 + "0" + "]" * 2000 + "}", encoding="utf-8")
+    elif damage == "large_integer":
+        log.write_text('{"sequence":' + "1" * 5000 + "}", encoding="utf-8")
+    elif damage == "sequence":
+        with log.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(observation) + "\n")
+    else:
+        observation["image_sha256" if damage == "digest" else "session_id"] = (
+            "0" * 64 if damage == "digest" else "another-session"
+        )
+        log.write_text(json.dumps(observation) + "\n", encoding="utf-8")
+    assert review_image_delivery(log, image, digest, "native-viewer-session").status == "unknown"
+
+
+def test_file_editor_delivery_does_not_infer_producer_ownership(tmp_path: Path) -> None:
+    image = tmp_path / "ux-owned-looking.png"
+    image.write_bytes(b"unidentified-owner")
+    payload = _payload(tmp_path, [], [image.read_bytes()], "file_editor")
+    payload["tool_input"] = {"command": "view", "path": str(image)}
+    _observe(tmp_path, payload)
+    delivery = review_image_delivery(
+        tmp_path / "observations/ux/image-observations.jsonl",
+        image,
+        hashlib.sha256(image.read_bytes()).hexdigest(),
+        "native-viewer-session",
+    )
+    assert delivery.status == "bound"
+    assert delivery.producer_identity_status == "unknown"
+    assert delivery.image_identity is None
+
+
+def test_repeated_delivery_does_not_select_an_occurrence_for_the_reviewer(tmp_path: Path) -> None:
+    image = tmp_path / "drawing.png"
+    image.write_bytes(b"same-path-and-revision")
+    payload = _payload(tmp_path, [_metadata(image)], [image.read_bytes()])
+    _observe(tmp_path, payload)
+    payload["tool_call_id"] = "another-call"
+    assert len(_observe(tmp_path, payload)) == 2
+    delivery = review_image_delivery(
+        tmp_path / "observations/ux/image-observations.jsonl",
+        image,
+        hashlib.sha256(image.read_bytes()).hexdigest(),
+        "native-viewer-session",
+    )
+    assert delivery.status == "unknown"
+    assert delivery.reason == "ambiguous_delivery"
+    assert delivery.observation_event_id is None
+
+
+def test_legacy_filename_record_is_not_delivery(tmp_path: Path) -> None:
+    image = tmp_path / "drawing.png"
+    image.write_bytes(b"not-delivered")
+    log = tmp_path / "observations.jsonl"
+    digest = hashlib.sha256(image.read_bytes()).hexdigest()
+    log.write_text(
+        json.dumps(
+            {
+                "image_path": str(image),
+                "image_sha256": digest,
+                "session_id": "native-viewer-session",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    delivery = review_image_delivery(log, image, digest, "native-viewer-session")
+    assert delivery.status == "unknown"
+    assert delivery.reason == "no_matching_delivery"
 
 
 def _identity(image: Path, owner: str = "ux") -> dict[str, object]:

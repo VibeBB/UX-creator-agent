@@ -105,6 +105,17 @@ Write-time checks (writer only, they need the workspace):
   `{claim, verdict confirmed/refuted/uncertain, note}` per claim — the
   model looks at the image again for each claim. A refuted claim must
   surface as a finding.
+  UX also computes `image_delivery` from the existing image-observation log:
+  `status: bound` requires the reviewer's own native session, exact resolved
+  image path and returned SHA, and a valid observation event digest. It
+  references a unique matching occurrence; repeated delivery of identical
+  bytes leaves the occurrence ambiguous and `unknown`. `scope: tool-return`
+  proves delivery only, independently of producer identity and perception.
+  Missing, legacy, malformed or unmatched evidence remains `unknown` with a
+  reason. Callers cannot supply this output field. Native inspector events
+  carry `source_image_status: unknown`: their question and image index do
+  not identify an MCP/file-editor image. Shared Stop policy still checks
+  existing record obligations; this metadata never changes a gate verdict.
 - `upstream_read`: `artifact` (path + sha256), `producer`, `refs`
   resolved from the artifact's `impression_refs` or from producer
   impressions bound to the same bytes, and `unresolved` problems.
