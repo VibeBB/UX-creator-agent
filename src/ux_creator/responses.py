@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Mapping
 from datetime import datetime
@@ -68,6 +69,11 @@ class UXResponse(BaseModel):
     questions_for_user: list[str] = Field(default_factory=list[str])
     records_heads: dict[str, str] = Field(default_factory=dict[str, str])
     responded_at: str
+
+    def content_sha256(self) -> str:
+        """Fingerprint the complete validated response independently of JSON key order."""
+        content = json.dumps(self.model_dump(), sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
     @field_validator("records_heads")
     @classmethod
@@ -144,6 +150,7 @@ class LiaisonEntry(BaseModel):
     responder: TargetAgent | None = None
     reason: str = ""
     response_path: str = ""
+    response_sha256: str | None = Field(default=None, pattern=SHA256.pattern)
     gate_verdicts: list[GateVerdict] = Field(default_factory=list[GateVerdict])
     decision_refs: list[str] = Field(default_factory=list[str])
     impression_refs: list[str] = Field(default_factory=list[str])
@@ -394,6 +401,7 @@ def liaison_status(liaison_dir: Path, workspace: Path) -> LiaisonStatus:
                 responder=response.responder,
                 reason=response.reason,
                 response_path=str(response_path),
+                response_sha256=response.content_sha256(),
                 gate_verdicts=response.gate_verdicts,
                 decision_refs=response.decision_refs,
                 impression_refs=response.impression_refs,

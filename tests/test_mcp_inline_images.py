@@ -15,11 +15,21 @@ from mcp import types
 from ux_creator import mcp_server
 from ux_creator.contract import load_contract
 from ux_creator.records import tree_sha256
-from ux_creator.render import RenderResult
+from ux_creator.render import ImageIdentity, RenderResult
 from ux_creator.requests import build_request, write_request
-from ux_creator.responses import ArtifactRef, UXResponse
+from ux_creator.responses import ArtifactRef, LiaisonStatus, UXResponse
 
 EXAMPLE = Path(__file__).resolve().parents[1] / "examples/smart-kettle/smart-kettle.ux.json"
+
+
+def _render(source: Path, output: Path) -> RenderResult:
+    identity = ImageIdentity(
+        path=str(output.resolve()),
+        sha256=hashlib.sha256(output.read_bytes()).hexdigest(),
+        owner_plugin="ux",
+        origin="renderer",
+    )
+    return RenderResult(source, output, "ok", "", identity)
 
 
 async def _call_tool(name: str, arguments: dict[str, Any]) -> object:
@@ -47,8 +57,8 @@ def test_render_tool_attaches_pngs_with_caps_and_metadata(
     for path in small_images:
         path.write_bytes(path.name.encode("ascii"))
     renders = [
-        RenderResult(tmp_path / "large.mmd", oversized, "ok", ""),
-        *[RenderResult(tmp_path / f"{path.stem}.mmd", path, "ok", "") for path in small_images],
+        _render(tmp_path / "large.mmd", oversized),
+        *[_render(tmp_path / f"{path.stem}.mmd", path) for path in small_images],
     ]
 
     def fake_render_all(_out_dir: Path, **_kwargs: object) -> list[RenderResult]:
@@ -60,11 +70,15 @@ def test_render_tool_attaches_pngs_with_caps_and_metadata(
 
     payload, content = _content_payload(result)
     metadata = payload["inline_images"]
+    large_identity = renders[0].image_identity
+    assert large_identity is not None
     assert metadata[0] == {
         "path": str(oversized),
         "sha256": hashlib.sha256(oversized.read_bytes()).hexdigest(),
         "attached": False,
         "reason": "over_4_mib",
+        "image_identity": large_identity.model_dump(),
+        "identity_status": "bound",
     }
     assert len([entry for entry in metadata if entry["attached"]]) == 8
     assert metadata[-1]["attached"] is False
@@ -87,7 +101,7 @@ def test_author_render_returns_text_and_inline_png(
         out_dir.mkdir(parents=True, exist_ok=True)
         image = out_dir / "statechart.png"
         image.write_bytes(image_bytes)
-        return [RenderResult(out_dir / "statechart.mmd", image, "ok", "")]
+        return [_render(out_dir / "statechart.mmd", image)]
 
     monkeypatch.setattr(mcp_server, "render_all", fake_render_all)
 
@@ -110,6 +124,13 @@ def test_author_render_returns_text_and_inline_png(
             "path": str(tmp_path / "author" / "statechart.png"),
             "sha256": hashlib.sha256(image_bytes).hexdigest(),
             "attached": True,
+            "image_identity": {
+                "path": str(tmp_path / "author" / "statechart.png"),
+                "sha256": hashlib.sha256(image_bytes).hexdigest(),
+                "owner_plugin": "ux",
+                "origin": "renderer",
+            },
+            "identity_status": "bound",
         }
     ]
     assert len(images) == 1
@@ -131,7 +152,7 @@ def test_produce_render_attaches_production_plan_image(
         assert _kwargs == {"fmts": ("svg", "png")}
         image = out / "smart-kettle.production.png"
         image.write_bytes(image_bytes)
-        return [RenderResult(out / "smart-kettle.production.mmd", image, "ok", "")]
+        return [_render(out / "smart-kettle.production.mmd", image)]
 
     monkeypatch.setattr(mcp_server, "render_all", fake_render_all)
 
@@ -157,13 +178,17 @@ def test_produce_render_attaches_production_plan_image(
     assert base64.b64decode(images[0].data) == image_bytes
 
 
-def test_liaison_status_attaches_answered_image_artifacts(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(
+    "change_after_scan",
+    [None, "image_bytes", "responder", "artifacts", "input_hashes", "format_only"],
+)
+def test_liaison_status_binds_image_to_response_owner_and_hash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, change_after_scan: str | None
 ) -> None:
     monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
     liaison = tmp_path / "liaison"
     liaison.mkdir()
-    image = tmp_path / "deliverables" / "assembly.JPG"
+    image = tmp_path / "deliverables" / "ux-statechart.JPG"
     image.parent.mkdir()
     image_bytes = b"sister-image"
     image.write_bytes(image_bytes)
@@ -187,13 +212,36 @@ def test_liaison_status_attaches_answered_image_artifacts(
         responder="mech",
         status="accepted",
         reason="The enclosure update is ready for review.",
-        artifacts=[ArtifactRef(path="deliverables/assembly.JPG", sha256=tree_sha256(image))],
+        artifacts=[ArtifactRef(path="deliverables/ux-statechart.JPG", sha256=tree_sha256(image))],
         responded_at=datetime.now(UTC).isoformat(),
     )
-    (liaison / "request-1.ux-response.json").write_text(
+    response_path = liaison / "request-1.ux-response.json"
+    response_path.write_text(
         json.dumps(response.model_dump(), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    scan = mcp_server.liaison_status
+
+    def scan_then_change(directory: Path, workspace: Path) -> LiaisonStatus:
+        status = scan(directory, workspace)
+        if change_after_scan == "image_bytes":
+            image.write_bytes(b"changed after status scan")
+        elif change_after_scan is not None:
+            changed = response.model_dump()
+            if change_after_scan == "responder":
+                changed["responder"] = "doc"
+            elif change_after_scan == "artifacts":
+                replacement = tmp_path / "replacement.png"
+                replacement.write_bytes(b"unscanned replacement artifact")
+                changed["artifacts"] = [
+                    {"path": "replacement.png", "sha256": tree_sha256(replacement)}
+                ]
+            elif change_after_scan == "input_hashes":
+                changed["input_hashes"] = {"never-scanned.txt": "0" * 64}
+            response_path.write_text(json.dumps(changed), encoding="utf-8")
+        return status
+
+    monkeypatch.setattr(mcp_server, "liaison_status", scan_then_change)
 
     result = asyncio.run(
         _call_tool(
@@ -208,14 +256,94 @@ def test_liaison_status_attaches_answered_image_artifacts(
 
     payload, content = _content_payload(result)
     images = [block for block in content if isinstance(block, types.ImageContent)]
+    if change_after_scan in ("responder", "artifacts", "input_hashes"):
+        assert payload["verdict"] == "fail"
+        assert "response changed since status scan" in payload["detail"]
+        assert not images
+        return
     assert payload["entries"][0]["state"] == "answered"
+    if change_after_scan == "image_bytes":
+        metadata = payload["inline_images"][0]
+        assert metadata["identity_status"] == "mismatch"
+        assert metadata["reason"] == "source_identity_mismatch"
+        assert metadata["attached"] is False
+        assert metadata["sha256"] != metadata["image_identity"]["sha256"]
+        assert not images
+        return
     assert payload["inline_images"] == [
         {
             "path": str(image),
             "sha256": hashlib.sha256(image_bytes).hexdigest(),
             "attached": True,
+            "image_identity": {
+                "path": str(image),
+                "sha256": hashlib.sha256(image_bytes).hexdigest(),
+                "owner_plugin": "mech",
+                "origin": "liaison-response",
+            },
+            "identity_status": "bound",
         }
     ]
     assert len(images) == 1
     assert images[0].mime_type == "image/jpeg"
     assert base64.b64decode(images[0].data) == image_bytes
+
+
+@pytest.mark.parametrize("mutation", ["bytes", "copied_path"])
+def test_changed_render_identity_does_not_consume_inline_capacity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mutation: str
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    original = tmp_path / "original.png"
+    original.write_bytes(b"original")
+    first = _render(tmp_path / "original.mmd", original)
+    if mutation == "bytes":
+        original.write_bytes(b"changed")
+    else:
+        copied = tmp_path / "copied.png"
+        copied.write_bytes(original.read_bytes())
+        first = RenderResult(first.source, copied, "ok", "", first.image_identity)
+    rest = [tmp_path / f"valid-{index}.png" for index in range(8)]
+    for path in rest:
+        path.write_bytes(path.name.encode("ascii"))
+    renders = [first, *[_render(path.with_suffix(".mmd"), path) for path in rest]]
+
+    def fake_render_all(_out_dir: Path, **_kwargs: object) -> list[RenderResult]:
+        return renders
+
+    monkeypatch.setattr(mcp_server, "render_all", fake_render_all)
+
+    payload, content = _content_payload(
+        asyncio.run(_call_tool("ux_render", {"dir": str(tmp_path)}))
+    )
+
+    first_meta = payload["inline_images"][0]
+    assert first_meta["identity_status"] == "mismatch"
+    assert first_meta["attached"] is False
+    assert first_meta["reason"] == "source_identity_mismatch"
+    assert all(entry["identity_status"] == "bound" for entry in payload["inline_images"][1:])
+    assert len([block for block in content if isinstance(block, types.ImageContent)]) == 8
+
+
+def test_render_without_producer_identity_remains_unknown(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("OPENHANDS_PROJECT_DIR", str(tmp_path))
+    image = tmp_path / "firmware" / "ux-statechart.png"
+    image.parent.mkdir()
+    image.write_bytes(b"unattributed legacy image")
+    renders = [RenderResult(image.with_suffix(".mmd"), image, "ok", "")]
+
+    def fake_render_all(_out_dir: Path, **_kwargs: object) -> list[RenderResult]:
+        return renders
+
+    monkeypatch.setattr(mcp_server, "render_all", fake_render_all)
+
+    payload, content = _content_payload(
+        asyncio.run(_call_tool("ux_render", {"dir": str(tmp_path)}))
+    )
+
+    assert payload["inline_images"][0]["image_identity"] is None
+    assert payload["inline_images"][0]["identity_status"] == "unknown"
+    assert payload["inline_images"][0]["attached"] is True
+    assert any(isinstance(block, types.ImageContent) for block in content)

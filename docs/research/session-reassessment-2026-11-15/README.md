@@ -156,6 +156,12 @@ The [review-boundary implementation follow-up](review-boundaries.md) records
 subsequent identity, coordinator and Stop corrections and their verification
 limits. Those source changes do not alter the historical findings above.
 
+The [image-identity foundation](image-identity-foundation.md) describes the
+first C3 producer/path/SHA binding at the MCP image boundary. The
+[native SDK limit probe](sdk-native-review-limits.md) records the D-stage
+resume limitation and the decision still required before adopting a
+checkpoint strategy.
+
 The complete raw conversations, operational logs, original attachments,
 workspace, runtime hooks, pinned source archives, audit scripts, Japanese
 reports and image atlas remain in the user-delivered research ZIP. They
