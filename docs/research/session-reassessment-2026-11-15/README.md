@@ -152,6 +152,10 @@ regression remains necessary after the fixes.
 
 ## Preservation and reproduction boundary
 
+The [review-boundary implementation follow-up](review-boundaries.md) records
+subsequent identity, coordinator and Stop corrections and their verification
+limits. Those source changes do not alter the historical findings above.
+
 The complete raw conversations, operational logs, original attachments,
 workspace, runtime hooks, pinned source archives, audit scripts, Japanese
 reports and image atlas remain in the user-delivered research ZIP. They

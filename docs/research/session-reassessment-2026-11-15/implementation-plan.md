@@ -1,8 +1,10 @@
 # Implementation and verification plan
 
-Status: proposed implementation, based on the [reassessment](README.md)
-and pinned [validation evidence](validation-results.json). Research results
-are verified; the work packages below are not completion claims.
+Status: implementation is progressing from the [reassessment](README.md)
+and pinned [validation evidence](validation-results.json). The
+[review-boundary follow-up](review-boundaries.md) records the implemented
+native-identity, coordinator and Stop corrections. Work-package acceptance
+below remains distinct from those source changes.
 
 ## Order and acceptance model
 

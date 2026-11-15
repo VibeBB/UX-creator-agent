@@ -1,0 +1,1640 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-11-15T11:37:49.790860+00:00",
+  "scope": "Committed-source C2 verification; independent of the historical cooperative run.",
+  "execution": "Local repository Python environments; PYTEST_XDIST_AUTO_NUM_WORKERS=2.",
+  "evidence_boundary": "This file publishes commands, revisions, hashes and outcomes. Log bodies remain in private research and attachments.",
+  "summary": {
+    "repositories_passed": 11,
+    "effective_commands_passed": 113,
+    "sdk_plugin_loads_passed": 11,
+    "stop_suite_runs_passed": 55,
+    "actual_sdk_delegated_startup_cases_passed": 2,
+    "shared_stop_hook_sha256": "dc6aa78e9b67004687e59ef62ee13ae23ec40809c546c319d37dae662a527a14"
+  },
+  "not_verified": [
+    "Clean installation of released artifacts and digest-locked runtime images",
+    "Live provider profiles, MCP startup and LLM review quality",
+    "AgentCanvas GUI, physical devices, hardware programming and audio listening",
+    "C3 image ownership and crop/tile lineage, D workflow budgets and resume"
+  ],
+  "ci": "CI status is recorded separately on the linked pull requests and in private evidence; local pass is not CI or product acceptance.",
+  "previous_attempts": [
+    {
+      "repository": "simulation-agent",
+      "revision": "da1374e8ba962f14aa4d62f426d475865d060dfc",
+      "command": [
+        "uv",
+        "run",
+        "python",
+        "scripts/verify_all.py",
+        "--stage",
+        "fast",
+        "--jobs",
+        "2"
+      ],
+      "exit_code": 2,
+      "duration_s": 0.062,
+      "private_log": "simulation-agent-0.log",
+      "cause": "The simulation verifier does not accept --jobs; no repository code failure.",
+      "replacement": [
+        "uv",
+        "run",
+        "python",
+        "scripts/verify_all.py",
+        "--stage",
+        "fast"
+      ]
+    }
+  ],
+  "repositories": [
+    {
+      "repository": "UX-creator-agent",
+      "pull_request": "https://github.com/VibeBB/UX-creator-agent/pull/190",
+      "validated_revision": "f596e4edf33042e1f7d6a8828206accebfd6f2b5",
+      "revision_url": "https://github.com/VibeBB/UX-creator-agent/commit/f596e4edf33042e1f7d6a8828206accebfd6f2b5",
+      "runtime_source_sha256": {
+        "plugins/ux/hooks/scripts/require_records.py": "dc6aa78e9b67004687e59ef62ee13ae23ec40809c546c319d37dae662a527a14",
+        "plugins/ux/hooks/scripts/_records.py": "eeb3b0a0f4d2a1751d1b4c3a92d8096c51a7d01ab397aae1a47abc5d7d5374c9",
+        "src/ux_creator/records.py": "66bcba6e5fedc7570ced422e7f836fd910ba688562b6be7c1edda108e271d438",
+        "plugins/ux/hooks/scripts/record_vision_tool_event.py": "8d9521529c88b5613910ffb9a9ce9c801ce6dde08ee79d8616fb836f215a4091"
+      },
+      "tools": {
+        "uv --version": "uv 0.13.8 (x86_64-unknown-linux-gnu)",
+        "uv run python --version": "Python 3.14.10",
+        "uv run ruff --version": "ruff 0.17.5",
+        "uv run pyright --version": "pyright 1.1.414"
+      },
+      "result": "pass",
+      "stop_suite_repeats": 5,
+      "commands": [
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/verify_all.py",
+            "--stage",
+            "fast",
+            "--jobs",
+            "2"
+          ],
+          "exit_code": 0,
+          "duration_s": 41.401,
+          "private_log": "UX-creator-agent-0.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "--group",
+            "sdk-check",
+            "python",
+            "scripts/check_plugin_load.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 9.677,
+          "private_log": "UX-creator-agent-1.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "--group",
+            "sdk-check",
+            "pytest",
+            "-q",
+            "tests/test_sdk_delegated_context.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 9.458,
+          "private_log": "UX-creator-agent-2.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.187,
+          "private_log": "UX-creator-agent-3.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.553,
+          "private_log": "UX-creator-agent-4.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.363,
+          "private_log": "UX-creator-agent-5.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.466,
+          "private_log": "UX-creator-agent-6.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.26,
+          "private_log": "UX-creator-agent-7.log"
+        }
+      ]
+    },
+    {
+      "repository": "bard-agent",
+      "pull_request": "https://github.com/VibeBB/bard-agent/pull/200",
+      "validated_revision": "7b4ff3f3963da18a1ae9ab4ccdcb0381fd2c7214",
+      "revision_url": "https://github.com/VibeBB/bard-agent/commit/7b4ff3f3963da18a1ae9ab4ccdcb0381fd2c7214",
+      "runtime_source_sha256": {
+        "plugins/bard/hooks/scripts/require_records.py": "dc6aa78e9b67004687e59ef62ee13ae23ec40809c546c319d37dae662a527a14",
+        "plugins/bard/hooks/scripts/_records.py": "bd526df8763ee51c77f239e59065d1e57e47d16a03f384a9606518e49dc9a35e",
+        "plugins/bard/scripts/bard_records.py": "6d24e29f2257af2f576005bd34a3327b93e615f733e34c68f475a56da43233ad",
+        "plugins/bard/hooks/scripts/record_vision_tool_event.py": "2b2233d7dbd544b9ea3d1bd4807642ea0483b345a6baabe6624d8aedcc56dfaa"
+      },
+      "tools": {
+        "uv --version": "uv 0.13.8 (x86_64-unknown-linux-gnu)",
+        "uv run python --version": "Python 3.14.10",
+        "uv run ruff --version": "ruff 0.17.5",
+        "uv run pyright --version": "pyright 1.1.414"
+      },
+      "result": "pass",
+      "stop_suite_repeats": 5,
+      "commands": [
+        {
+          "argv": [
+            "uv",
+            "run",
+            "ruff",
+            "check",
+            "."
+          ],
+          "exit_code": 0,
+          "duration_s": 0.026,
+          "private_log": "bard-agent-0.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "ruff",
+            "format",
+            "--check",
+            "."
+          ],
+          "exit_code": 0,
+          "duration_s": 0.025,
+          "private_log": "bard-agent-1.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pyright"
+          ],
+          "exit_code": 0,
+          "duration_s": 12.768,
+          "private_log": "bard-agent-2.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q"
+          ],
+          "exit_code": 0,
+          "duration_s": 34.486,
+          "private_log": "bard-agent-3.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_shared_hooks.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.092,
+          "private_log": "bard-agent-4.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_shared_workflows.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.055,
+          "private_log": "bard-agent-5.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/verify_docs.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.158,
+          "private_log": "bard-agent-6.log"
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.002,
+          "private_log": "bard-agent-7.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "--group",
+            "sdk-check",
+            "python",
+            "scripts/check_plugin_load.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 3.764,
+          "private_log": "bard-agent-8.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.621,
+          "private_log": "bard-agent-9.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.175,
+          "private_log": "bard-agent-10.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 2.385,
+          "private_log": "bard-agent-11.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.249,
+          "private_log": "bard-agent-12.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.293,
+          "private_log": "bard-agent-13.log"
+        }
+      ]
+    },
+    {
+      "repository": "dashboard-agent",
+      "pull_request": "https://github.com/VibeBB/dashboard-agent/pull/252",
+      "validated_revision": "043ff2feee649667c100ae75823a004ffc5cf0f4",
+      "revision_url": "https://github.com/VibeBB/dashboard-agent/commit/043ff2feee649667c100ae75823a004ffc5cf0f4",
+      "runtime_source_sha256": {
+        "plugins/dashboard/hooks/scripts/require_records.py": "dc6aa78e9b67004687e59ef62ee13ae23ec40809c546c319d37dae662a527a14",
+        "plugins/dashboard/hooks/scripts/_records.py": "eeb3b0a0f4d2a1751d1b4c3a92d8096c51a7d01ab397aae1a47abc5d7d5374c9",
+        "src/dashboard/records.py": "f08870cbc538b59ade3eac2699d32efaf2e4d41082dcaa7386f670165ca7f476",
+        "plugins/dashboard/hooks/scripts/record_vision_tool_event.py": "09dc3fa8759a37537f1592cdb2efbca5a682af86748e534377bcb314b7c4072d"
+      },
+      "tools": {
+        "uv --version": "uv 0.13.8 (x86_64-unknown-linux-gnu)",
+        "uv run python --version": "Python 3.14.10",
+        "uv run ruff --version": "ruff 0.17.5",
+        "uv run pyright --version": "pyright 1.1.414"
+      },
+      "result": "pass",
+      "stop_suite_repeats": 5,
+      "commands": [
+        {
+          "argv": [
+            "uv",
+            "run",
+            "ruff",
+            "check",
+            "."
+          ],
+          "exit_code": 0,
+          "duration_s": 0.07,
+          "private_log": "dashboard-agent-0.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "ruff",
+            "format",
+            "--check",
+            "."
+          ],
+          "exit_code": 0,
+          "duration_s": 0.066,
+          "private_log": "dashboard-agent-1.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pyright"
+          ],
+          "exit_code": 0,
+          "duration_s": 9.566,
+          "private_log": "dashboard-agent-2.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q"
+          ],
+          "exit_code": 0,
+          "duration_s": 19.835,
+          "private_log": "dashboard-agent-3.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_shared_hooks.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.138,
+          "private_log": "dashboard-agent-4.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_shared_workflows.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.121,
+          "private_log": "dashboard-agent-5.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/verify_docs.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.347,
+          "private_log": "dashboard-agent-6.log"
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.004,
+          "private_log": "dashboard-agent-7.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "--group",
+            "sdk-check",
+            "python",
+            "scripts/check_plugin_load.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 5.649,
+          "private_log": "dashboard-agent-8.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.779,
+          "private_log": "dashboard-agent-9.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.905,
+          "private_log": "dashboard-agent-10.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.783,
+          "private_log": "dashboard-agent-11.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.851,
+          "private_log": "dashboard-agent-12.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.314,
+          "private_log": "dashboard-agent-13.log"
+        }
+      ]
+    },
+    {
+      "repository": "document-agent",
+      "pull_request": "https://github.com/VibeBB/document-agent/pull/65",
+      "validated_revision": "dcac831c2856b5154d908749385ed627c297f6fa",
+      "revision_url": "https://github.com/VibeBB/document-agent/commit/dcac831c2856b5154d908749385ed627c297f6fa",
+      "runtime_source_sha256": {
+        "plugins/doc/hooks/scripts/require_records.py": "dc6aa78e9b67004687e59ef62ee13ae23ec40809c546c319d37dae662a527a14",
+        "plugins/doc/hooks/scripts/_records.py": "eeb3b0a0f4d2a1751d1b4c3a92d8096c51a7d01ab397aae1a47abc5d7d5374c9",
+        "plugins/doc/scripts/doc_records.py": "3973e04973a927eba3ed686ee1b0e68a3b1b3d624098a43204dbdb407810978a",
+        "plugins/doc/hooks/scripts/record_vision_tool_event.py": "cd9873d3b4c6fade9009825444be02586a8f86781bcc73e5c6ab2ac11b81d817"
+      },
+      "tools": {
+        "uv --version": "uv 0.13.8 (x86_64-unknown-linux-gnu)",
+        "uv run python --version": "Python 3.14.10",
+        "uv run ruff --version": "ruff 0.17.5",
+        "uv run pyright --version": "pyright 1.1.414"
+      },
+      "result": "pass",
+      "stop_suite_repeats": 5,
+      "commands": [
+        {
+          "argv": [
+            "uv",
+            "run",
+            "ruff",
+            "check",
+            "."
+          ],
+          "exit_code": 0,
+          "duration_s": 0.035,
+          "private_log": "document-agent-0.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "ruff",
+            "format",
+            "--check",
+            "."
+          ],
+          "exit_code": 0,
+          "duration_s": 0.03,
+          "private_log": "document-agent-1.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pyright"
+          ],
+          "exit_code": 0,
+          "duration_s": 7.764,
+          "private_log": "document-agent-2.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q"
+          ],
+          "exit_code": 0,
+          "duration_s": 24.987,
+          "private_log": "document-agent-3.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_shared_hooks.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.105,
+          "private_log": "document-agent-4.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_shared_workflows.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.078,
+          "private_log": "document-agent-5.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/verify_docs.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.212,
+          "private_log": "document-agent-6.log"
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.002,
+          "private_log": "document-agent-7.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "--group",
+            "sdk-check",
+            "python",
+            "scripts/check_plugin_load.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 9.412,
+          "private_log": "document-agent-8.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 2.236,
+          "private_log": "document-agent-9.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.616,
+          "private_log": "document-agent-10.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.842,
+          "private_log": "document-agent-11.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.937,
+          "private_log": "document-agent-12.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.69,
+          "private_log": "document-agent-13.log"
+        }
+      ]
+    },
+    {
+      "repository": "electrical-circuit-agent",
+      "pull_request": "https://github.com/VibeBB/electrical-circuit-agent/pull/358",
+      "validated_revision": "510b711a97186ccdd3ef1a459fdf36eab15c290c",
+      "revision_url": "https://github.com/VibeBB/electrical-circuit-agent/commit/510b711a97186ccdd3ef1a459fdf36eab15c290c",
+      "runtime_source_sha256": {
+        "plugins/circuit/hooks/scripts/require_records.py": "dc6aa78e9b67004687e59ef62ee13ae23ec40809c546c319d37dae662a527a14",
+        "plugins/circuit/hooks/scripts/_records.py": "eeb3b0a0f4d2a1751d1b4c3a92d8096c51a7d01ab397aae1a47abc5d7d5374c9",
+        "src/circuit/records.py": "90e8a79c8489329b1b6e6bc7a5adccdb781ae52b17e0c5c84bbe65605bbcbe6f",
+        "plugins/circuit/hooks/scripts/record_vision_tool_event.py": "d486083cc6c22bc2e4d6e92f207b9a39439b3826d45e64551c1ede29f2469570"
+      },
+      "tools": {
+        "uv --version": "uv 0.13.8 (x86_64-unknown-linux-gnu)",
+        "uv run python --version": "Python 3.14.10",
+        "uv run ruff --version": "ruff 0.17.5",
+        "uv run pyright --version": "pyright 1.1.414"
+      },
+      "result": "pass",
+      "stop_suite_repeats": 5,
+      "commands": [
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/verify_all.py",
+            "--stage",
+            "fast",
+            "--jobs",
+            "2"
+          ],
+          "exit_code": 0,
+          "duration_s": 270.316,
+          "private_log": "electrical-circuit-agent-0.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_plugin_load.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 7.075,
+          "private_log": "electrical-circuit-agent-1.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 2.241,
+          "private_log": "electrical-circuit-agent-2.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.46,
+          "private_log": "electrical-circuit-agent-3.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.255,
+          "private_log": "electrical-circuit-agent-4.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.199,
+          "private_log": "electrical-circuit-agent-5.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.302,
+          "private_log": "electrical-circuit-agent-6.log"
+        }
+      ]
+    },
+    {
+      "repository": "firmware-agent",
+      "pull_request": "https://github.com/VibeBB/firmware-agent/pull/160",
+      "validated_revision": "456aa6239f77fd80619cba9dfd488f49cb6a1465",
+      "revision_url": "https://github.com/VibeBB/firmware-agent/commit/456aa6239f77fd80619cba9dfd488f49cb6a1465",
+      "runtime_source_sha256": {
+        "plugins/firmware/hooks/scripts/require_records.py": "dc6aa78e9b67004687e59ef62ee13ae23ec40809c546c319d37dae662a527a14",
+        "plugins/firmware/hooks/scripts/_records.py": "eeb3b0a0f4d2a1751d1b4c3a92d8096c51a7d01ab397aae1a47abc5d7d5374c9",
+        "src/firmware/records.py": "4f91d80d97f548b93a2f7a7d27a9ef6a9b15a342c6bc28c0c9664931f4bcd6f1",
+        "plugins/firmware/hooks/scripts/record_vision_tool_event.py": "7d486c6d5d810247614d72a29331914e76f9bb37ab569a37a3d03f414bae3f73"
+      },
+      "tools": {
+        "uv --version": "uv 0.13.8 (x86_64-unknown-linux-gnu)",
+        "uv run python --version": "Python 3.14.10",
+        "uv run ruff --version": "ruff 0.17.5",
+        "uv run pyright --version": "pyright 1.1.414"
+      },
+      "result": "pass",
+      "stop_suite_repeats": 5,
+      "commands": [
+        {
+          "argv": [
+            "uv",
+            "run",
+            "ruff",
+            "check",
+            "."
+          ],
+          "exit_code": 0,
+          "duration_s": 0.059,
+          "private_log": "firmware-agent-0.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "ruff",
+            "format",
+            "--check",
+            "."
+          ],
+          "exit_code": 0,
+          "duration_s": 0.081,
+          "private_log": "firmware-agent-1.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pyright"
+          ],
+          "exit_code": 0,
+          "duration_s": 17.663,
+          "private_log": "firmware-agent-2.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q"
+          ],
+          "exit_code": 0,
+          "duration_s": 25.669,
+          "private_log": "firmware-agent-3.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_shared_hooks.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.144,
+          "private_log": "firmware-agent-4.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_shared_workflows.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.115,
+          "private_log": "firmware-agent-5.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/verify_docs.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.242,
+          "private_log": "firmware-agent-6.log"
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.002,
+          "private_log": "firmware-agent-7.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "--group",
+            "sdk-check",
+            "python",
+            "scripts/check_plugin_load.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 5.421,
+          "private_log": "firmware-agent-8.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.104,
+          "private_log": "firmware-agent-9.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.158,
+          "private_log": "firmware-agent-10.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.553,
+          "private_log": "firmware-agent-11.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.256,
+          "private_log": "firmware-agent-12.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.294,
+          "private_log": "firmware-agent-13.log"
+        }
+      ]
+    },
+    {
+      "repository": "fpga-agent",
+      "pull_request": "https://github.com/VibeBB/fpga-agent/pull/157",
+      "validated_revision": "2e2b36db42980e8a46f04ae965d0567e8b3aeca1",
+      "revision_url": "https://github.com/VibeBB/fpga-agent/commit/2e2b36db42980e8a46f04ae965d0567e8b3aeca1",
+      "runtime_source_sha256": {
+        "plugins/fpga/hooks/scripts/require_records.py": "dc6aa78e9b67004687e59ef62ee13ae23ec40809c546c319d37dae662a527a14",
+        "plugins/fpga/hooks/scripts/_records.py": "eeb3b0a0f4d2a1751d1b4c3a92d8096c51a7d01ab397aae1a47abc5d7d5374c9",
+        "src/fpga/records.py": "a4eb7a4b31133e939a2dc3bf486c9e4493ee396dc3f951b37da9420c537b0b1b",
+        "plugins/fpga/hooks/scripts/record_vision_tool_event.py": "8ce70dd64afbf6defa7c62dbfa5c09a5d6e215b9cadec6a2020e918369adb37e"
+      },
+      "tools": {
+        "uv --version": "uv 0.13.8 (x86_64-unknown-linux-gnu)",
+        "uv run python --version": "Python 3.14.10",
+        "uv run ruff --version": "ruff 0.17.5",
+        "uv run pyright --version": "pyright 1.1.414"
+      },
+      "result": "pass",
+      "stop_suite_repeats": 5,
+      "commands": [
+        {
+          "argv": [
+            "uv",
+            "run",
+            "ruff",
+            "check",
+            "."
+          ],
+          "exit_code": 0,
+          "duration_s": 0.056,
+          "private_log": "fpga-agent-0.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "ruff",
+            "format",
+            "--check",
+            "."
+          ],
+          "exit_code": 0,
+          "duration_s": 0.043,
+          "private_log": "fpga-agent-1.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pyright"
+          ],
+          "exit_code": 0,
+          "duration_s": 11.861,
+          "private_log": "fpga-agent-2.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q"
+          ],
+          "exit_code": 0,
+          "duration_s": 23.139,
+          "private_log": "fpga-agent-3.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_shared_hooks.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.102,
+          "private_log": "fpga-agent-4.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_shared_workflows.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.092,
+          "private_log": "fpga-agent-5.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/verify_docs.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.551,
+          "private_log": "fpga-agent-6.log"
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.005,
+          "private_log": "fpga-agent-7.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "--group",
+            "sdk-check",
+            "python",
+            "scripts/check_plugin_load.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 6.399,
+          "private_log": "fpga-agent-8.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.774,
+          "private_log": "fpga-agent-9.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.642,
+          "private_log": "fpga-agent-10.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.59,
+          "private_log": "fpga-agent-11.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.339,
+          "private_log": "fpga-agent-12.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.17,
+          "private_log": "fpga-agent-13.log"
+        }
+      ]
+    },
+    {
+      "repository": "mechanical-agent",
+      "pull_request": "https://github.com/VibeBB/mechanical-agent/pull/265",
+      "validated_revision": "d2dce3b168a2b028fdf25f33e8797b83771b562b",
+      "revision_url": "https://github.com/VibeBB/mechanical-agent/commit/d2dce3b168a2b028fdf25f33e8797b83771b562b",
+      "runtime_source_sha256": {
+        "plugins/mech/hooks/scripts/require_records.py": "dc6aa78e9b67004687e59ef62ee13ae23ec40809c546c319d37dae662a527a14",
+        "plugins/mech/hooks/scripts/_records.py": "eeb3b0a0f4d2a1751d1b4c3a92d8096c51a7d01ab397aae1a47abc5d7d5374c9",
+        "src/mech/records.py": "c0b90a770a88847b9b58deda02cd84d603a64dfd7d202bcdfc7a546527eabf3f",
+        "plugins/mech/hooks/scripts/record_vision_tool_event.py": "62bf7a16076fefd8a6b604df83caceb64994a8b15bfebf89a7b6e2149acc4d07"
+      },
+      "tools": {
+        "uv --version": "uv 0.13.8 (x86_64-unknown-linux-gnu)",
+        "uv run python --version": "Python 3.14.10",
+        "uv run ruff --version": "ruff 0.17.5",
+        "uv run pyright --version": "pyright 1.1.414"
+      },
+      "result": "pass",
+      "stop_suite_repeats": 5,
+      "commands": [
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/verify_all.py",
+            "--stage",
+            "fast",
+            "--jobs",
+            "2"
+          ],
+          "exit_code": 0,
+          "duration_s": 113.855,
+          "private_log": "mechanical-agent-0.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_plugin_load.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 3.597,
+          "private_log": "mechanical-agent-1.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.177,
+          "private_log": "mechanical-agent-2.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.992,
+          "private_log": "mechanical-agent-3.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.209,
+          "private_log": "mechanical-agent-4.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.052,
+          "private_log": "mechanical-agent-5.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.056,
+          "private_log": "mechanical-agent-6.log"
+        }
+      ]
+    },
+    {
+      "repository": "production-engineering-agent",
+      "pull_request": "https://github.com/VibeBB/production-engineering-agent/pull/185",
+      "validated_revision": "95f7659a1fa9ac0e7fc38fe982825aaf5a154747",
+      "revision_url": "https://github.com/VibeBB/production-engineering-agent/commit/95f7659a1fa9ac0e7fc38fe982825aaf5a154747",
+      "runtime_source_sha256": {
+        "plugins/prodeng/hooks/scripts/require_records.py": "dc6aa78e9b67004687e59ef62ee13ae23ec40809c546c319d37dae662a527a14",
+        "plugins/prodeng/hooks/scripts/_records.py": "eeb3b0a0f4d2a1751d1b4c3a92d8096c51a7d01ab397aae1a47abc5d7d5374c9",
+        "src/prodeng/records.py": "5bf9a3e716de1fff2bee4b3b937ea8c882dc2e7115e1ec35cce8025a34b1ec19",
+        "plugins/prodeng/hooks/scripts/record_vision_tool_event.py": "95cb85672e58ec9076453d048f1a1af811d1ad383ac419081f8e6a91fd17f108"
+      },
+      "tools": {
+        "uv --version": "uv 0.13.8 (x86_64-unknown-linux-gnu)",
+        "uv run python --version": "Python 3.14.10",
+        "uv run ruff --version": "ruff 0.17.5",
+        "uv run pyright --version": "pyright 1.1.414"
+      },
+      "result": "pass",
+      "stop_suite_repeats": 5,
+      "commands": [
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/verify_all.py",
+            "--stage",
+            "fast",
+            "--jobs",
+            "2"
+          ],
+          "exit_code": 0,
+          "duration_s": 34.924,
+          "private_log": "production-engineering-agent-0.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "--group",
+            "sdk-check",
+            "python",
+            "scripts/check_plugin_load.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 3.873,
+          "private_log": "production-engineering-agent-1.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.047,
+          "private_log": "production-engineering-agent-2.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.231,
+          "private_log": "production-engineering-agent-3.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.193,
+          "private_log": "production-engineering-agent-4.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.215,
+          "private_log": "production-engineering-agent-5.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.32,
+          "private_log": "production-engineering-agent-6.log"
+        }
+      ]
+    },
+    {
+      "repository": "simulation-agent",
+      "pull_request": "https://github.com/VibeBB/simulation-agent/pull/154",
+      "validated_revision": "da1374e8ba962f14aa4d62f426d475865d060dfc",
+      "revision_url": "https://github.com/VibeBB/simulation-agent/commit/da1374e8ba962f14aa4d62f426d475865d060dfc",
+      "runtime_source_sha256": {
+        "plugins/sim/hooks/scripts/require_records.py": "dc6aa78e9b67004687e59ef62ee13ae23ec40809c546c319d37dae662a527a14",
+        "plugins/sim/hooks/scripts/_records.py": "eeb3b0a0f4d2a1751d1b4c3a92d8096c51a7d01ab397aae1a47abc5d7d5374c9",
+        "src/sim/records.py": "8749d63d4d5d1210301b273de85f29d877e479adf4518804fccc679941e94218",
+        "plugins/sim/hooks/scripts/record_vision_tool_event.py": "a06811ea2fa788592a2ace392fd4215bfb91aa410bcd48beab3415550244e8fd"
+      },
+      "tools": {
+        "uv --version": "uv 0.13.8 (x86_64-unknown-linux-gnu)",
+        "uv run python --version": "Python 3.14.10",
+        "uv run ruff --version": "ruff 0.17.5",
+        "uv run pyright --version": "pyright 1.1.414"
+      },
+      "result": "pass",
+      "stop_suite_repeats": 5,
+      "commands": [
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/verify_all.py",
+            "--stage",
+            "fast"
+          ],
+          "exit_code": 0,
+          "duration_s": 22.969,
+          "private_log": "simulation-agent-fast-supported-arguments-attempt1.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "--group",
+            "sdk-check",
+            "python",
+            "scripts/check_plugin_load.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 4.772,
+          "private_log": "simulation-agent-1.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.949,
+          "private_log": "simulation-agent-2.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.065,
+          "private_log": "simulation-agent-3.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 1.048,
+          "private_log": "simulation-agent-4.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.959,
+          "private_log": "simulation-agent-5.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.878,
+          "private_log": "simulation-agent-6.log"
+        }
+      ]
+    },
+    {
+      "repository": "wire-agent",
+      "pull_request": "https://github.com/VibeBB/wire-agent/pull/261",
+      "validated_revision": "9c3efb7385a34485197fda98b52822d35cc7d352",
+      "revision_url": "https://github.com/VibeBB/wire-agent/commit/9c3efb7385a34485197fda98b52822d35cc7d352",
+      "runtime_source_sha256": {
+        "plugins/wire/hooks/scripts/require_records.py": "dc6aa78e9b67004687e59ef62ee13ae23ec40809c546c319d37dae662a527a14",
+        "plugins/wire/hooks/scripts/_records.py": "eeb3b0a0f4d2a1751d1b4c3a92d8096c51a7d01ab397aae1a47abc5d7d5374c9",
+        "src/wire/records.py": "0baaddf2a13aa227a5da912a38dfa807010de45806e5f75d4b3c24ee10bc26ae",
+        "plugins/wire/hooks/scripts/record_vision_tool_event.py": "0c86e20268073bef1c40c0027458d414980e2a6026adfea056fc6cafead4c407"
+      },
+      "tools": {
+        "uv --version": "uv 0.13.8 (x86_64-unknown-linux-gnu)",
+        "uv run python --version": "Python 3.14.10",
+        "uv run ruff --version": "ruff 0.17.5",
+        "uv run pyright --version": "pyright 1.1.414"
+      },
+      "result": "pass",
+      "stop_suite_repeats": 5,
+      "commands": [
+        {
+          "argv": [
+            "uv",
+            "run",
+            "python",
+            "scripts/verify_all.py",
+            "--stage",
+            "fast",
+            "--jobs",
+            "2"
+          ],
+          "exit_code": 0,
+          "duration_s": 31.055,
+          "private_log": "wire-agent-0.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "--group",
+            "sdk-check",
+            "python",
+            "scripts/check_plugin_load.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 3.805,
+          "private_log": "wire-agent-1.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.673,
+          "private_log": "wire-agent-2.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.672,
+          "private_log": "wire-agent-3.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.749,
+          "private_log": "wire-agent-4.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.672,
+          "private_log": "wire-agent-5.log"
+        },
+        {
+          "argv": [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/test_record_stop_scope.py"
+          ],
+          "exit_code": 0,
+          "duration_s": 0.667,
+          "private_log": "wire-agent-6.log"
+        }
+      ]
+    }
+  ]
+}

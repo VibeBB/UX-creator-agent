@@ -8,6 +8,7 @@ mismatch. Intended for the `plugin-load` CI job.
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -158,6 +159,21 @@ def main() -> int:
         for reason in reasons:
             print(reason)
         return 1
+    startup = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "-n",
+            "0",
+            str(REPO_ROOT / "tests/test_sdk_delegated_context.py"),
+        ],
+        cwd=REPO_ROOT,
+        check=False,
+    )
+    if startup.returncode:
+        return startup.returncode
     all_hooks = (
         EXPECTED_SESSION_START_HOOKS
         | EXPECTED_USER_PROMPT_SUBMIT_HOOKS
