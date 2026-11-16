@@ -119,6 +119,40 @@ def test_request_high_risk_needs_job_id(contract_dict: dict[str, Any]) -> None:
         )
 
 
+@pytest.mark.parametrize("rationale", ["", " \t\n"])
+def test_low_risk_default_rationale_is_usable_by_sisters(
+    contract_dict: dict[str, Any], tmp_path: Path, rationale: str
+) -> None:
+    request = _build(UXContract.model_validate(contract_dict), tmp_path, rationale=rationale)
+    path = write_request(request, tmp_path)
+    assert json.loads(path.read_text(encoding="utf-8"))["rationale"] == request.purpose
+    assert load_request(path) == request
+
+
+def test_legacy_blank_rationale_remains_readable(
+    contract_dict: dict[str, Any], tmp_path: Path
+) -> None:
+    request = _build(UXContract.model_validate(contract_dict), tmp_path)
+    payload = request.model_dump()
+    payload["rationale"] = ""
+    path = tmp_path / f"{request.id}.ux-request.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    assert load_request(path).rationale == ""
+
+
+def test_high_risk_blank_rationale_cannot_fall_back_to_purpose(
+    contract_dict: dict[str, Any], tmp_path: Path
+) -> None:
+    with pytest.raises(ValueError, match="job id"):
+        _build(
+            UXContract.model_validate(contract_dict),
+            tmp_path,
+            risk="high",
+            purpose="job j1 needs a quieter circuit driver",
+            rationale="",
+        )
+
+
 def test_request_high_risk_with_job_id(contract_dict: dict[str, Any]) -> None:
     contract = UXContract.model_validate(contract_dict)
     req = _build(
