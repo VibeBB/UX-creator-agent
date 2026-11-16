@@ -170,7 +170,8 @@ def _producer_sources(
         return None
     parents = cast(list[Any], raw_parents)
     if (
-        set(claim) != {"path", "sha256", "owner_plugin", "origin", "operation", "parents"}
+        set(claim)
+        != {"path", "sha256", "owner_plugin", "origin", "operation", "parents"}
         or claim.get("owner_plugin") != "ux"
         or claim.get("operation") not in ("crop", "tile", "composite")
         or not 1 <= len(parents) <= 16
@@ -188,7 +189,9 @@ def _producer_sources(
 def _receipt_sources(
     observation: dict[str, Any], root: Path, *, current: bool = True
 ) -> list[dict[str, Any]] | None:
-    content = {k: v for k, v in observation.items() if k not in {"event_id", "recorded_at"}}
+    content = {
+        k: v for k, v in observation.items() if k not in {"event_id", "recorded_at"}
+    }
     intact = (
         observation.get("delivery_evidence") == "inline_bytes"
         and observation.get("event_id")
@@ -199,7 +202,9 @@ def _receipt_sources(
     return _producer_sources(observation, root, current=current) if intact else None
 
 
-def _current_originals(observations: list[dict[str, Any]], root: Path) -> dict[str, dict[str, Any]]:
+def _current_originals(
+    observations: list[dict[str, Any]], root: Path
+) -> dict[str, dict[str, Any]]:
     originals: dict[str, dict[str, Any]] = {}
     ambiguous: set[str] = set()
     for observation in observations:
@@ -254,7 +259,9 @@ def _observation_keys(
         return keys, "earlier image delivery superseded by current original revisions"
     return (
         keys,
-        "foreign or auxiliary image scoped to its original owner/revision" if not keys else None,
+        "foreign or auxiliary image scoped to its original owner/revision"
+        if not keys
+        else None,
     )
 
 
@@ -300,10 +307,14 @@ def _read_marker(path: Path) -> dict[str, Any] | None:
 
 def _write_json(path: Path, value: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
 
 
-def _create_marker(path: Path, payload: dict[str, Any], scope_origin: str) -> dict[str, Any]:
+def _create_marker(
+    path: Path, payload: dict[str, Any], scope_origin: str
+) -> dict[str, Any]:
     marker = {
         "session_id": payload.get("session_id"),
         "started_at": time.time(),
@@ -324,15 +335,20 @@ def session_start(
     records_dir = root / str(policy["records_dir"])
     marker = _marker_path(records_dir, payload)
     if _read_marker(marker) is None:
-        _create_marker(marker, payload, "session_start" if include_recall else "record-context")
+        _create_marker(
+            marker, payload, "session_start" if include_recall else "record-context"
+        )
     briefing = recall(root, str(policy["plugin"])) if include_recall else ""
     if payload.get("session_id"):
         identity = json.dumps(payload["session_id"], ensure_ascii=False)
         briefing = (
-            f"VRP record context: pass session_id={identity} to this plugin's record tools. "
+            f"VRP record context: pass session_id={identity} "
+            "to this plugin's record tools. "
             "Use the delegated agent's own session context for its records. "
-            "A delegated primary must record coordinator_session_id supplied by its caller; "
-            "when delegating a primary, pass your own session_id as that coordinator.\n" + briefing
+            "A delegated primary must record coordinator_session_id "
+            "supplied by its caller; "
+            "when delegating a primary, pass your own session_id as that coordinator.\n"
+            + briefing
         )
     if briefing:
         print(json.dumps({"additionalContext": briefing}, ensure_ascii=False))
@@ -357,7 +373,10 @@ def _dual_review_problems(
         for r in reviews
         if r.get("reviewer") == "primary"
         and not _auxiliary_review(r, root)
-        and (not r.get("coordinator_session_id") or r.get("coordinator_session_id") == session_id)
+        and (
+            not r.get("coordinator_session_id")
+            or r.get("coordinator_session_id") == session_id
+        )
         and matches(str(r.get("image_path") or ""), patterns)
     ]
     for primary in primaries:
@@ -376,7 +395,8 @@ def _dual_review_problems(
         ]
         if not blind:
             problems.append(
-                f"image {image} needs a blind second review: delegate it with `task` to the"
+                f"image {image} needs a blind second review: "
+                "delegate it with `task` to the"
                 " blind vision sub-agent (it must not see the first review)"
             )
             continue
@@ -391,11 +411,14 @@ def _dual_review_problems(
         last = max(mine, key=lambda c: int(c.get("round") or 0))
         if last.get("outcome") == "disagree":
             problems.append(
-                f"image {image}: the reviews disagree; get one tiebreak review and reconcile"
+                f"image {image}: the reviews disagree; "
+                "get one tiebreak review and reconcile"
                 " again (round 2 is the last)"
             )
         elif last.get("outcome") == "unresolved":
-            warnings.append(f"image {image}: independent reviews stay split; treat it as unknown")
+            warnings.append(
+                f"image {image}: independent reviews stay split; treat it as unknown"
+            )
     return problems, warnings
 
 
@@ -420,7 +443,8 @@ def problems_for(
         legacy = [
             r
             for r in logs[kind]
-            if not r.get("session_id") and (parse_time(r.get("recorded_at")) or 0) >= since
+            if not r.get("session_id")
+            and (parse_time(r.get("recorded_at")) or 0) >= since
         ]
         if legacy:
             warnings.append(
@@ -447,10 +471,14 @@ def problems_for(
         if review.get("reviewer") not in {"blind", "tiebreak"}:
             continue
         primary = review_primary(review, logs["vision_review"], root)
-        if (review.get("session_id") or review.get("primary_event_id")) and primary is None:
+        if (
+            review.get("session_id") or review.get("primary_event_id")
+        ) and primary is None:
             if review in session["vision_review"]:
                 session["vision_review"].remove(review)
-                problems.append("scoped independent review has no valid primary_event_id")
+                problems.append(
+                    "scoped independent review has no valid primary_event_id"
+                )
             continue
         if (
             primary is not None
@@ -460,7 +488,9 @@ def problems_for(
             session["vision_review"].append(review)
 
     for primary in session["vision_review"]:
-        if primary.get("reviewer") != "primary" or not primary.get("coordinator_session_id"):
+        if primary.get("reviewer") != "primary" or not primary.get(
+            "coordinator_session_id"
+        ):
             continue
         if primary.get("coordinator_session_id") != session_id:
             warnings.append(
@@ -476,13 +506,16 @@ def problems_for(
                 session["review_reconcile"].append(reconciliation)
 
     reviews = session["vision_review"]
-    reviewed_events = {str(r.get("source_event_id")) for r in reviews if r.get("source_event_id")}
+    reviewed_events = {
+        str(r.get("source_event_id")) for r in reviews if r.get("source_event_id")
+    }
     reviewed_images = {_image_key(r, root) for r in reviews if r.get("image_sha256")}
     events, malformed = load_jsonl(records_dir / VISION_EVENTS_FILE)
     if malformed:
         problems.append(f"{VISION_EVENTS_FILE}: {malformed} malformed lines")
     if any(
-        not e.get("session_id") and (parse_time(e.get("recorded_at")) or 0) >= since for e in events
+        not e.get("session_id") and (parse_time(e.get("recorded_at")) or 0) >= since
+        for e in events
     ):
         warnings.append("legacy vision events lack session_id; attribution is unknown")
     for event in events:
@@ -497,10 +530,13 @@ def problems_for(
     if malformed:
         problems.append(f"{IMAGE_OBSERVATIONS_FILE}: {malformed} malformed lines")
     if any(
-        not item.get("session_id") and (parse_time(item.get("recorded_at")) or 0) >= since
+        not item.get("session_id")
+        and (parse_time(item.get("recorded_at")) or 0) >= since
         for item in observations
     ):
-        warnings.append("legacy image observations lack session_id; attribution is unknown")
+        warnings.append(
+            "legacy image observations lack session_id; attribution is unknown"
+        )
     seen: set[tuple[str, str]] = set()
     originals = _current_originals(observations, root)
     for observation in observations:
@@ -514,7 +550,9 @@ def problems_for(
             and warning
             and warning.startswith("image owner/ancestry unknown")
         ):
-            problems.append("image ancestry unknown: restore and re-deliver the original revisions")
+            problems.append(
+                "image ancestry unknown: restore and re-deliver the original revisions"
+            )
         if warning and warning not in warnings:
             warnings.append(warning)
         for key in keys:
@@ -532,9 +570,12 @@ def problems_for(
         for ref in cast(list[dict[str, Any]], read.get("refs") or []):
             if not acknowledged(session, ref, after):
                 problems.append(
-                    f"sister impression {ref.get('system')}:{str(ref.get('event_id'))[:12]} came"
-                    f" with {cast(dict[str, Any], read.get('artifact') or {}).get('path')}; cite"
-                    " it in the upstream field of an impression (adopted, deferred, disputed or"
+                    f"sister impression {ref.get('system')}:"
+                    f"{str(ref.get('event_id'))[:12]} came with "
+                    f"{cast(dict[str, Any], read.get('artifact') or {}).get('path')}"
+                    "; cite"
+                    " it in the upstream field of an impression "
+                    "(adopted, deferred, disputed or"
                     " noted, and its effect)"
                 )
         for issue in cast(list[str], read.get("unresolved") or []):
@@ -552,7 +593,8 @@ def problems_for(
             continue
         if not received(logs, relative, sha256_file(root / relative)):
             problems.append(
-                f"bard sent you a song ({relative}); read it and record a song receipt: what"
+                f"bard sent you a song ({relative}); "
+                "read it and record a song receipt: what"
                 " you felt and whether it makes you look at the design again"
             )
 
@@ -572,7 +614,8 @@ def problems_for(
         uncovered = [rel for rel in changed if not any(covers(p, rel) for p in fresh)]
         for relative in uncovered:
             problems.append(
-                f"artifact {relative} changed this session but no fresh stage_impression covers it"
+                f"artifact {relative} changed this session "
+                "but no fresh stage_impression covers it"
             )
         if not session["decision"]:
             problems.append(
@@ -592,7 +635,9 @@ def stop(payload: dict[str, Any], policy: dict[str, Any], root: Path) -> int:
     since = float(marker.get("started_at") or 0.0)
     problems, warnings = problems_for(payload, policy, root, since)
     if missing_marker or marker.get("scope_origin") == "stop":
-        warnings.append("session-start marker was missing; prior record scope is unknown")
+        warnings.append(
+            "session-start marker was missing; prior record scope is unknown"
+        )
     limit = max(0, int(policy.get("max_stop_denials", DEFAULT_MAX_STOP_DENIALS)))
     denials = int(marker.get("denials") or 0)
     deny = bool(problems) and denials < limit
@@ -628,13 +673,20 @@ def stop(payload: dict[str, Any], policy: dict[str, Any], root: Path) -> int:
     hint = str(policy.get("record_hint") or "")
     if deny:
         message = (
-            f"[{policy['plugin']}] VibeBB Record Protocol: this session still owes records."
-            f" Record them before finishing (refusal {denials}/{limit}):\n{body}\n{hint}"
+            f"[{policy['plugin']}] VibeBB Record Protocol: "
+            "this session still owes records."
+            f" Record them before finishing (refusal {denials}/{limit}):\n"
+            f"{body}\n{hint}"
         ).strip()
-        print(json.dumps({"decision": "deny", "reason": message, "additionalContext": message}))
+        print(
+            json.dumps(
+                {"decision": "deny", "reason": message, "additionalContext": message}
+            )
+        )
         return 2
     message = (
-        f"[{policy['plugin']}] VibeBB Record Protocol still unmet after {limit} refusals;"
+        f"[{policy['plugin']}] VibeBB Record Protocol "
+        f"still unmet after {limit} refusals;"
         f" finishing with gaps recorded in {policy['records_dir']}/records-status.json."
         f" Tell the user exactly which records are missing:\n{body}"
     )
