@@ -117,9 +117,10 @@ After exhaustion, persist paused/blocked state and gaps. Resume only missing
 work for the same source revision and reviewer role.
 
 The image-review portion is implemented and locally validated. Broader
-design/liaison/domain-stage checkpointing and live provider/backoff timing
-remain separate verification work; do not infer their completion from the
-synthetic review-collection tests.
+design/liaison/domain-stage checkpointing is implemented separately in
+[PR #205](https://github.com/VibeBB/UX-creator-agent/pull/205), including
+interruption recovery and bounded retries. Live provider/backoff timing
+remains unverified; do not infer it from synthetic review-collection tests.
 
 Keep bounded stop refusals. Surface their final gap record in status and
 reports. Acceptance requires sequential review, finite behavior under
@@ -185,6 +186,13 @@ and `.frd` field plots as separate requirements. Inventory the existing
 after evidence exists; raw workspace conversations/logs stay private.
 
 ## Final acceptance and handoff
+
+The [fixed-release domain matrix](family-domain-validation.md),
+[evidence index](family-domain-validation.json) and
+[implementation snapshot](family-implementation-status.json) now record the
+observed scope of F/G/H. An unavailable released Bard CLI, unexecuted optional
+EM solvers and long-page/CJK rendering remain explicit gaps, not completed
+features. The website and SDK were not modified.
 
 Report changed repository/revision, verified matrix cells, unknown/N/A
 scope, outstanding gaps and required maintainer decisions in one index.

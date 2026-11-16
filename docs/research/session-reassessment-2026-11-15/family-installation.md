@@ -67,6 +67,7 @@ after runtime files have been added. Runtime checks use
   are separate. Asset loading leaves all four unknown. MCP initialization and
   protocol checks do not prove a native model completed a product workflow.
 
-The domain matrix and evidence index record runtime results and their scopes.
+The [domain matrix](family-domain-validation.md) and
+[evidence index](family-domain-validation.json) record runtime results and their scopes.
 Physical devices, actual sound, native model image perception and end-user
 acceptance remain unknown unless directly evidenced.
