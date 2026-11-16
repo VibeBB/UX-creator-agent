@@ -146,20 +146,45 @@ def _producer_claim(
     metadata: dict[str, object], path: Path, digest: str
 ) -> dict[str, object] | None:
     claim = _mapping(metadata.get("image_identity"))
-    owner, origin, source = claim.get("owner_plugin"), claim.get("origin"), claim.get("path")
+    source = claim.get("path")
     if (
         metadata.get("identity_status") != "bound"
-        or set(claim) != {"path", "sha256", "owner_plugin", "origin"}
         or claim.get("sha256") != digest
-        or not isinstance(owner, str)
-        or owner not in _OWNERS
-        or origin not in ("renderer", "liaison-response")
         or not isinstance(source, str)
         or not Path(source).is_absolute()
         or str(path) != source
     ):
         return None
+    if claim.get("origin") != "derived":
+        return claim if _original_identity(claim) else None
+    parents = [_mapping(p) for p in _items(claim.get("parents"))]
+    operation = claim.get("operation")
+    if (
+        set(claim) != {"path", "sha256", "owner_plugin", "origin", "operation", "parents"}
+        or claim.get("owner_plugin") != "ux"
+        or operation not in ("crop", "tile", "composite")
+        or not 1 <= len(parents) <= 16
+        or (operation != "composite" and len(parents) != 1)
+        or any(not _original_identity(p) or p["path"] == source for p in parents)
+        or len({str(p.get("path")) for p in parents}) != len(parents)
+    ):
+        return None
     return claim
+
+
+def _original_identity(claim: dict[str, object]) -> bool:
+    owner, source, digest = claim.get("owner_plugin"), claim.get("path"), claim.get("sha256")
+    return (
+        set(claim) == {"path", "sha256", "owner_plugin", "origin"}
+        and isinstance(owner, str)
+        and owner in _OWNERS
+        and claim.get("origin") in ("renderer", "liaison-response")
+        and isinstance(source, str)
+        and Path(source).is_absolute()
+        and isinstance(digest, str)
+        and len(digest) == 64
+        and all(c in "0123456789abcdef" for c in digest)
+    )
 
 
 def _observation(

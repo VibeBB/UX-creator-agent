@@ -16,6 +16,7 @@ protocols, operations, and accepted design decisions.
 - [Contracts](contracts.md) — UX, SLP v2, production, VRP, and advisory formats
 - [Records and vision](records-and-vision.md) — decision, impression, image, and review evidence
 - [Review checkpoints](review-checkpoints.md) — SHA-bound record reuse and bounded fresh native tasks
+- [Image ancestry](image-lineage.md) — auxiliary views, original revisions and owner-scoped review
 - [Records protocol (VRP v2)](records-protocol.md) — hash-chained, grounded, answerable records; blind review; bard receipts
 - [Sister cooperation](sister-cooperation.md) — ten registered targets and hash-bound exchange
 - [Performance and limits](performance-and-limits.md) — timeouts, inline image caps, and known gaps

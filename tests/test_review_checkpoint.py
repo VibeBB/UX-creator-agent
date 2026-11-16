@@ -16,6 +16,7 @@ import pytest
 from ux_creator import _vrp, mcp_server
 from ux_creator.cli import main
 from ux_creator.records import record_reconcile, record_vision_review
+from ux_creator.render import ImageIdentity, RenderResult
 from ux_creator.review_checkpoint import review_checkpoint
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -127,6 +128,94 @@ def _write_review(root: Path, role: str, primary: str | None = None, **fields: A
 
 def _collect(root: Path, started: dict[str, Any], event: str) -> dict[str, Any]:
     return _call(root, "collect", pair_id=_active(started)["id"], review_event_id=event)
+
+
+@pytest.mark.parametrize("replacement_tile", ["tile.png", "replacement.png"])
+def test_current_review_keeps_prior_original_debt_after_auxiliary_replacement(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch, replacement_tile: str
+) -> None:
+    """Use real MCP receipts, VRP writers and native Stop without an LLM call."""
+    image = workspace / "diagram.png"
+
+    def render(_directory: Path, **_kwargs: object) -> list[RenderResult]:
+        return [
+            RenderResult(
+                image,
+                image,
+                "ok",
+                "synthetic fixture",
+                ImageIdentity(
+                    path=str(image),
+                    sha256=_vrp.sha256_file(image),
+                    owner_plugin="ux",
+                    origin="renderer",
+                ),
+            )
+        ]
+
+    monkeypatch.setattr(mcp_server, "render_all", render)
+
+    def deliver(tile_name: str) -> None:
+        (workspace / tile_name).write_bytes(b"synthetic tile")
+        result = asyncio.run(
+            mcp_server.call_tool(
+                None,
+                mcp_server.types.CallToolRequestParams(
+                    name="ux_render",
+                    arguments={
+                        "dir": ".",
+                        "image_details": [
+                            {"path": tile_name, "parents": ["diagram.png"], "operation": "tile"}
+                        ],
+                    },
+                ),
+            )
+        )
+        assert not result.is_error
+        observed = subprocess.run(
+            [sys.executable, str(HOOK)],
+            input=json.dumps(
+                {
+                    "session_id": "coordinator",
+                    "working_dir": str(workspace),
+                    "tool_name": "ux_render",
+                    "tool_response": result.model_dump(by_alias=True),
+                }
+            ),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert observed.returncode == 0 and not observed.stderr
+
+    def hook(action: str) -> int:
+        return subprocess.run(
+            [sys.executable, str(HOOK.with_name("require_records.py")), action],
+            input=json.dumps({"session_id": "coordinator", "working_dir": str(workspace)}),
+            capture_output=True,
+            text=True,
+            check=False,
+        ).returncode
+
+    assert hook("record-context") == 0
+    deliver("tile.png")
+    original_sha = _vrp.sha256_file(image)
+    image.write_bytes(b"Idle Ready: updated formal revision")
+    deliver(replacement_tile)
+    assert hook("stop") == 2
+    status_path = workspace / "observations/ux/.sessions/coordinator.status.json"
+    before = json.loads(status_path.read_text(encoding="utf-8"))
+    assert any("viewed image" in problem for problem in before["problems"])
+    assert not any("ancestry unknown" in problem for problem in before["problems"])
+    _write_review(workspace, "primary")
+    assert hook("stop") == 2
+    after = json.loads(status_path.read_text(encoding="utf-8"))
+    assert len(after["problems"]) == 1 and original_sha[:12] in after["problems"][0]
+    assert "ancestry unknown" not in after["problems"][0]
+    assert after["stop_denials"] == 2
+    # Auxiliary debt retires, but the unreviewed historical original still fails.
+    assert after["record_compliance"] == "fail"
+    assert after["acceptance"] == after["run_completion"] == "unknown"
 
 
 def test_event_only_review_preserves_history_without_blocking_image_collection(
