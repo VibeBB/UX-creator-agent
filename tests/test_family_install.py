@@ -75,14 +75,21 @@ def test_tag_validation_checks_annotated_commit_not_tag_object() -> None:
         verify_tag_output(entry, "")
 
 
-def test_interface_check_keeps_asset_load_separate_from_cooperation() -> None:
-    assert interface_gaps("bard", ["bard", "bard-critic"], []) == [
-        "missing declared MCP server: bard"
+def test_interface_check_keeps_asset_load_separate_from_cooperation(tmp_path: Path) -> None:
+    assert interface_gaps("bard", ["bard", "bard-critic"], [], tmp_path) == [
+        f"missing native liaison CLI asset: scripts/{filename}"
+        for filename in ("bard_cli.py", "bard_liaison.py", "bard_records.py")
     ]
-    assert interface_gaps("ux", ["ux-creator"], ["ux"]) == [
+    scripts = tmp_path / "scripts"
+    scripts.mkdir()
+    for filename in ("bard_cli.py", "bard_liaison.py", "bard_records.py"):
+        (scripts / filename).write_text("# CLI asset\n", encoding="utf-8")
+    assert not interface_gaps("bard", ["bard"], [], tmp_path)
+    assert interface_gaps("ux", ["ux-creator"], ["ux"], tmp_path) == [
         "missing native liaison agent: ux-liaison"
     ]
-    assert not interface_gaps("ux", ["ux-liaison"], ["ux"])
+    assert not interface_gaps("ux", ["ux-liaison"], ["ux"], tmp_path)
+    assert interface_gaps("ux", ["ux-liaison"], [], tmp_path) == ["missing declared MCP server: ux"]
 
 
 def test_installed_digest_binds_paths_bytes_and_rejects_links(tmp_path: Path) -> None:

@@ -3,6 +3,11 @@
 Release, dependency-update, and CI policy. Product documentation lives in
 the README and `docs/`; design decisions live in `docs/adr/`.
 
+For a release-pinned eleven-plugin installation check, use the
+[family installation procedure](research/session-reassessment-2026-11-15/family-installation.md).
+Its inventory separates plugin assets, native CLI/MCP entry points and tools-image
+preparation; loading a plugin is not evidence of product acceptance.
+
 ## Documentation map
 
 - [Architecture](architecture.md), [workflow](workflow.md),

@@ -69,6 +69,8 @@ class Inventory(StrictModel):
     agents: list[str] = Field(default_factory=list[str])
     commands: list[str] = Field(default_factory=list[str])
     mcp_servers: list[str] = Field(default_factory=list[str])
+    preparation_command: list[str] = Field(default_factory=list[str])
+    next_steps: list[str] = Field(default_factory=list[str])
     gaps: list[str] = Field(default_factory=list[str])
 
 
@@ -80,6 +82,7 @@ class InstallReport(StrictModel):
     acceptance: Literal["unknown"] = "unknown"
     tool_readiness: Literal["unknown"] = "unknown"
     workflow_completion: Literal["unknown"] = "unknown"
+    native_execution: Literal["unknown"] = "unknown"
     plugins: list[Inventory]
 
 
@@ -99,10 +102,16 @@ def tree_sha256(root: Path) -> str:
     return digest.hexdigest()
 
 
-def interface_gaps(name: str, agents: list[str], servers: list[str]) -> list[str]:
+def interface_gaps(name: str, agents: list[str], servers: list[str], root: Path) -> list[str]:
     expected_agent = "ux-liaison" if name == "ux" else SISTERS[name].liaison_agent
     gaps: list[str] = []
-    if name not in servers:
+    # Bard deliberately uses a stdlib CLI instead of an MCP server. Its old
+    # song-only releases may load successfully without shipping SLP at all.
+    if name == "bard":
+        for filename in ("bard_cli.py", "bard_liaison.py", "bard_records.py"):
+            if not (root / "scripts" / filename).is_file():
+                gaps.append(f"missing native liaison CLI asset: scripts/{filename}")
+    elif name not in servers:
         gaps.append(f"missing declared MCP server: {name}")
     if expected_agent not in agents:
         gaps.append(f"missing native liaison agent: {expected_agent}")
@@ -165,6 +174,8 @@ def install_one(entry: Release, store: Path) -> Inventory:
             raise ValueError("installed manifest has a different plugin name")
         agents = sorted(agent.name for agent in plugin.agents)
         servers = sorted(plugin.mcp_config)
+        gaps = interface_gaps(entry.plugin, agents, servers, info.install_path)
+        launcher = info.install_path / "scripts" / f"{entry.plugin}_launcher.py"
         return Inventory(
             plugin=entry.plugin,
             source_commit=entry.source_commit,
@@ -176,7 +187,16 @@ def install_one(entry: Release, store: Path) -> Inventory:
             agents=agents,
             commands=sorted(command.name for command in plugin.commands),
             mcp_servers=servers,
-            gaps=interface_gaps(entry.plugin, agents, servers),
+            preparation_command=[sys.executable, str(launcher), "prewarm"]
+            if launcher.is_file()
+            else [],
+            next_steps=[
+                "Install a verified release with the missing liaison entry points; "
+                "preserve this lock and failed report instead of inventing an interface."
+            ]
+            if gaps
+            else [],
+            gaps=gaps,
         )
     except Exception as error:
         return Inventory(
@@ -184,6 +204,10 @@ def install_one(entry: Release, store: Path) -> Inventory:
             source_commit=entry.source_commit,
             release=entry.release,
             status="error",
+            next_steps=[
+                "Resolve the recorded source/authentication/integrity error, then retry "
+                "with a new --out directory; do not overwrite this attempt."
+            ],
             gaps=[f"{type(error).__name__}: {error}"],
         )
 
