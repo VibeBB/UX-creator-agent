@@ -1,11 +1,19 @@
 # Cooperative-run reassessment
 
-Evidence cutoff: 2026-11-15. This is an investigation of an existing
+Historical evidence cutoff: 2026-11-15. This is an investigation of an existing
 11-plugin AgentCanvas run and its subsequent research/release work, not a
 new execution of every product feature. The [implementation plan](implementation-plan.md)
 separates proposed changes from verified results. The
 [validation summary](validation-results.json) binds the figures below to
 the privately delivered evidence archive and pinned repository revisions.
+
+Subsequent implementation and fixed-release trials are recorded in the
+[G1–G10 domain matrix and handoff](family-domain-validation.md),
+[evidence index](family-domain-validation.json),
+[visual inspection inventory](family-visual-review.json), and
+[PR/revision snapshot](family-implementation-status.json). The historical
+findings below remain unchanged; newer successful trials do not validate the
+original failed cue set or complete every native product workflow.
 
 ## Conclusion
 

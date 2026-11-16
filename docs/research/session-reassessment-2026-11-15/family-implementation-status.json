@@ -1,0 +1,284 @@
+{
+  "observed_at": "2026-11-16T18:20:08.935576+00:00",
+  "scope": "implementation PR heads before final research documentation commit",
+  "main_merge_status": "open PR work is not merged main",
+  "live_checks_authoritative": true,
+  "results": [
+    {
+      "repo": "VibeBB/bard-agent",
+      "number": 201,
+      "url": "https://github.com/VibeBB/bard-agent/pull/201",
+      "state": "OPEN",
+      "title": "fix(records): scope auxiliary reviews to original image owners",
+      "headRefOid": "566dcd4868254212838c92d1ffbe9be523b71431",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 15,
+        "SKIPPED": 1
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "**Devin Review** found 3 findings. Devin automatically fixed all 3 findings.\n\n<details>\n<summary><b>Fixed by Devin (3)</b></summary>\n\n- **Vision-tool references discard valid delivery bindings** \u2014 A crop receipt and inspect_image_with_vision event have different IDs. Delivery now matches path, SHA and native session independently of the source-event namespace; historical SHA reuse still requires an intact explicit delivery receipt. Native hook/writer/Stop regression covers unchanged and regenerated images; focused checks pass.\n- **Repeated views lose auxiliary review scope** \u2014 Two unchanged deliveries of the same crop previously lost its auxiliary binding. Consistent verified receipts now deduplicate; conflicting ancestry remains unknown. Native observer/writer and Stop regression cases pass.\n- **Home-relative overrides lose image delivery binding** \u2014 A home-relative observation override previously differed between observer and writer. Both readers now expand the configured path; the native writer regression binds the receipt in the overridden home directory.\n\n</details>\n\n[View findings in Devin Review](https://app.devin.ai/review/vibebb/bard-agent/pull/201) \u00b7 [Follow Devin's work](https://app.devin.ai/sessions/0d5855f5d5394e49b4e0202783401227)\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/bard-agent/pull/201\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-session-triaged -->"
+    },
+    {
+      "repo": "VibeBB/dashboard-agent",
+      "number": 257,
+      "url": "https://github.com/VibeBB/dashboard-agent/pull/257",
+      "state": "OPEN",
+      "title": "fix(records): scope auxiliary reviews to original image owners",
+      "headRefOid": "311fbe1beb837cf9fefc380fb4235681c4e06de3",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 19
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "**Devin Review** found 3 findings. Devin automatically fixed all 3 findings.\n\n<details>\n<summary><b>Fixed by Devin (3)</b></summary>\n\n- **Redundant blind reviews for cited crops** \u2014 A valid crop delivered to the native reviewer lost its auxiliary exemption when source_event_id cited an inspect_image_with_vision event. Delivery now matches path, SHA and native session independently of that event namespace; explicit delivery receipts still govern historical-SHA reuse. Real hook/writer/Stop regression covers both unchanged and regenerated images; focused checks pass.\n- **Repeated views lose auxiliary review exemptions** \u2014 Two unchanged deliveries of the same crop previously lost its auxiliary binding. Consistent verified receipts now deduplicate; conflicting ancestry remains unknown. Native observer/writer and Stop regression cases pass.\n- **Inline image receipts lose actor attribution** \u2014 Inline responses bypassed the legacy actor collector. The native receipt now retains supplied agent, actor, call and parent identifiers; missing fields remain absent and the payload-attribution regression passes.\n\n</details>\n\n[View findings in Devin Review](https://app.devin.ai/review/vibebb/dashboard-agent/pull/257) \u00b7 [Follow Devin's work](https://app.devin.ai/sessions/0d5855f5d5394e49b4e0202783401227)\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/dashboard-agent/pull/257\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-session-triaged -->"
+    },
+    {
+      "repo": "VibeBB/document-agent",
+      "number": 66,
+      "url": "https://github.com/VibeBB/document-agent/pull/66",
+      "state": "OPEN",
+      "title": "fix(records): scope auxiliary reviews to original image owners",
+      "headRefOid": "59dd652a63808a39153c7bf31c010657e3be9343",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 12
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "**Devin Review** found 3 findings. Devin automatically fixed all 3 findings.\n\n<details>\n<summary><b>Fixed by Devin (3)</b></summary>\n\n- **Repeated views trigger unnecessary crop reviews** \u2014 Two unchanged deliveries of the same crop previously lost its auxiliary binding. Consistent verified receipts now deduplicate; conflicting ancestry remains unknown. Native observer/writer and Stop regression cases pass.\n- **Concurrent figure views return mismatched receipts** \u2014 A concurrent append could make the document viewer return a different session's final log line. The append operation now returns its own generated event ID directly; the interleaved-view regression passes.\n- **Redundant independent reviews for auxiliary images** \u2014 A crop receipt and inspect_image_with_vision event have different IDs. Delivery now matches path, SHA and native session independently of the source-event namespace; historical SHA reuse still requires an intact explicit delivery receipt. Native hook/writer/Stop regression covers unchanged and regenerated images; focused checks pass.\n\n</details>\n\n[View findings in Devin Review](https://app.devin.ai/review/vibebb/document-agent/pull/66) \u00b7 [Follow Devin's work](https://app.devin.ai/sessions/0d5855f5d5394e49b4e0202783401227)\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/document-agent/pull/66\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-session-triaged -->"
+    },
+    {
+      "repo": "VibeBB/electrical-circuit-agent",
+      "number": 361,
+      "url": "https://github.com/VibeBB/electrical-circuit-agent/pull/361",
+      "state": "OPEN",
+      "title": "fix(records): scope auxiliary reviews to original image owners",
+      "headRefOid": "9fdcfcc06661148a997b8443f7c9345739664a3d",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 27
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "**Devin Review** found 3 findings. Devin automatically fixed all 3 findings.\n\n<details>\n<summary><b>Fixed by Devin (3)</b></summary>\n\n- **Vision tool references erase auxiliary binding** \u2014 A crop receipt and inspect_image_with_vision event have different IDs. Delivery now matches path, SHA and native session independently of the source-event namespace; historical SHA reuse still requires an intact explicit delivery receipt. Native hook/writer/Stop regression covers unchanged and regenerated images; focused checks pass.\n- **Identical attachments create unsatisfiable review obligations** \u2014 Two returned images with equal bytes previously lost both paths. When returned counts and verified metadata resolve the mapping, distinct paths are retained; ambiguous/conflicting mapping remains unknown. The native integration regressions pass.\n- **Repeated views lose auxiliary review exemptions** \u2014 Two unchanged deliveries of the same crop previously lost its auxiliary binding. Consistent verified receipts now deduplicate; conflicting ancestry remains unknown. Native observer/writer and Stop regression cases pass.\n\n</details>\n\n[View findings in Devin Review](https://app.devin.ai/review/vibebb/electrical-circuit-agent/pull/361) \u00b7 [Follow Devin's work](https://app.devin.ai/sessions/0d5855f5d5394e49b4e0202783401227)\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/electrical-circuit-agent/pull/361\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-session-triaged -->"
+    },
+    {
+      "repo": "VibeBB/firmware-agent",
+      "number": 162,
+      "url": "https://github.com/VibeBB/firmware-agent/pull/162",
+      "state": "OPEN",
+      "title": "fix(records): scope auxiliary reviews to original image owners",
+      "headRefOid": "faeb04a5f793fba660b4afeecbe98a8deb22a839",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 20
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "**Devin Review** found 3 findings. Devin automatically fixed all 3 findings.\n\n<details>\n<summary><b>Fixed by Devin (3)</b></summary>\n\n- **Identical attachments lose their image paths** \u2014 Two returned images with equal bytes previously lost both paths. When returned counts and verified metadata resolve the mapping, distinct paths are retained; ambiguous/conflicting mapping remains unknown. The native integration regressions pass.\n- **Repeated views discard auxiliary review binding** \u2014 Two unchanged deliveries of the same crop previously lost its auxiliary binding. Consistent verified receipts now deduplicate; conflicting ancestry remains unknown. Native observer/writer and Stop regression cases pass.\n- **Vision-event references erase auxiliary review bindings** \u2014 A crop receipt and inspect_image_with_vision event have different IDs. Delivery now matches path, SHA and native session independently of the source-event namespace; historical SHA reuse still requires an intact explicit delivery receipt. Native hook/writer/Stop regression covers unchanged and regenerated images; focused checks pass.\n\n</details>\n\n[View findings in Devin Review](https://app.devin.ai/review/vibebb/firmware-agent/pull/162) \u00b7 [Follow Devin's work](https://app.devin.ai/sessions/0d5855f5d5394e49b4e0202783401227)\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/firmware-agent/pull/162\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-session-triaged -->"
+    },
+    {
+      "repo": "VibeBB/fpga-agent",
+      "number": 159,
+      "url": "https://github.com/VibeBB/fpga-agent/pull/159",
+      "state": "OPEN",
+      "title": "fix(records): scope auxiliary reviews to original image owners",
+      "headRefOid": "220efe638d42c136d5cc546840e2f7800bf63e50",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 15,
+        "SKIPPED": 1
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "**Devin Review** found 5 findings. Devin automatically fixed all 5 findings.\n\n<details>\n<summary><b>Fixed by Devin (5)</b></summary>\n\n- **Vision-tool citations lose image delivery binding** \u2014 A crop receipt and inspect_image_with_vision event have different IDs. Delivery now matches path, SHA and native session independently of the source-event namespace; historical SHA reuse still requires an intact explicit delivery receipt. Native hook/writer/Stop regression covers unchanged and regenerated images; focused checks pass.\n- **Repeated views lose auxiliary review exemptions** \u2014 Two unchanged deliveries of the same crop previously lost its auxiliary binding. Consistent verified receipts now deduplicate; conflicting ancestry remains unknown. Native observer/writer and Stop regression cases pass.\n- **Identical attachments lose their image paths** \u2014 Two returned images with equal bytes previously lost both paths. When returned counts and verified metadata resolve the mapping, distinct paths are retained; ambiguous/conflicting mapping remains unknown. The native integration regressions pass.\n- **Older original image reviews disappear** \u2014 Original-image receipts retain their observed SHA after redelivery; only derived receipts can be superseded. Regression reproduced before the fix.\n- **Legacy image debt follows overwritten files** \u2014 Removed current-file rehashing of legacy observations; a replacement no longer clears an older revision's review debt.\n\n</details>\n\n[View findings in Devin Review](https://app.devin.ai/review/vibebb/fpga-agent/pull/159) \u00b7 [Follow Devin's work](https://app.devin.ai/sessions/0d5855f5d5394e49b4e0202783401227)\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/fpga-agent/pull/159\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-session-triaged -->"
+    },
+    {
+      "repo": "VibeBB/mechanical-agent",
+      "number": 267,
+      "url": "https://github.com/VibeBB/mechanical-agent/pull/267",
+      "state": "OPEN",
+      "title": "fix(records): scope auxiliary reviews to original image owners",
+      "headRefOid": "ff9fb672ef9533287e3199465f0f0ce1e46d6fb9",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 14
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "**Devin Review** found 2 findings. Devin automatically fixed all 2 findings.\n\n<details>\n<summary><b>Fixed by Devin (2)</b></summary>\n\n- **Author renders lose reviewable image paths** \u2014 Author rendering appended image content after metadata wrapping, losing its path on SDK conversion. Metadata is now wrapped after the image is appended and the author-to-observer regression passes.\n- **Repeated crop views lose auxiliary scope** \u2014 Two unchanged deliveries of the same crop previously lost its auxiliary binding. Consistent verified receipts now deduplicate; conflicting ancestry remains unknown. Native observer/writer and Stop regression cases pass.\n\n</details>\n\n[View findings in Devin Review](https://app.devin.ai/review/vibebb/mechanical-agent/pull/267) \u00b7 [Follow Devin's work](https://app.devin.ai/sessions/0d5855f5d5394e49b4e0202783401227)\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/mechanical-agent/pull/267\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-session-triaged -->"
+    },
+    {
+      "repo": "VibeBB/production-engineering-agent",
+      "number": 187,
+      "url": "https://github.com/VibeBB/production-engineering-agent/pull/187",
+      "state": "OPEN",
+      "title": "fix(records): scope auxiliary reviews to original image owners",
+      "headRefOid": "aa84192a0d4ea2e1d83ae9312db764821ac021ef",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 16,
+        "SKIPPED": 1
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "**Devin Review** found 2 findings. Devin automatically fixed all 2 findings.\n\n<details>\n<summary><b>Fixed by Devin (2)</b></summary>\n\n- **Vision-event references erase auxiliary review exemptions** \u2014 A crop receipt and inspect_image_with_vision event have different IDs. Delivery now matches path, SHA and native session independently of the source-event namespace; historical SHA reuse still requires an intact explicit delivery receipt. Native hook/writer/Stop regression covers unchanged and regenerated images; focused checks pass.\n- **Repeated crop views lose review binding** \u2014 Two unchanged deliveries of the same crop previously lost its auxiliary binding. Consistent verified receipts now deduplicate; conflicting ancestry remains unknown. Native observer/writer and Stop regression cases pass.\n\n</details>\n\n[View findings in Devin Review](https://app.devin.ai/review/vibebb/production-engineering-agent/pull/187) \u00b7 [Follow Devin's work](https://app.devin.ai/sessions/0d5855f5d5394e49b4e0202783401227)\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/production-engineering-agent/pull/187\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-session-triaged -->"
+    },
+    {
+      "repo": "VibeBB/simulation-agent",
+      "number": 157,
+      "url": "https://github.com/VibeBB/simulation-agent/pull/157",
+      "state": "OPEN",
+      "title": "fix(records): scope auxiliary reviews to original image owners",
+      "headRefOid": "9d38ffc9e7ad22ba4c5ac1f9861ab6a800f3eceb",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 16
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "**Devin Review** found 1 finding. Devin automatically fixed it.\n\n<details>\n<summary><b>Fixed by Devin (1)</b></summary>\n\n- **Repeated crop views trigger redundant reviews** \u2014 Two unchanged deliveries of the same crop previously lost its auxiliary binding. Consistent verified receipts now deduplicate; conflicting ancestry remains unknown. Native observer/writer and Stop regression cases pass.\n\n</details>\n\n[View findings in Devin Review](https://app.devin.ai/review/vibebb/simulation-agent/pull/157) \u00b7 [Follow Devin's work](https://app.devin.ai/sessions/0d5855f5d5394e49b4e0202783401227)\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/simulation-agent/pull/157\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-session-triaged -->"
+    },
+    {
+      "repo": "VibeBB/wire-agent",
+      "number": 263,
+      "url": "https://github.com/VibeBB/wire-agent/pull/263",
+      "state": "OPEN",
+      "title": "fix(records): scope auxiliary reviews to original image owners",
+      "headRefOid": "0683828466ff6516fb9d6aaad1b4da8c7b4346b5",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 16
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "**Devin Review** found 4 findings. Devin automatically fixed all 4 findings.\n\n<details>\n<summary><b>Fixed by Devin (4)</b></summary>\n\n- **Vision-event references erase auxiliary delivery binding** \u2014 A crop receipt and inspect_image_with_vision event have different IDs. Delivery now matches path, SHA and native session independently of the source-event namespace; historical SHA reuse still requires an intact explicit delivery receipt. Native hook/writer/Stop regression covers unchanged and regenerated images; focused checks pass.\n- **Unsatisfiable reviews for overwritten image revisions** \u2014 Regenerating an image before recording its delivered revision previously made the historical obligation unsatisfiable. An explicit intact event matching path and native session now supplies the delivered SHA; foreign or damaged receipts cannot restore an old revision.\n- **Repeated auxiliary deliveries trigger redundant reviews** \u2014 Two unchanged deliveries of the same crop previously lost its auxiliary binding. Consistent verified receipts now deduplicate; conflicting ancestry remains unknown. Native observer/writer and Stop regression cases pass.\n- **Missing actor attribution for inline images** \u2014 Inline responses bypassed the legacy actor collector. The native receipt now retains supplied agent, actor, call and parent identifiers; missing fields remain absent and the payload-attribution regression passes.\n\n</details>\n\n[View findings in Devin Review](https://app.devin.ai/review/vibebb/wire-agent/pull/263) \u00b7 [Follow Devin's work](https://app.devin.ai/sessions/0d5855f5d5394e49b4e0202783401227)\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/wire-agent/pull/263\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-session-triaged -->"
+    },
+    {
+      "repo": "VibeBB/UX-creator-agent",
+      "number": 203,
+      "url": "https://github.com/VibeBB/UX-creator-agent/pull/203",
+      "state": "OPEN",
+      "title": "fix(vision): retain review bindings across repeated image delivery",
+      "headRefOid": "4be068f79b9eeb864335d9c8a40ab28e25cc1822",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 16
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "**Devin Review** found 1 finding. Devin automatically fixed it.\n\n<details>\n<summary><b>Fixed by Devin (1)</b></summary>\n\n- **Corrupt logs block review recording** \u2014 Invalid UTF-8 or an I/O failure previously raised before a source-referenced review could be recorded. Revision and shared delivery readers now preserve unknown for unreadable evidence; the typed-writer regressions confirm current-file SHA fallback without asserting a historical binding.\n\n</details>\n\n[View findings in Devin Review](https://app.devin.ai/review/vibebb/ux-creator-agent/pull/203) \u00b7 [Follow Devin's work](https://app.devin.ai/sessions/0d5855f5d5394e49b4e0202783401227)\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/ux-creator-agent/pull/203\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-session-triaged -->"
+    },
+    {
+      "repo": "VibeBB/UX-creator-agent",
+      "number": 205,
+      "url": "https://github.com/VibeBB/UX-creator-agent/pull/205",
+      "state": "OPEN",
+      "title": "feat(workflow): checkpoint bounded native work evidence",
+      "headRefOid": "89a91fa36c6d976bf630bfda07d475ed96eac907",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 16
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "**Devin Review** found 2 findings. Devin automatically fixed all 2 findings.\n\n<details>\n<summary><b>Fixed by Devin (2)</b></summary>\n\n- **Missing inputs pass evidence validation** \u2014 Four regressions reproduce missing sources/step inputs and deletion of pinned empty directories. The artifact boundary now requires a regular file or directory before hashing, so absence cannot equal the empty-tree digest.\n- **Checkpoint writes invalidate directory inputs** \u2014 Six regressions reproduce pinning the workspace root or ancestors of checkpoint storage as source/inputs. Reject those configurations before saving instead of dispatching an immediately stale run. Stable scoped directory sources and inputs remain supported and pass two positive regressions.\n\n</details>\n\n[View findings in Devin Review](https://app.devin.ai/review/vibebb/ux-creator-agent/pull/205) \u00b7 [Follow Devin's work](https://app.devin.ai/sessions/0d5855f5d5394e49b4e0202783401227)\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/ux-creator-agent/pull/205\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-session-triaged -->"
+    },
+    {
+      "repo": "VibeBB/UX-creator-agent",
+      "number": 206,
+      "url": "https://github.com/VibeBB/UX-creator-agent/pull/206",
+      "state": "OPEN",
+      "title": "feat(validation): verify pinned family plugin installations",
+      "headRefOid": "7c6e662542486e8b5160d11f291891fa52da9519",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 15
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "**Devin Review** found 1 finding. Devin automatically fixed it.\n\n<details>\n<summary><b>Fixed by Devin (1)</b></summary>\n\n- **Symlink validation misses copied link targets** \u2014 Reproduced file and directory links being dereferenced by the SDK's copytree and incorrectly reported as installed. Fetch and hash the pinned source before installation, reject source links (including root/path links), then require installed bytes to match. The two regressions failed before the fix; 13 focused tests and all 854 fast-stage tests pass.\n\n</details>\n\n[View findings in Devin Review](https://app.devin.ai/review/vibebb/ux-creator-agent/pull/206) \u00b7 [Follow Devin's work](https://app.devin.ai/sessions/0d5855f5d5394e49b4e0202783401227)\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/ux-creator-agent/pull/206\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-session-triaged -->"
+    },
+    {
+      "repo": "VibeBB/UX-creator-agent",
+      "number": 207,
+      "url": "https://github.com/VibeBB/UX-creator-agent/pull/207",
+      "state": "OPEN",
+      "title": "fix(liaison): emit a rationale for low-risk sister requests",
+      "headRefOid": "da4f3203b087721544b0619e6978d23f0c335046",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 16
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "## \u2705 Devin Review: No Issues Found\n\nDevin Review analyzed this PR and found no bugs or issues to report.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/ux-creator-agent/pull/207\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-summary -->"
+    },
+    {
+      "repo": "VibeBB/mechanical-agent",
+      "number": 268,
+      "url": "https://github.com/VibeBB/mechanical-agent/pull/268",
+      "state": "OPEN",
+      "title": "fix(examples): bind enclosure intake to the current brief",
+      "headRefOid": "62f71118c19122a11e163697e2c5f7e3eb3b27b0",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 14
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "## \u2705 Devin Review: No Issues Found\n\nDevin Review analyzed this PR and found no bugs or issues to report.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/mechanical-agent/pull/268\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-summary -->"
+    },
+    {
+      "repo": "VibeBB/fpga-agent",
+      "number": 160,
+      "url": "https://github.com/VibeBB/fpga-agent/pull/160",
+      "state": "OPEN",
+      "title": "fix(sim): resolve NVC waveform output before changing directories",
+      "headRefOid": "6a0739a6ebac40a109f181227236fc3c64460d7b",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 15,
+        "SKIPPED": 1
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "## \u2705 Devin Review: No Issues Found\n\nDevin Review analyzed this PR and found no bugs or issues to report.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/fpga-agent/pull/160\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-summary -->"
+    },
+    {
+      "repo": "VibeBB/UX-creator-agent",
+      "number": 208,
+      "url": "https://github.com/VibeBB/UX-creator-agent/pull/208",
+      "state": "OPEN",
+      "title": "fix(liaison): delegate Bard requests through its native CLI",
+      "headRefOid": "2dac91b84d7e4b68bef28ec9a2baf650161d8da7",
+      "mergeStateStatus": "CLEAN",
+      "mergeCommit": null,
+      "check_counts": {
+        "SUCCESS": 16
+      },
+      "pending": [],
+      "failed": [],
+      "review_summary": "## \u2705 Devin Review: No Issues Found\n\nDevin Review analyzed this PR and found no bugs or issues to report.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/vibebb/ux-creator-agent/pull/208\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-light.svg?v=4\" alt=\"Devin Review\"></picture></a>\n<!-- devin-review-badge-end -->\n\n<!-- devin-review-summary -->"
+    }
+  ]
+}

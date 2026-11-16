@@ -3,14 +3,15 @@
 UX-creator-agent coordinates with ten VibeBB sister targets through
 workspace files and OpenHands task delegation. It does not import sister
 Python packages or assume a live plugin-to-plugin API. The registered agent
-and tool names below are the UX-side contract; each sister repository owns
-the implementation of its inbox and response tools.
+and entry points below are the UX-side contract; each sister repository owns
+its inbox and response implementation. Bard deliberately uses its stdlib CLI;
+the other nine sisters expose MCP tools.
 
 ## Registered targets
 
 | Target | Repository | Registered agents | Liaison agent | Expected inbox / response tools |
 | --- | --- | --- | --- | --- |
-| `bard` | `bard-agent` | `bard`, `bard-cue`, `bard-critic` | `bard` | `bard_ux_inbox` / `bard_ux_respond` |
+| `bard` | `bard-agent` | `bard`, `bard-cue`, `bard-critic` | `bard` | `bard_cli.py ux-inbox` / `bard_cli.py ux-respond` |
 | `circuit` | `electrical-circuit-agent` | `circuit-brief`, `circuit-schematic`, `circuit-layout`, `circuit-library`, `circuit-review`, `circuit-part-author-a`, `circuit-part-author-b` | `circuit-brief` | `circuit_ux_inbox` / `circuit_ux_respond` |
 | `dashboard` | `dashboard-agent` | `dashboard-architect`, `dashboard-developer`, `dashboard-review` | `dashboard-architect` | `dashboard_ux_inbox` / `dashboard_ux_respond` |
 | `doc` | `document-agent` | `doc-liaison`, `doc-writer`, `doc-review`, `doc-launch` | `doc-liaison` | `doc_ux_inbox` / `doc_ux_respond` |
@@ -46,7 +47,13 @@ The `ux-producer` and `ux-liaison` use OpenHands `task_tool_set` with the
 deterministic brief from `ux_delegate`. The brief names the correct liaison
 agent and passes the request ID, path, acceptance criteria, and expected
 deliverables. It names the sister's own `<target>_record_decision` and
-`<target>_record_impression` tools for VRP records; never direct a sister to
+`<target>_record_impression` tools for VRP records; Bard instead uses
+`bard_cli.py record decision` and `bard_cli.py record impression`.
+Resolve Bard's installed plugin root by requiring `scripts/bard_cli.py`,
+run it with `python3`, and pass `--root <shared-workspace>`. Record and
+response commands also take `--json <payload-file|->`. A song-only release
+without that CLI cannot answer SLP requests; report it as unavailable rather
+than inventing `bard_ux_*` MCP tools. Never direct a sister to
 UX-only `ux_record_*` tools. The task call itself is not evidence that a
 request was received or completed; the sibling response file is authoritative.
 
