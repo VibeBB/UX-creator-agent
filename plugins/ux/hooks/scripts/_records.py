@@ -132,7 +132,7 @@ def _producer_delivery(path: str, digest: str, root: Path) -> dict[str, object] 
     """Reuse exact UX producer evidence; a filename alone never creates it."""
     log = Path(
         os.environ.get("UX_IMAGE_OBSERVATIONS") or "observations/ux/image-observations.jsonl"
-    )
+    ).expanduser()
     log = log if log.is_absolute() else root / log
     rows, malformed = load_jsonl(log)
     if malformed:
@@ -158,7 +158,12 @@ def producer_image_metadata(path: Path, data: bytes, root: Path) -> dict[str, ob
     return {"vibebb_image_identity": claim} if claim is not None else {}
 
 
-def capture_image_delivery(payload: dict[str, object], root: Path, log: Path) -> bool:
+def capture_image_delivery(
+    payload: dict[str, object],
+    root: Path,
+    log: Path,
+    event_ids: list[str] | None = None,
+) -> bool:
     """Append actual returned bytes before the legacy filename observer runs."""
     response = _delivery_mapping(payload.get("tool_response"))
     if "error" in response or response.get("is_error") or response.get("isError"):
@@ -225,11 +230,20 @@ def capture_image_delivery(payload: dict[str, object], root: Path, log: Path) ->
         viewed = action.get("image_path")
     log.parent.mkdir(parents=True, exist_ok=True)
     sequence = len(log.read_text(encoding="utf-8").splitlines()) + 1 if log.exists() else 1
+    occurrences: dict[str, int] = {}
     with log.open("a", encoding="utf-8") as stream:
         for digest in digests:
             matches = [m for m in metadata if m.get("sha256") == digest]
-            paths = {m["path"] for m in matches if isinstance(m.get("path"), str)}
-            path = next(iter(paths)) if len(paths) == 1 else viewed if len(digests) == 1 else None
+            paths = sorted({str(m["path"]) for m in matches if isinstance(m.get("path"), str)})
+            occurrence = occurrences.get(digest, 0)
+            occurrences[digest] = occurrence + 1
+            path = (
+                paths[occurrence % len(paths)]
+                if paths and len(paths) <= digests.count(digest)
+                else viewed
+                if not paths and len(digests) == 1
+                else None
+            )
             if isinstance(path, str):
                 path = str((root / path).resolve())
             candidates: dict[str, dict[str, object]] = {}
@@ -254,13 +268,31 @@ def capture_image_delivery(payload: dict[str, object], root: Path, log: Path) ->
                 "identity_status": "bound" if claim else "unknown",
                 "delivery_evidence": "inline_bytes",
                 "session_id": payload.get("session_id"),
-                "actor": None,
+                "actor": {
+                    key: payload[key]
+                    for key in sorted(payload)
+                    if key
+                    in {
+                        "agent",
+                        "agent_name",
+                        "actor",
+                        "subagent_type",
+                        "task_agent",
+                        "action_id",
+                        "tool_call_id",
+                        "parent_id",
+                        "call_id",
+                    }
+                }
+                or None,
                 "tool_call_id": payload.get("tool_call_id") or payload.get("action_id"),
             }
             encoded = json.dumps(row, sort_keys=True, separators=(",", ":")).encode()
             row["event_id"] = hashlib.sha256(encoded).hexdigest()
             row["recorded_at"] = datetime.now().astimezone().isoformat()
             stream.write(json.dumps(row, separators=(",", ":")) + "\n")
+            if event_ids is not None:
+                event_ids.append(row["event_id"])
             sequence += 1
     return True
 
@@ -279,9 +311,12 @@ def review_image_delivery(review: dict[str, object], root: Path, plugin: str) ->
     log = Path(
         os.environ.get(f"{plugin.upper()}_IMAGE_OBSERVATIONS")
         or f"observations/{plugin}/image-observations.jsonl"
-    )
+    ).expanduser()
     log = log if log.is_absolute() else root / log
-    rows, malformed = load_jsonl(log)
+    try:
+        rows, malformed = load_jsonl(log)
+    except (OSError, UnicodeError, ValueError, RecursionError):
+        return unknown
     if malformed:
         return unknown
     matched: list[dict[str, object]] = []
@@ -296,8 +331,15 @@ def review_image_delivery(review: dict[str, object], root: Path, plugin: str) ->
             and row.get("session_id") == review.get("session_id")
         ):
             matched.append(row)
-    if len(matched) != 1:
+    identities = {
+        json.dumps([row.get("identity_status"), row.get("image_identity")], sort_keys=True)
+        for row in matched
+    }
+    if not matched or len(identities) != 1:
         return unknown
+    # A source event can cite the separate vision-tool log. Delivery is bound
+    # by path, revision and native session; it does not prove vision selection.
+    # Keep the first receipt stable when the same bytes are delivered again.
     row = matched[0]
     claim = _delivery_claim(row.get("image_identity"), root)
     if row.get("identity_status") != "bound":
@@ -312,6 +354,34 @@ def review_image_delivery(review: dict[str, object], root: Path, plugin: str) ->
         "image_identity": claim,
         "producer_identity_status": "bound" if claim else "unknown",
     }
+
+
+def observed_image_revision(review: dict[str, object], root: Path, plugin: str) -> str | None:
+    """Use an explicit native delivery receipt to review a superseded revision."""
+    source, path, session = (review.get(k) for k in ("source_event_id", "image_path", "session_id"))
+    if not source or not isinstance(path, str) or not session:
+        return None
+    log = Path(
+        os.environ.get(f"{plugin.upper()}_IMAGE_OBSERVATIONS")
+        or f"observations/{plugin}/image-observations.jsonl"
+    ).expanduser()
+    try:
+        rows, malformed = load_jsonl(log if log.is_absolute() else root / log)
+    except (OSError, UnicodeError, ValueError, RecursionError):
+        return None
+    matching = [row for row in rows if row.get("event_id") == source]
+    if malformed or not matching:
+        return None
+    if any(
+        not _delivery_receipt(row)
+        or row.get("image_path") != str((root / path).resolve())
+        or row.get("session_id") != session
+        or not _sha(row.get("image_sha256"))
+        for row in matching
+    ):
+        return None
+    digests = {str(row["image_sha256"]) for row in matching}
+    return digests.pop() if len(digests) == 1 else None
 
 
 SCHEMA_VERSION = 2

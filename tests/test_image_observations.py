@@ -97,7 +97,7 @@ def test_file_editor_delivery_does_not_infer_producer_ownership(tmp_path: Path) 
     assert delivery.image_identity is None
 
 
-def test_repeated_delivery_does_not_select_an_occurrence_for_the_reviewer(tmp_path: Path) -> None:
+def test_repeated_delivery_keeps_the_first_consistent_receipt(tmp_path: Path) -> None:
     image = tmp_path / "drawing.png"
     image.write_bytes(b"same-path-and-revision")
     payload = _payload(tmp_path, [_metadata(image)], [image.read_bytes()])
@@ -110,9 +110,8 @@ def test_repeated_delivery_does_not_select_an_occurrence_for_the_reviewer(tmp_pa
         hashlib.sha256(image.read_bytes()).hexdigest(),
         "native-viewer-session",
     )
-    assert delivery.status == "unknown"
-    assert delivery.reason == "ambiguous_delivery"
-    assert delivery.observation_event_id is None
+    assert delivery.status == "bound"
+    assert delivery.observation_event_id is not None
 
 
 def test_legacy_filename_record_is_not_delivery(tmp_path: Path) -> None:
