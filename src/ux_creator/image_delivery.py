@@ -129,8 +129,13 @@ def review_image_delivery(
             and observation.image_sha256 == digest
         ):
             if matched is not None:
-                return ImageDelivery(status="unknown", reason="ambiguous_delivery")
-            matched = observation
+                if (
+                    matched.identity_status != observation.identity_status
+                    or matched.image_identity != observation.image_identity
+                ):
+                    return ImageDelivery(status="unknown", reason="ambiguous_delivery")
+            else:
+                matched = observation
     if matched is None:
         return ImageDelivery(status="unknown", reason="no_matching_delivery")
     identity = matched.image_identity

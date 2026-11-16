@@ -100,11 +100,13 @@ def _stop_hook(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
 
 
 @pytest.mark.parametrize("derived", [False, True])
+@pytest.mark.parametrize("repeat", [False, True])
 def test_native_observer_and_writer_bind_original_or_auxiliary(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     native: tuple[ModuleType, Callable[..., dict[str, object]], ModuleType],
     derived: bool,
+    repeat: bool,
 ) -> None:
     writer, vision, vrp = native
     monkeypatch.delenv("OPENHANDS_CONVERSATION_ID", raising=False)
@@ -121,6 +123,9 @@ def test_native_observer_and_writer_bind_original_or_auxiliary(
             "parents": [parent],
         }
     observation = _observe(tmp_path, image, _response(image, claim))
+    if repeat:
+        again = _observe(tmp_path, image, _response(image, claim))
+        assert again["event_id"] != observation["event_id"]
     assert observation["image_identity"] == claim
     assert observation["delivery_evidence"] == "inline_bytes"
     payload = vision(image_path="detail.png", session_id="reader")
@@ -132,6 +137,8 @@ def test_native_observer_and_writer_bind_original_or_auxiliary(
     assert delivery["image_identity"] == claim
     assert delivery["observation_event_id"] == observation["event_id"]
     hook = _stop_hook(monkeypatch)
+    if repeat:
+        _observe(tmp_path, image, _response(image, claim))
     assert hook._auxiliary_review(review, tmp_path) is derived
     problems, _ = hook._dual_review_problems(
         {"dual_review_globs": ["*.png"]},
@@ -149,6 +156,226 @@ def test_native_observer_and_writer_bind_original_or_auxiliary(
         )[1]
         == []
     )
+
+
+@pytest.mark.parametrize("extra_path", [False, True])
+def test_identical_inline_bytes_keep_each_unambiguous_metadata_path(
+    tmp_path: Path,
+    native: tuple[ModuleType, Callable[..., dict[str, object]], ModuleType],
+    extra_path: bool,
+) -> None:
+    _, _, vrp = native
+    first = tmp_path / "first.png"
+    second = tmp_path / "second.png"
+    response_a = _response(first, _claim(first, PLUGIN))
+    response_b = _response(second, _claim(second, PLUGIN))
+    content = cast(list[object], response_a["content"]) + cast(list[object], response_b["content"])
+    if extra_path:
+        third = tmp_path / "third.png"
+        content += cast(list[object], _response(third, _claim(third, PLUGIN))["content"])[:1]
+    log = tmp_path / "delivery.jsonl"
+    assert vrp.capture_image_delivery(
+        {"tool_name": "render", "session_id": "reader", "tool_response": {"content": content}},
+        tmp_path,
+        log,
+    )
+    rows = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
+    assert len(rows) == 2
+    if extra_path:
+        assert all(
+            row["image_path"] is None and row["identity_status"] == "unknown" for row in rows
+        )
+    else:
+        assert {row["image_path"] for row in rows} == {str(first), str(second)}
+        assert all(row["identity_status"] == "bound" for row in rows)
+
+
+@pytest.mark.parametrize("use_action_id", [False, True])
+def test_inline_delivery_retains_actor_and_parent_call(
+    tmp_path: Path,
+    native: tuple[ModuleType, Callable[..., dict[str, object]], ModuleType],
+    use_action_id: bool,
+) -> None:
+    _, _, vrp = native
+    image = tmp_path / "image.png"
+    claim = _claim(image, PLUGIN)
+    actor = {
+        "agent_name": "reviewer",
+        "parent_id": "parent",
+        "call_id": "parent-call",
+        "action_id" if use_action_id else "tool_call_id": "native-call",
+    }
+    log = tmp_path / "delivery.jsonl"
+    assert vrp.capture_image_delivery(
+        {
+            **actor,
+            "tool_name": "render",
+            "session_id": "reader",
+            "tool_response": _response(image, claim),
+        },
+        tmp_path,
+        log,
+    )
+    row = json.loads(log.read_text(encoding="utf-8"))
+    assert row["actor"] == actor
+    assert row["tool_call_id"] == "native-call"
+
+
+def test_home_relative_observation_override_binds_the_writer(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    native: tuple[ModuleType, Callable[..., dict[str, object]], ModuleType],
+) -> None:
+    writer, vision, vrp = native
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv(f"{PLUGIN.upper()}_IMAGE_OBSERVATIONS", "~/deliveries.jsonl")
+    monkeypatch.delenv("OPENHANDS_CONVERSATION_ID", raising=False)
+    monkeypatch.delenv("OPENHANDS_SESSION_ID", raising=False)
+    image = tmp_path / "image.png"
+    claim = _claim(image, PLUGIN)
+    assert vrp.capture_image_delivery(
+        {"tool_name": "render", "session_id": "reader", "tool_response": _response(image, claim)},
+        tmp_path,
+        tmp_path / "deliveries.jsonl",
+    )
+    payload = vision(image_path="image.png", session_id="reader")
+    for entry in cast(list[dict[str, object]], payload["claims"]):
+        entry["artifact"] = "image.png"
+    row = writer.record_vision_review(payload, tmp_path)["record"]
+    assert row["image_delivery"]["status"] == "bound"
+    assert row["image_delivery"]["image_identity"] == claim
+
+
+@pytest.mark.parametrize("damage", ["none", "session", "integrity", "source"])
+def test_writer_can_review_the_delivered_revision_after_regeneration(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    native: tuple[ModuleType, Callable[..., dict[str, object]], ModuleType],
+    damage: str,
+) -> None:
+    writer, vision, _ = native
+    monkeypatch.delenv("OPENHANDS_CONVERSATION_ID", raising=False)
+    monkeypatch.delenv("OPENHANDS_SESSION_ID", raising=False)
+    image = tmp_path / "detail.png"
+    claim = _claim(image, PLUGIN)
+    observation = _observe(tmp_path, image, _response(image, claim))
+    if damage == "integrity":
+        log = tmp_path / "observations" / PLUGIN / "image-observations.jsonl"
+        log.write_text(
+            json.dumps({**observation, "image_sha256": "f" * 64}) + "\n", encoding="utf-8"
+        )
+    image.write_bytes(b"new W1 render, old delivery remains a separate obligation")
+    payload = vision(
+        image_path="detail.png",
+        session_id="foreign" if damage == "session" else "reader",
+        source_event_id="f" * 64 if damage == "source" else observation["event_id"],
+    )
+    for entry in cast(list[dict[str, object]], payload["claims"]):
+        entry["artifact"] = "detail.png"
+    row = writer.record_vision_review(payload, tmp_path)["record"]
+    expected = (
+        claim["sha256"] if damage == "none" else hashlib.sha256(image.read_bytes()).hexdigest()
+    )
+    assert row["image_sha256"] == expected
+    assert row["image_delivery"]["status"] == ("bound" if damage == "none" else "unknown")
+
+
+@pytest.mark.parametrize("regenerated", [False, True])
+def test_vision_tool_citation_does_not_replace_the_delivery_receipt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    native: tuple[ModuleType, Callable[..., dict[str, object]], ModuleType],
+    regenerated: bool,
+) -> None:
+    writer, vision, vrp = native
+    monkeypatch.delenv("OPENHANDS_CONVERSATION_ID", raising=False)
+    monkeypatch.delenv("OPENHANDS_SESSION_ID", raising=False)
+    monkeypatch.delenv(f"{PLUGIN.upper()}_VISION_TOOL_EVENTS", raising=False)
+    image = tmp_path / "detail.png"
+    parent = _claim(tmp_path / "source.png", PLUGIN)
+    claim = {
+        **_claim(image, "ux"),
+        "origin": "derived",
+        "operation": "crop",
+        "parents": [parent],
+    }
+    observation = _observe(tmp_path, image, _response(image, claim))
+    subprocess.run(
+        [sys.executable, str(SCRIPTS / "record_vision_tool_event.py")],
+        input=json.dumps(
+            {
+                "session_id": "reader",
+                "tool_name": "inspect_image_with_vision",
+                "tool_input": {"question": "Synthetic fixture; no perception proof"},
+                "tool_response": {
+                    "answer": "W1 is the synthetic fixture anchor",
+                    "model": "synthetic-model",
+                    "profile_name": "synthetic-profile",
+                },
+            }
+        ),
+        env={**os.environ, "OPENHANDS_PROJECT_DIR": str(tmp_path)},
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    event = json.loads(
+        (tmp_path / "observations" / PLUGIN / "vision-tool-events.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()[-1]
+    )
+    assert event["event_id"] != observation["event_id"]
+    if regenerated:
+        image.write_bytes(b"new W1 render after the original delivery")
+    payload = vision(
+        image_path="detail.png", session_id="reader", source_event_id=event["event_id"]
+    )
+    for entry in cast(list[dict[str, object]], payload["claims"]):
+        entry["artifact"] = "detail.png"
+    row = writer.record_vision_review(payload, tmp_path)["record"]
+    assert row["source_event_id"] == event["event_id"]
+    expected = "unknown" if regenerated else "bound"
+    assert row["image_delivery"]["status"] == expected
+    assert vrp.review_image_delivery(row, tmp_path, PLUGIN)["status"] == expected
+    assert _stop_hook(monkeypatch)._auxiliary_review(row, tmp_path) is not regenerated
+
+
+@pytest.mark.parametrize("damage", ["utf8", "depth", "io"])
+def test_unreadable_delivery_log_preserves_a_review_with_unknown_binding(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    native: tuple[ModuleType, Callable[..., dict[str, object]], ModuleType],
+    damage: str,
+) -> None:
+    writer, vision, _ = native
+    monkeypatch.delenv("OPENHANDS_CONVERSATION_ID", raising=False)
+    monkeypatch.delenv("OPENHANDS_SESSION_ID", raising=False)
+    image = tmp_path / "detail.png"
+    claim = _claim(image, PLUGIN)
+    observation = _observe(tmp_path, image, _response(image, claim))
+    log = tmp_path / "observations" / PLUGIN / "image-observations.jsonl"
+    if damage == "utf8":
+        log.write_bytes(b"\xff\xfe")
+    elif damage == "depth":
+        log.write_text("[" * 2000 + "0" + "]" * 2000, encoding="utf-8")
+    else:
+        read_text = Path.read_text
+
+        def unreadable(path: Path, encoding: str | None = None, errors: str | None = None) -> str:
+            if path == log:
+                raise PermissionError("delivery log cannot be read")
+            return read_text(path, encoding=encoding, errors=errors)
+
+        monkeypatch.setattr(Path, "read_text", unreadable)
+    image.write_bytes(b"new W1 render; unreadable evidence cannot bind the old revision")
+    payload = vision(
+        image_path="detail.png", session_id="reader", source_event_id=observation["event_id"]
+    )
+    for entry in cast(list[dict[str, object]], payload["claims"]):
+        entry["artifact"] = "detail.png"
+    row = writer.record_vision_review(payload, tmp_path)["record"]
+    assert row["image_sha256"] == hashlib.sha256(image.read_bytes()).hexdigest()
+    assert row["image_delivery"]["status"] == "unknown"
 
 
 def test_file_editor_inherits_only_exact_ux_producer_receipt(
