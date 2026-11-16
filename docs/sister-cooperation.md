@@ -32,7 +32,7 @@ A request file is `{id}.ux-request.json`, normally in a workspace liaison
 directory. It has `schema_version: 2` and `system: "ux-creator"`, with:
 
 - a unique normalized request `id`, `target_agent`, one of the six product
-  `stage` values, `risk`, meaningful `purpose`, and optional `rationale`;
+  `stage` values, `risk`, meaningful `purpose`, and a nonempty `rationale`;
 - nonempty `requested_changes`, `expected_deliverables`, and `acceptance`;
 - workspace-relative `inputs` with SHA-256 hashes, optional `depends_on`
   request IDs, and timezone-aware `created_at`.
@@ -42,6 +42,13 @@ inside the workspace; traversal, absolute paths, and symlink escapes are
 rejected. High-risk requests must cite an ID of a job declared in the UX
 contract. `write_request` allows an identical repeat but refuses to replace a
 different existing file unless `replace` is explicitly true.
+
+For low-risk work, CLI/MCP callers may omit the rationale. The request builder
+then uses the stated purpose as its rationale so that strict sister SLP v2
+readers can accept the generated file. Explicit rationales are preserved.
+Legacy low-risk files with an empty rationale remain readable by UX; this
+does not make them compatible with every sister. High-risk requests still
+require an explicit rationale citing a declared job and never use this fallback.
 
 The `ux-producer` and `ux-liaison` use OpenHands `task_tool_set` with the
 deterministic brief from `ux_delegate`. The brief names the correct liaison

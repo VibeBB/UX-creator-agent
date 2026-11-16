@@ -147,7 +147,8 @@ def build_request(
         stage=stage,
         risk=risk,
         purpose=purpose,
-        rationale=rationale,
+        # Some sister SLP v2 readers require this field even for low-risk work.
+        rationale=rationale if rationale.strip() else purpose,
         requested_changes=list(requested_changes),
         inputs=refs,
         expected_deliverables=list(expected_deliverables),
