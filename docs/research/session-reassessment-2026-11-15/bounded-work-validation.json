@@ -1,0 +1,169 @@
+{
+  "captured_at": "2026-11-16T17:12:33.410748+00:00",
+  "implementation_commit": "6ed1c2d8f18475d11a52105b8e959da7692031e3",
+  "base_commit": "c848408083bf9e3f4d8e695e73aa8a088b3b2916",
+  "pr": "https://github.com/VibeBB/UX-creator-agent/pull/205",
+  "versions": {
+    "python": "3.14.10",
+    "openhands-sdk": "1.62.0",
+    "openhands-tools": "1.62.0",
+    "mcp": "2.3.0",
+    "ruff": "0.17.5",
+    "pyright": "1.1.414",
+    "pytest": "9.2.0",
+    "uv": "uv 0.13.8 (x86_64-unknown-linux-gnu)"
+  },
+  "source_sha256": {
+    "docs/README.md": "f1c826a54758196eaf98ab5362e377ca20353259c1374e771df0fd88619c0663",
+    "docs/agents.md": "3e961868f12070eabac4cc3a1d31d7606dbe91bbca0edb74ff815004637ba950",
+    "docs/commands.md": "08c54050e08f5fb5315ee879dacb9cde362fd8d0d66c9a2cfa1f897943656e7a",
+    "docs/mcp.md": "6ad01544c685544913dca33b2e616c7a078eafd7270eb80a35d9cc048aca99b5",
+    "docs/performance-and-limits.md": "19eb92e50977f20f4aeb920bf7d35c1a2779d979d2baeacd48fc99cb7ea24452",
+    "docs/work-checkpoints.md": "501edbe592d5a02438ece47b71af8e303ff7fb1964ff225deadfd8ea28d142c3",
+    "plugins/ux/agents/ux-blind-review.md": "0cd3ff717682a827dfa2db67f9c828ec8432c542b10b95f0a37f6c2ce280c621",
+    "plugins/ux/agents/ux-creator.md": "d79bb25256db7776ee67563b5aecee14d475b68aba8965fcff117880d8d144ee",
+    "plugins/ux/agents/ux-liaison.md": "41e226ca673223289f02e1118ddeebb715989cc0a8d5d18255d0cf2054c43da9",
+    "plugins/ux/agents/ux-producer.md": "3c8d4f63faf0fae580a58718a651765d4e37458e26018138c8e4155df9b9b3b7",
+    "plugins/ux/hooks/scripts/blind_guard.py": "dfafb29977959345d2ee5da1006e1816f38c7628162019a90bf7e60c55db260f",
+    "plugins/ux/hooks/scripts/protect_generated.py": "17844af2813976d3be7a90d5710bce545c8d911daecf0f5607d3b059c2914617",
+    "src/ux_creator/cli.py": "281c1660500de9b072d5343a75e4931dc72c1d14a78313b268d9c9b95f8707b7",
+    "src/ux_creator/mcp_server.py": "8f7a094f0d825c9e5db3cf1c6c20b948116b3b52f4fa31393be2667ad5d9cc35",
+    "src/ux_creator/work_checkpoint.py": "92cc61bbbb4814432f19a55f62496674fba15649620a1dd40eecab29fa3e2ce6",
+    "tests/test_hooks.py": "881e048de363d57b5f7365a4a44d4cd03c7f3ee3313f8e5214be9d429093c5f2",
+    "tests/test_records.py": "2e8d4146ff2f522c72856bc06ef17230068b6bf36aa7565b1d391c503fe7aada",
+    "tests/test_sdk_review_limits.py": "0530274a7ab1a6948efd38935a5339158e9bf53bcbbcade246a87810eb03aea9",
+    "tests/test_work_checkpoint.py": "ce0bc6d605106cb0752193adad1811d844399280b3c1f15fdd62af45303c530f"
+  },
+  "fast": {
+    "command": [
+      "uv",
+      "run",
+      "python",
+      "scripts/verify_all.py",
+      "--stage",
+      "fast"
+    ],
+    "exit_code": 0,
+    "seconds": 55.98,
+    "log": "/home/ubuntu/repos/UX-creator-agent/out/reassessment-work-checkpoints/fast.log",
+    "log_sha256": "fe6141ea0bb58181d5b0bb930ac22ac336db404cea1534a81ad2bb71bef5a13f"
+  },
+  "repeats": [
+    {
+      "command": [
+        "uv",
+        "run",
+        "--group",
+        "sdk-check",
+        "pytest",
+        "-o",
+        "addopts=",
+        "tests/test_work_checkpoint.py",
+        "tests/test_sdk_review_limits.py",
+        "-q"
+      ],
+      "repeat": 1,
+      "exit_code": 0,
+      "seconds": 15.584,
+      "log": "repeat-01.log",
+      "log_sha256": "60666ac49e1a82f62b834554bc165f552b347783fa1b662f30ff853abfe7580c"
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "--group",
+        "sdk-check",
+        "pytest",
+        "-o",
+        "addopts=",
+        "tests/test_work_checkpoint.py",
+        "tests/test_sdk_review_limits.py",
+        "-q"
+      ],
+      "repeat": 2,
+      "exit_code": 0,
+      "seconds": 16.249,
+      "log": "repeat-02.log",
+      "log_sha256": "5b620614cd2c4f978e66827343acbb5cbd6715aea3d84683697cab4005961044"
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "--group",
+        "sdk-check",
+        "pytest",
+        "-o",
+        "addopts=",
+        "tests/test_work_checkpoint.py",
+        "tests/test_sdk_review_limits.py",
+        "-q"
+      ],
+      "repeat": 3,
+      "exit_code": 0,
+      "seconds": 15.701,
+      "log": "repeat-03.log",
+      "log_sha256": "7074d3c8dfd7f34f2291d38b954d22df7a35dba10c50ecf246ed22d53826efb0"
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "--group",
+        "sdk-check",
+        "pytest",
+        "-o",
+        "addopts=",
+        "tests/test_work_checkpoint.py",
+        "tests/test_sdk_review_limits.py",
+        "-q"
+      ],
+      "repeat": 4,
+      "exit_code": 0,
+      "seconds": 15.863,
+      "log": "repeat-04.log",
+      "log_sha256": "f546ab9cee4521563282f449499e7c321888f0e736cf7b01efcbb63b61fb5c38"
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "--group",
+        "sdk-check",
+        "pytest",
+        "-o",
+        "addopts=",
+        "tests/test_work_checkpoint.py",
+        "tests/test_sdk_review_limits.py",
+        "-q"
+      ],
+      "repeat": 5,
+      "exit_code": 0,
+      "seconds": 15.937,
+      "log": "repeat-05.log",
+      "log_sha256": "06c95b9f8353bdb391be8aaa20a18cf2c06f3c1653be05ace9ba267f491307a3"
+    }
+  ],
+  "native_plugin_load": {
+    "command": "uv run --group sdk-check python scripts/check_plugin_load.py",
+    "exit_code": 0,
+    "agents": 7
+  },
+  "observed_failed_attempts": [
+    {
+      "command": "uv run python scripts/verify_all.py --stage fast",
+      "result": "Documentation inventory omitted work-checkpoint; corrected docs/commands.md."
+    },
+    {
+      "command": "uv run python scripts/verify_all.py --stage fast",
+      "result": "Four blind-role SDK cases failed: the new MCP tool was not included in the agent hook matcher. Updated ux-blind-review.md; final native dispatch tests pass."
+    }
+  ],
+  "acceptance": "unknown",
+  "workflow_completion": "unknown",
+  "native_execution": "unknown",
+  "native_execution_note": "Synthetic native SDK tests and coordinator-reported child identities do not establish a live-provider work run.",
+  "scope": "SHA-bound evidence collection, not domain acceptance",
+  "raw_logs": "Retained privately under out/reassessment-work-checkpoints; hashes identify the runs, not public raw-log availability."
+}
