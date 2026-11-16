@@ -114,7 +114,8 @@ def with_image_details(
         )
         results.append(RenderResult(path, path, "ok", "declared auxiliary ancestry", derived))
         seen.add(str(path))
-    return results
+    # Explicit detail requests must not be crowded out by the renderer's originals.
+    return [*results[len(renders) :], *renders]
 
 
 def _rendered(source: Path, output: Path) -> RenderResult:

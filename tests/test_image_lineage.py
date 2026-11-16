@@ -95,6 +95,10 @@ def _deliver(root: Path, renders: list[RenderResult]) -> list[dict[str, Any]]:
     ]
 
 
+def _tile(observations: list[dict[str, Any]]) -> dict[str, Any]:
+    return next(row for row in observations if row["image_identity"]["origin"] == "derived")
+
+
 @pytest.mark.parametrize("override", [False, True])
 def test_tile_receipt_and_checkpoint_use_one_original_pair(
     tmp_path: Path,
@@ -116,7 +120,7 @@ def test_tile_receipt_and_checkpoint_use_one_original_pair(
     assert receipt.status == receipt.producer_identity_status == "bound"
     assert receipt.image_identity and receipt.image_identity.origin == "derived"
     assert original_review_images(log, tile, tmp_path) == [tmp_path / "source.png"]
-    assert stop_hook._observation_keys(observations[-1], tmp_path, "ux")[0] == [
+    assert stop_hook._observation_keys(_tile(observations), tmp_path, "ux")[0] == [
         (str(source.output), source.image_identity.sha256)
     ]
     contract = tmp_path / "contract.json"
@@ -147,7 +151,7 @@ def test_tile_receipt_and_checkpoint_use_one_original_pair(
 def test_multisource_preserves_each_parent_owner(tmp_path: Path, stop_hook: ModuleType) -> None:
     roots = [_image(tmp_path, "ux.png"), _image(tmp_path, "bard.png", "bard")]
     observations = _deliver(tmp_path, _details(tmp_path, roots, composite=True))
-    tile = observations[-1]
+    tile = _tile(observations)
     for owner, source in zip(("ux", "bard"), roots, strict=True):
         assert source.image_identity is not None
         assert stop_hook._observation_keys(tile, tmp_path, owner)[0] == [
@@ -163,7 +167,7 @@ def test_changed_or_unverified_lineage_never_waives_review(
     damage: str,
 ) -> None:
     observations = _deliver(tmp_path, _details(tmp_path, [_image(tmp_path, "source.png")]))
-    tile = observations[-1]
+    tile = _tile(observations)
     if damage == "parent":
         (tmp_path / "source.png").write_bytes(b"new source revision")
     elif damage == "child":
@@ -216,8 +220,17 @@ def test_missing_original_review_survives_auxiliary_dedup(
     tmp_path: Path, stop_hook: ModuleType
 ) -> None:
     source = _image(tmp_path, "source.png")
-    tile = _deliver(tmp_path, _details(tmp_path, [source]))[-1]
+    tile = _tile(_deliver(tmp_path, _details(tmp_path, [source])))
     keys, _ = stop_hook._observation_keys(tile, tmp_path, "ux")
     assert keys and keys[0][0] == str(source.output)
     review = {"image_path": "tile.png", "image_sha256": tile["image_sha256"]}
     assert stop_hook._image_key(review, tmp_path) not in keys
+
+
+def test_requested_composite_is_delivered_before_eight_originals(tmp_path: Path) -> None:
+    renders = _details(
+        tmp_path, [_image(tmp_path, f"source-{i}.png") for i in range(8)], composite=True
+    )
+    observations = _deliver(tmp_path, renders)
+    assert len(observations) == 8
+    assert _tile(observations)["identity_status"] == "bound"

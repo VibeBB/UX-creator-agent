@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 from contextlib import closing
 from datetime import UTC, datetime
@@ -30,7 +31,47 @@ from openhands.tools.preset.default import register_default_tools
 from openhands.tools.task.manager import TaskManager
 from pydantic import SecretStr
 
+from ux_creator import mcp_server
+from ux_creator.render import ImageDetail, ImageIdentity, RenderResult, with_image_details
+
 PLUGIN_DIR = Path(__file__).resolve().parents[1] / "plugins/ux"
+
+
+def _deliver_auxiliary(child: LocalConversation, root: Path) -> None:
+    """Pass producer originals and declared tiles through native PostToolUse hooks."""
+    image = root / "lineage-source.png"
+    image.write_bytes(b"synthetic-original")
+    tile = root / "lineage-tile.png"
+    tile.write_bytes(b"synthetic-tile")
+    original = ImageIdentity(
+        path=str(image),
+        sha256=hashlib.sha256(image.read_bytes()).hexdigest(),
+        owner_plugin="ux",
+        origin="renderer",
+    )
+    renders = with_image_details(
+        [RenderResult(image, image, "ok", "synthetic fixture", original)],
+        [ImageDetail(path=str(tile), parents=[str(image)], operation="tile")],
+        root,
+    )
+    blocks = mcp_server._render_content({}, renders)
+    assert child._hook_processor is not None
+    results = child._hook_processor.hook_manager.run_post_tool_use(
+        "ux_render",
+        {"dir": str(root)},
+        {"content": [block.model_dump(by_alias=True) for block in blocks]},
+    )
+    assert results and all(result.success for result in results)
+    rows = [
+        json.loads(line)
+        for line in (root / "observations/ux/image-observations.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+    ][-2:]
+    assert [row["image_path"] for row in rows] == [str(tile), str(image)]
+    assert all(row["session_id"] == str(child.state.id) for row in rows)
+    assert rows[0]["identity_status"] == "bound"
+    assert rows[0]["image_identity"]["parents"] == [original.model_dump()]
 
 
 @pytest.mark.parametrize(
@@ -165,6 +206,7 @@ def test_sdk_delegate_receives_only_own_record_context(
             delivered = json.loads(image_log.read_text(encoding="utf-8"))
             assert delivered["session_id"] == str(child.state.id)
             assert delivered["image_path"] == str(image)
+            _deliver_auxiliary(child, tmp_path)
             if name in {"ux-review", "ux-blind-review"}:
                 results = child._hook_processor.hook_manager.run_post_tool_use(
                     "inspect_image_with_vision",
