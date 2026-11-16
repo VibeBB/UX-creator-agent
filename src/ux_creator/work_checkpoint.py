@@ -149,6 +149,8 @@ def _artifact(value: str, base: Path) -> _Artifact:
     path = workspace_path(value, base)
     if not path.is_file() and not path.is_dir():
         raise ValueError(f"artifact unavailable: {value}")
+    if path.is_dir() and (base / "observations/ux/work-checkpoints").is_relative_to(path):
+        raise ValueError("pin a stable input directory outside checkpoint storage")
     return _Artifact(path=path.relative_to(base).as_posix(), sha256=tree_sha256(path))
 
 

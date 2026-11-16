@@ -443,3 +443,46 @@ def test_inputs_must_exist_including_previously_empty_directories(
     assert result["delegate"] is None
     assert result["attempts_consumed"] == 0
     assert any("input unavailable: evidence" in gap for gap in result["gaps"])
+
+
+@pytest.mark.parametrize("role", ["source", "input"])
+@pytest.mark.parametrize("directory", [".", "observations", "observations/ux"])
+def test_directory_inputs_cannot_enclose_checkpoint_storage(
+    workspace: Path, role: str, directory: str
+) -> None:
+    with pytest.raises(ValueError, match="checkpoint storage"):
+        _call(
+            workspace,
+            "create",
+            source_path=directory if role == "source" else "brief.json",
+            steps=[
+                {
+                    "id": "ux",
+                    "kind": "design",
+                    "output_contract": "design.ux.json",
+                    "inputs": [directory] if role == "input" else [],
+                }
+            ],
+        )
+    assert not (workspace / "observations/ux/work-checkpoints/run.json").exists()
+
+
+@pytest.mark.parametrize("role", ["source", "input"])
+def test_stable_directory_inputs_survive_checkpoint_writes(workspace: Path, role: str) -> None:
+    (workspace / "inputs").mkdir()
+    (workspace / "inputs/note.txt").write_text("Stable input evidence", encoding="utf-8")
+    _call(
+        workspace,
+        "create",
+        source_path="inputs" if role == "source" else "brief.json",
+        steps=[
+            {
+                "id": "ux",
+                "kind": "design",
+                "output_contract": "design.ux.json",
+                "inputs": ["inputs"] if role == "input" else [],
+            }
+        ],
+    )
+    assert _call(workspace, "start")["status"] == "active"
+    assert _call(workspace, "status")["gaps"] == []

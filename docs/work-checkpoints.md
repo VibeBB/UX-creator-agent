@@ -33,6 +33,9 @@ a separate scope, not an attempt-cap reset. Steps have unique IDs, are ordered,
 and reference only earlier dependencies. Optional `inputs` name additional
 workspace files or directories to hash. `source_path` remains unchanged for
 the whole run; a design output must be separate from pinned inputs.
+Inputs must exist. Use stable input directories outside checkpoint storage;
+the workspace root and ancestors of `observations/ux/work-checkpoints/` are
+rejected because saving a checkpoint would change their pinned contents.
 
 Independent steps pin inputs at creation. Dependent steps pin them at first
 start, after prerequisite outputs exist. Create requests through `ux_request`
