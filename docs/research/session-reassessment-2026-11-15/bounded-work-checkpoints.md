@@ -46,6 +46,20 @@ names, and terminal access remains denied. Failed fast-verification attempts
 also caught the command-documentation inventory omission. Neither failure is
 counted as a successful verification run.
 
+## Review corrections
+
+Revision `a3356615c5a592372b4533ea592998da7633e1bc` also incorporates
+two independently reproduced review findings. Four failing regressions showed
+that absent inputs and deleted empty input directories shared an empty-tree
+digest. The artifact boundary now requires an existing file or directory.
+Six failing regressions showed that directory inputs enclosing checkpoint
+storage changed during checkpoint writes. Those configurations are rejected
+up front; two positive tests retain support for stable scoped directories.
+
+The [follow-up validation](bounded-work-followup-validation.json) records
+the final fast verification (886 passed, one skipped) and five successful
+43-test repetitions, separately from the initial implementation evidence.
+
 ## Acceptance boundary
 
 `collected` means that declared evidence was collected and revalidated.
