@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
-import sys
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -14,9 +13,9 @@ import pytest
 
 
 @pytest.fixture()
-def image_scope_hook() -> ModuleType:
+def image_scope_hook(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     scripts = next(Path(__file__).resolve().parents[1].glob("plugins/*/hooks/scripts"))
-    sys.path.insert(0, str(scripts))
+    monkeypatch.syspath_prepend(str(scripts))
     spec = importlib.util.spec_from_file_location(
         "image_scope_hook", scripts / "require_records.py"
     )

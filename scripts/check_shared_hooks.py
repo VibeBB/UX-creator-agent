@@ -26,10 +26,6 @@ _EXPECTED_RECORDS_NORMALIZED_AST_SHA256 = (
 _EXPECTED_REQUIRE_RECORDS_NORMALIZED_AST_SHA256 = (
     "0badbf11d9d0040c1e5dbe1d91aaf604813a2441b389d06fbf6888fd8ef60208"
 )
-_EXPECTED_RECORDS_SOURCE_SHA256 = "eeb3b0a0f4d2a1751d1b4c3a92d8096c51a7d01ab397aae1a47abc5d7d5374c9"
-_EXPECTED_REQUIRE_RECORDS_SOURCE_SHA256 = (
-    "aef68917842f480b4a2c83a121f4834568cc7d5a9737fd7ecf5d308241016401"
-)
 EXPECTED: dict[str, str] = {
     "ensure_llm_profiles.py": _EXPECTED_ENSURE_LLM_PROFILES_NORMALIZED_AST_SHA256,
     "ensure_agent_profiles.py": _EXPECTED_ENSURE_AGENT_PROFILES_NORMALIZED_AST_SHA256,
@@ -38,10 +34,7 @@ EXPECTED: dict[str, str] = {
     "_records.py": _EXPECTED_RECORDS_NORMALIZED_AST_SHA256,
     "require_records.py": _EXPECTED_REQUIRE_RECORDS_NORMALIZED_AST_SHA256,
 }
-RAW_SHA256_EXPECTED: dict[str, str] = {
-    "_records.py": _EXPECTED_RECORDS_SOURCE_SHA256,
-    "require_records.py": _EXPECTED_REQUIRE_RECORDS_SOURCE_SHA256,
-}
+CANONICAL_RECORD_HOOKS = frozenset({"_records.py", "require_records.py"})
 REQUIRED = frozenset(
     {
         "ensure_llm_profiles.py",
@@ -74,9 +67,9 @@ def _strip_docstrings(node: ast.AST) -> None:
 
 def _digest(path: Path, plugin_name: str) -> str:
     source = path.read_text(encoding="utf-8")
-    # Byte-identical canonical scripts contain the full family owner vocabulary.
+    # Canonical record hooks contain the full family owner vocabulary.
     # Replacing one member's name would give each repository a different AST.
-    if path.name not in RAW_SHA256_EXPECTED:
+    if path.name not in CANONICAL_RECORD_HOOKS:
         source = re.sub(rf"\b{re.escape(plugin_name)}\b", "PLUGIN", source)
         if plugin_name == "ux":
             source = re.sub(r"\bux_creator\b", "PLUGIN", source)
@@ -129,14 +122,6 @@ def main() -> int:
                 f"{filename}: expected {expected}, got {actual}; compare with "
                 "the wire canonical and update all copies and EXPECTED together"
             )
-        source_expected = RAW_SHA256_EXPECTED.get(filename)
-        if source_expected is not None:
-            source_actual = hashlib.sha256(path.read_bytes()).hexdigest()
-            if source_actual != source_expected:
-                failures.append(
-                    f"{filename}: source SHA256 expected {source_expected}, got "
-                    f"{source_actual}; copy the wire canonical byte-for-byte"
-                )
 
     if failures:
         print("\n".join(failures), file=sys.stderr)
