@@ -103,9 +103,12 @@ def _image_key(record: dict[str, Any], root: Path) -> tuple[str, str]:
     return str(path), str(record.get("image_sha256") or "")
 
 
-def _original_image(claim: Any, root: Path) -> bool:
+def _original_image(claim: Any, root: Path, *, current: bool = True) -> bool:
     """Validate producer scope against the current workspace revision."""
-    if not isinstance(claim, dict) or set(claim) != {"path", "sha256", "owner_plugin", "origin"}:
+    if not isinstance(claim, dict):
+        return False
+    claim = cast(dict[str, Any], claim)
+    if set(claim) != {"path", "sha256", "owner_plugin", "origin"}:
         return False
     if claim.get("origin") not in ("renderer", "liaison-response"):
         return False
@@ -123,10 +126,10 @@ def _original_image(claim: Any, root: Path) -> bool:
         "wire",
     ):
         return False
-    return _intact_image(claim, root)
+    return _intact_image(claim, root, current=current)
 
 
-def _intact_image(claim: dict[str, Any], root: Path) -> bool:
+def _intact_image(claim: dict[str, Any], root: Path, *, current: bool = True) -> bool:
     path, digest = claim.get("path"), claim.get("sha256")
     if (
         not isinstance(path, str)
@@ -140,44 +143,51 @@ def _intact_image(claim: dict[str, Any], root: Path) -> bool:
             source.is_absolute()
             and str(source.resolve()) == path
             and source.is_relative_to(root)
-            and source.is_file()
-            and sha256_file(source) == digest
+            and (not current or (source.is_file() and sha256_file(source) == digest))
         )
     except (OSError, ValueError):
         return False
 
 
-def _producer_sources(observation: dict[str, Any], root: Path) -> list[dict[str, Any]] | None:
+def _producer_sources(
+    observation: dict[str, Any], root: Path, *, current: bool = True
+) -> list[dict[str, Any]] | None:
     """Unknown/corrupt ownership never suppresses a review obligation."""
     claim = observation.get("image_identity")
     if not isinstance(claim, dict) or observation.get("identity_status") != "bound":
         return None
+    claim = cast(dict[str, Any], claim)
     if (
         claim.get("path") != observation.get("image_path")
         or claim.get("sha256") != observation.get("image_sha256")
-        or not _intact_image(claim, root)
+        or not _intact_image(claim, root, current=current)
     ):
         return None
     if claim.get("origin") != "derived":
-        return [claim] if _original_image(claim, root) else None
-    parents = claim.get("parents")
+        return [claim] if _original_image(claim, root, current=current) else None
+    raw_parents = claim.get("parents")
+    if not isinstance(raw_parents, list):
+        return None
+    parents = cast(list[Any], raw_parents)
     if (
         set(claim) != {"path", "sha256", "owner_plugin", "origin", "operation", "parents"}
         or claim.get("owner_plugin") != "ux"
         or claim.get("operation") not in ("crop", "tile", "composite")
-        or not isinstance(parents, list)
         or not 1 <= len(parents) <= 16
         or (claim.get("operation") != "composite" and len(parents) != 1)
-        or any(not _original_image(p, root) or p["path"] == claim["path"] for p in parents)
+        or any(
+            not _original_image(p, root, current=current) or p["path"] == claim["path"]
+            for p in parents
+        )
         or len({p["path"] for p in parents}) != len(parents)
     ):
         return None
-    return parents
+    return cast(list[dict[str, Any]], parents)
 
 
-def _observation_keys(
-    observation: dict[str, Any], root: Path, plugin: str
-) -> tuple[list[tuple[str, str]], str | None]:
+def _receipt_sources(
+    observation: dict[str, Any], root: Path, *, current: bool = True
+) -> list[dict[str, Any]] | None:
     content = {k: v for k, v in observation.items() if k not in {"event_id", "recorded_at"}}
     intact = (
         observation.get("delivery_evidence") == "inline_bytes"
@@ -186,7 +196,50 @@ def _observation_keys(
             json.dumps(content, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
     )
-    sources = _producer_sources(observation, root) if intact else None
+    return _producer_sources(observation, root, current=current) if intact else None
+
+
+def _current_originals(observations: list[dict[str, Any]], root: Path) -> dict[str, dict[str, Any]]:
+    originals: dict[str, dict[str, Any]] = {}
+    ambiguous: set[str] = set()
+    for observation in observations:
+        for source in _receipt_sources(observation, root) or []:
+            previous = originals.get(source["path"])
+            if previous and previous["owner_plugin"] != source["owner_plugin"]:
+                ambiguous.add(source["path"])
+            originals[source["path"]] = source
+    return {path: source for path, source in originals.items() if path not in ambiguous}
+
+
+def _superseding_sources(
+    observation: dict[str, Any], root: Path, originals: dict[str, dict[str, Any]]
+) -> list[dict[str, Any]] | None:
+    """Retire an old receipt only after its originals were re-delivered intact."""
+    sources = _receipt_sources(observation, root, current=False)
+    if not sources:
+        return None
+    replacements: list[dict[str, Any]] = []
+    changed = False
+    for source in sources:
+        replacement = originals.get(source["path"])
+        if replacement is None or replacement["owner_plugin"] != source["owner_plugin"]:
+            return None
+        changed = changed or replacement["sha256"] != source["sha256"]
+        replacements.append(replacement)
+    return replacements if changed else None
+
+
+def _observation_keys(
+    observation: dict[str, Any],
+    root: Path,
+    plugin: str,
+    originals: dict[str, dict[str, Any]] | None = None,
+) -> tuple[list[tuple[str, str]], str | None]:
+    sources = _receipt_sources(observation, root)
+    superseded = False
+    if sources is None and originals is not None:
+        sources = _superseding_sources(observation, root, originals)
+        superseded = sources is not None
     if sources is None:
         key = _image_key(observation, root)
         try:
@@ -197,6 +250,8 @@ def _observation_keys(
             pass
         return [key], "image owner/ancestry unknown; legacy review scope retained"
     keys = [(p["path"], p["sha256"]) for p in sources if p["owner_plugin"] == plugin]
+    if superseded:
+        return keys, "earlier image delivery superseded by current original revisions"
     return (
         keys,
         "foreign or auxiliary image scoped to its original owner/revision" if not keys else None,
@@ -204,11 +259,17 @@ def _observation_keys(
 
 
 def _auxiliary_review(review: dict[str, Any], root: Path) -> bool:
-    delivery = review.get("image_delivery") or {}
-    if not isinstance(delivery, dict) or delivery.get("status") != "bound":
+    delivery = review.get("image_delivery")
+    if not isinstance(delivery, dict):
         return False
-    claim = delivery.get("image_identity") or {}
-    if not isinstance(claim, dict) or claim.get("origin") != "derived":
+    delivery = cast(dict[str, Any], delivery)
+    if delivery.get("status") != "bound":
+        return False
+    claim = delivery.get("image_identity")
+    if not isinstance(claim, dict):
+        return False
+    claim = cast(dict[str, Any], claim)
+    if claim.get("origin") != "derived":
         return False
     return (
         _producer_sources(
@@ -219,6 +280,7 @@ def _auxiliary_review(review: dict[str, Any], root: Path) -> bool:
                 "image_sha256": review.get("image_sha256"),
             },
             root,
+            current=False,
         )
         is not None
     )
@@ -440,14 +502,15 @@ def problems_for(
     ):
         warnings.append("legacy image observations lack session_id; attribution is unknown")
     seen: set[tuple[str, str]] = set()
+    originals = _current_originals(observations, root)
     for observation in observations:
         if not _in_session(observation, session_id, since):
             continue
-        keys, warning = _observation_keys(observation, root, plugin)
+        keys, warning = _observation_keys(observation, root, plugin, originals)
         claim = observation.get("image_identity")
+        claim = cast(dict[str, Any], claim) if isinstance(claim, dict) else {}
         if (
-            isinstance(claim, dict)
-            and claim.get("origin") == "derived"
+            claim.get("origin") == "derived"
             and warning
             and warning.startswith("image owner/ancestry unknown")
         ):
@@ -460,7 +523,8 @@ def problems_for(
             seen.add(key)
             if key not in reviewed_images:
                 problems.append(
-                    f"viewed image {key[0]} (sha256 {key[1][:12]}) has no vision_review impression"
+                    f"viewed image {key[0] if observation.get('image_path') else None} "
+                    f"(sha256 {key[1][:12]}) has no vision_review impression"
                 )
 
     for read in session["upstream_read"]:

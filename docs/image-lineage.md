@@ -36,6 +36,13 @@ the conservative legacy obligation. Invalid ancestry is an explicit gap.
 A changed original requires a review of its current hash. Reviews of a tile
 alone cannot satisfy an original's review requirement.
 
+After regeneration, a fresh intact receipt with the same original path and
+owner can supersede earlier deliveries. The current original still needs its
+own review. A changed auxiliary alone, ambiguous ownership, tampered receipts
+or missing current originals remain gaps. Explicit detail requests take
+priority within the existing inline-image count and byte limits; omitted
+images retain an explicit reason and do not count as delivered.
+
 Review checkpoint creation normalizes receipted auxiliary images to their
 intact originals and deduplicates source/checklist pairs. A conflicting
 checklist or changed/ambiguous parent fails closed. All existing bounded
