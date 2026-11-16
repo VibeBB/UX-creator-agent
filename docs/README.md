@@ -24,6 +24,7 @@ protocols, operations, and accepted design decisions.
 - [Test coverage and test design](test-coverage.md) — C0/C1/C2/MCC/MC/DC and boundary coverage, floors, test-design techniques
 - [Improvement notes](improvement-notes.md) — resolved findings and maintainer follow-ups
 - [Operations](operations.md) — releases, dependency updates, Docker image, and CI policy
+- [Fixed family installation](family-installation.md) — native SDK installs, release pins and readiness limits
 - [Dependency updates](dependency-updates.md) — pinned versions, sources, and adoption decisions
 
 ## Research
