@@ -12,7 +12,9 @@ uv run --group sdk-check python scripts/verify_family_install.py \
 The lock records each published tag, repository, plugin subdirectory and full
 source commit. The verifier rejects sources outside the registered VibeBB
 family, moving refs, tag/commit mismatches, duplicate or missing family entries,
-and symlinks in installed assets. It uses a fresh `OH_PERSISTENCE_DIR`, leaves
+and symlinks in fetched source or installed assets. Source links are checked
+before the SDK copies and dereferences them; installed bytes must then match
+the checked source digest. It uses a fresh `OH_PERSISTENCE_DIR`, leaves
 the normal SDK installation untouched, and does not replace `HOME`.
 
 Each completed installation is appended to `report.json` with the resolved

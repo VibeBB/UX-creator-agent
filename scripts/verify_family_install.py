@@ -85,6 +85,10 @@ class InstallReport(StrictModel):
 
 def tree_sha256(root: Path) -> str:
     """Hash file paths and bytes; reject links instead of following external files."""
+    if root.is_symlink():
+        raise ValueError("symlink as asset tree root")
+    if not root.is_dir():
+        raise ValueError("asset tree unavailable")
     digest = hashlib.sha256()
     for path in sorted(root.rglob("*")):
         if path.is_symlink():
@@ -114,6 +118,9 @@ def verify_tag_output(entry: Release, output: str) -> None:
 
 def install_one(entry: Release, store: Path) -> Inventory:
     # Import after OH_PERSISTENCE_DIR is set: SDK cache constants freeze on import.
+    from openhands.sdk.extensions.fetch import (  # pyright: ignore[reportMissingImports]
+        fetch_with_resolution,
+    )
     from openhands.sdk.plugin import Plugin  # pyright: ignore[reportMissingImports]
     from openhands.sdk.plugin.installed import (  # pyright: ignore[reportMissingImports]
         install_plugin,
@@ -129,6 +136,19 @@ def install_one(entry: Release, store: Path) -> Inventory:
             timeout=60,
         )
         verify_tag_output(entry, remote.stdout)
+        # SDK installation dereferences links. Inspect the fetched source before
+        # copying, so an external target cannot become an apparently ordinary asset.
+        fetched, resolved = fetch_with_resolution(
+            source=f"https://github.com/{entry.repository}.git",
+            cache_dir=store.parent / "sdk-state/cache/extensions",
+            ref=entry.source_commit,
+            repo_path=entry.repo_path,
+        )
+        if resolved != entry.source_commit:
+            raise ValueError("SDK fetched a different source commit")
+        if fetched.parent.is_symlink():
+            raise ValueError("symlink in source plugin path")
+        source_sha256 = tree_sha256(fetched)
         info = install_plugin(
             f"https://github.com/{entry.repository}.git",
             ref=entry.source_commit,
@@ -137,6 +157,9 @@ def install_one(entry: Release, store: Path) -> Inventory:
         )
         if info.resolved_ref != entry.source_commit:
             raise ValueError("SDK resolved a different source commit")
+        installed_sha256 = tree_sha256(info.install_path)
+        if installed_sha256 != source_sha256:
+            raise ValueError("installed assets differ from the checked source tree")
         plugin = Plugin.load(info.install_path)
         if plugin.name != entry.plugin:
             raise ValueError("installed manifest has a different plugin name")
@@ -149,7 +172,7 @@ def install_one(entry: Release, store: Path) -> Inventory:
             status="installed",
             resolved_commit=info.resolved_ref,
             manifest_version=plugin.version,
-            tree_sha256=tree_sha256(info.install_path),
+            tree_sha256=installed_sha256,
             agents=agents,
             commands=sorted(command.name for command in plugin.commands),
             mcp_servers=servers,

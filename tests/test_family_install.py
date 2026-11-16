@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import shutil
+import sys
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 from pydantic import ValidationError
 from scripts.verify_family_install import (
     Release,
     ReleaseLock,
+    install_one,
     interface_gaps,
     tree_sha256,
     verify_tag_output,
@@ -89,3 +94,63 @@ def test_installed_digest_binds_paths_bytes_and_rejects_links(tmp_path: Path) ->
     (tmp_path / "linked.md").symlink_to(tmp_path / "other.md")
     with pytest.raises(ValueError, match="symlink"):
         tree_sha256(tmp_path)
+
+
+def test_digest_rejects_symlink_root_and_missing_tree(tmp_path: Path) -> None:
+    (tmp_path / "root").mkdir()
+    (tmp_path / "link").symlink_to(tmp_path / "root", target_is_directory=True)
+    with pytest.raises(ValueError, match="symlink"):
+        tree_sha256(tmp_path / "link")
+    with pytest.raises(ValueError, match="unavailable"):
+        tree_sha256(tmp_path / "missing")
+
+
+@pytest.mark.parametrize("directory", [False, True])
+def test_rejects_source_links_before_sdk_dereferences(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, directory: bool
+) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    target = tmp_path / "outside"
+    if directory:
+        target.mkdir()
+        (target / "external.md").write_text("outside plugin", encoding="utf-8")
+    else:
+        target.write_text("outside plugin", encoding="utf-8")
+    (source / "linked").symlink_to(target, target_is_directory=directory)
+    store = tmp_path / "installed"
+
+    def copy_like_sdk(*_args: object, **_kwargs: object) -> SimpleNamespace:
+        # The SDK's default copytree materializes links as ordinary files/directories.
+        shutil.copytree(source, store / "ux")
+        return SimpleNamespace(install_path=store / "ux", resolved_ref="a" * 40)
+
+    installer = Mock(side_effect=copy_like_sdk)
+    plugin = SimpleNamespace(
+        name="ux",
+        version="1.0.0",
+        agents=[SimpleNamespace(name="ux-liaison")],
+        commands=[],
+        mcp_config={"ux": {}},
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "openhands.sdk.plugin",
+        SimpleNamespace(Plugin=SimpleNamespace(load=Mock(return_value=plugin))),
+    )
+    monkeypatch.setitem(
+        sys.modules, "openhands.sdk.plugin.installed", SimpleNamespace(install_plugin=installer)
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "openhands.sdk.extensions.fetch",
+        SimpleNamespace(fetch_with_resolution=Mock(return_value=(source, "a" * 40))),
+    )
+    monkeypatch.setattr(
+        "scripts.verify_family_install.subprocess.run",
+        Mock(return_value=SimpleNamespace(stdout="a" * 40 + "\trefs/tags/v1.0.0\n")),
+    )
+    result = install_one(release(), store)
+    assert result.status == "error"
+    assert any("symlink" in gap for gap in result.gaps)
+    installer.assert_not_called()
