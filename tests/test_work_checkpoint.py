@@ -411,3 +411,35 @@ def test_failed_atomic_replace_leaves_the_previous_checkpoint(
 def test_attempt_budget_is_a_strict_bounded_integer(workspace: Path, budget: object) -> None:
     with pytest.raises(ValueError):
         _create(workspace, attempt_budget=budget)
+
+
+@pytest.mark.parametrize("role", ["source", "input"])
+@pytest.mark.parametrize("initially_present", [False, True])
+def test_inputs_must_exist_including_previously_empty_directories(
+    workspace: Path, role: str, initially_present: bool
+) -> None:
+    evidence = workspace / "evidence"
+    if initially_present:
+        evidence.mkdir()
+    fields: dict[str, Any] = {
+        "source_path": "evidence" if role == "source" else "brief.json",
+        "steps": [
+            {
+                "id": "ux",
+                "kind": "design",
+                "output_contract": "design.ux.json",
+                "inputs": ["evidence"] if role == "input" else [],
+            }
+        ],
+    }
+    if not initially_present:
+        with pytest.raises(ValueError, match="unavailable"):
+            _call(workspace, "create", **fields)
+        return
+    _call(workspace, "create", **fields)
+    evidence.rmdir()
+    assert _call(workspace, "status")["status"] == "blocked"
+    result = _call(workspace, "start")
+    assert result["delegate"] is None
+    assert result["attempts_consumed"] == 0
+    assert any("input unavailable: evidence" in gap for gap in result["gaps"])

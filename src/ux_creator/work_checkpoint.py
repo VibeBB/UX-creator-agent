@@ -147,6 +147,8 @@ def _digest(value: object) -> str:
 
 def _artifact(value: str, base: Path) -> _Artifact:
     path = workspace_path(value, base)
+    if not path.is_file() and not path.is_dir():
+        raise ValueError(f"artifact unavailable: {value}")
     return _Artifact(path=path.relative_to(base).as_posix(), sha256=tree_sha256(path))
 
 
