@@ -46,7 +46,7 @@ workspace and ask the user to open it in that plugin.
 
 | Target | Sister repository | Registered agents | Liaison agent | Inbox / response tools |
 | --- | --- | --- | --- | --- |
-| `bard` | `bard-agent` | `bard`, `bard-cue`, `bard-critic` | `bard` | `bard_ux_inbox` / `bard_ux_respond` |
+| `bard` | `bard-agent` | `bard`, `bard-cue`, `bard-critic` | `bard` | `bard_cli.py ux-inbox` / `bard_cli.py ux-respond` |
 | `circuit` | `electrical-circuit-agent` | `circuit-brief`, `circuit-schematic`, `circuit-layout`, `circuit-library`, `circuit-review`, `circuit-part-author-a`, `circuit-part-author-b` | `circuit-brief` | `circuit_ux_inbox` / `circuit_ux_respond` |
 | `dashboard` | `dashboard-agent` | `dashboard-architect`, `dashboard-developer`, `dashboard-review` | `dashboard-architect` | `dashboard_ux_inbox` / `dashboard_ux_respond` |
 | `doc` | `document-agent` | `doc-liaison`, `doc-writer`, `doc-review`, `doc-launch` | `doc-liaison` | `doc_ux_inbox` / `doc_ux_respond` |
@@ -71,8 +71,13 @@ deterministic delegation brief. `ux_delegate` and `python -m ux_creator
 delegate` rebuild that brief from an existing request. Differing request
 files are not overwritten unless replacement is explicitly requested.
 The brief names the sister's `<target>_record_decision` and
-`<target>_record_impression` tools; do not direct sisters to UX-only
-`ux_record_*` tools.
+`<target>_record_impression` tools; Bard instead uses `bard_cli.py record
+decision` and `bard_cli.py record impression`. Bard has no MCP server.
+Resolve its own installed root by requiring `scripts/bard_cli.py` and run
+it with `python3`, `--root <shared-workspace>` and, for record and respond,
+`--json <payload-file|->`. Missing CLI assets mean the installed release
+cannot answer liaison requests. Do not invent `bard_ux_*` tools or direct
+sisters to UX-only `ux_record_*` tools.
 
 High-risk requests must cite at least one declared UX job id in
 `rationale`. The proposal triage defaults hardware, mechanism, and

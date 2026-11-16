@@ -76,11 +76,16 @@ deterministic task-tool brief. When a sister agent is loaded, delegate
 with `task_tool_set`; if unavailable, direct the user to open the request
 in the named sister plugin. The brief names that sister's own
 `<target>_record_decision` and `<target>_record_impression` tools, not the
-UX plugin's `ux_record_*` tools. The ten targets and their liaison agents are:
+UX plugin's `ux_record_*` tools. Bard is CLI-only: resolve the installed
+root by requiring `scripts/bard_cli.py`, invoke it with `python3`, pass
+`--root <shared-workspace>` and use `--json <payload-file|->` for record
+and response commands. It records with `bard_cli.py record decision` and
+`bard_cli.py record impression`. If a release lacks the CLI, report the
+missing interface; do not invent MCP tools. The ten targets are:
 
 | Target | Sister agent | Inbox tool | Response tool |
 | --- | --- | --- | --- |
-| `bard` | `bard` | `bard_ux_inbox` | `bard_ux_respond` |
+| `bard` | `bard` | `bard_cli.py ux-inbox` | `bard_cli.py ux-respond` |
 | `circuit` | `circuit-brief` | `circuit_ux_inbox` | `circuit_ux_respond` |
 | `dashboard` | `dashboard-architect` | `dashboard_ux_inbox` | `dashboard_ux_respond` |
 | `doc` | `doc-liaison` | `doc_ux_inbox` | `doc_ux_respond` |

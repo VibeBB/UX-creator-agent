@@ -63,6 +63,20 @@ def test_delegation_brief_rejects_unsafe_liaison_paths(tmp_path: Path, path: str
         delegation_brief(_request(tmp_path), path)
 
 
+def test_bard_brief_routes_liaison_and_records_through_its_cli(tmp_path: Path) -> None:
+    prompt = delegation_brief(_request(tmp_path, "bard"), "liaison")["prompt"]
+    assert "has no MCP server" in prompt
+    assert "BARD_PLUGIN_ROOT" in prompt
+    assert "scripts/bard_cli.py to exist" in prompt
+    assert "--root <shared-workspace>" in prompt
+    assert "--json <payload-file|->" in prompt
+    for action in ("ux-inbox", "ux-respond", "record decision", "record impression"):
+        assert f"`bard_cli.py {action}`" in prompt
+    assert "`bard_ux_" not in prompt
+    assert "`bard_record_" not in prompt
+    assert "If the CLI is absent" in prompt
+
+
 def test_cli_delegate_loads_request_and_prints_task_brief(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
