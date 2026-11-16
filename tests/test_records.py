@@ -1149,6 +1149,8 @@ def _guard(tool: str, tool_input: dict[str, Any]) -> int:
         ("grep", {"pattern": "W1", "path": "out/review-visual-harness-diagram.advisory.json"}),
         ("glob", {"pattern": "**/*.advisory.json"}),
         ("file_editor", {"command": "view", "path": "liaison/r1.ux-response.json"}),
+        ("mcp__ux__ux_work_checkpoint", {"action": "status", "checkpoint_id": "run"}),
+        ("terminal", {"command": "ux work-checkpoint --json request.json"}),
     ],
 )
 def test_blind_guard_denies_earlier_reviews(tool: str, tool_input: dict[str, Any]) -> None:

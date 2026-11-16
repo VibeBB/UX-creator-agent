@@ -70,6 +70,7 @@ def test_protect_blocks_direct_vrp_log_writes() -> None:
         "image-observations.jsonl",
         "records-status.json",
         "review-checkpoints/test.json",
+        "work-checkpoints/run.json",
     ):
         payload = {
             "tool_name": "file_editor",

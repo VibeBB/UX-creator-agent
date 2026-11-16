@@ -27,7 +27,7 @@ hooks:
           name: require-records
           command: "p=$(for c in  \"${UX_PLUGIN_ROOT:-}\" \"${PLUGIN_ROOT:-}\" \"${OPENHANDS_PROJECT_DIR:-.}/plugins/ux\" \"${HOME:-}/.agents/plugins/ux\" \"${HOME:-}/.openhands/plugins/installed/ux\" \"${HOME:-}/plugins/installed/ux\" \"${OH_PERSISTENCE_DIR:-/nonexistent}/plugins/installed/ux\"; do [ -f \"$c/hooks/scripts/require_records.py\" ] && printf %s \"$c\" && break; done); [ -n \"$p\" ] || { echo \"ux plugin root unresolved\" >&2; exit 1; }; exec python3 \"$p/hooks/scripts/require_records.py\" record-context"
   pre_tool_use:
-    - matcher: file_editor|apply_patch|terminal|grep|glob|.*ux_review_checkpoint$
+    - matcher: file_editor|apply_patch|terminal|grep|glob|.*ux_(review|work)_checkpoint$
       hooks:
         - type: command
           name: blind-guard

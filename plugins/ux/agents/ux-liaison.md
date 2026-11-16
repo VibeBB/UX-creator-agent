@@ -76,7 +76,13 @@ deterministic task-tool brief. When a sister agent is loaded, delegate
 with `task_tool_set`; if unavailable, direct the user to open the request
 in the named sister plugin. The brief names that sister's own
 `<target>_record_decision` and `<target>_record_impression` tools, not the
-UX plugin's `ux_record_*` tools. The ten targets and their liaison agents are:
+UX plugin's `ux_record_*` tools. For multi-step work, let the coordinator use
+`ux_work_checkpoint` to retain SHA-matching done responses, share a finite run
+budget and issue only the next incomplete brief to a fresh native child. Pause
+explicitly on interruption; never reset the checkpoint or resume the old SDK
+child. See `docs/work-checkpoints.md`. Collection is not acceptance.
+
+The ten targets and their liaison agents are:
 
 | Target | Sister agent | Inbox tool | Response tool |
 | --- | --- | --- | --- |

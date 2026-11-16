@@ -65,10 +65,12 @@ from .ruby_bridge import contract_from_ruby, mruby_check
 from .sisters import PRODUCT_STAGES, TARGET_AGENTS
 from .vrp_hub import escalate as records_escalate
 from .vrp_hub import hub as records_hub
+from .work_checkpoint import WorkCheckpointInput, work_checkpoint
 from .workspace import workspace_path, workspace_root
 
 _SCHEMAS: dict[str, dict[str, Any]] = {
     "ux_review_checkpoint": ReviewCheckpointInput.model_json_schema(),
+    "ux_work_checkpoint": WorkCheckpointInput.model_json_schema(),
     "ux_record_decision": DecisionInput.model_json_schema(),
     "ux_record_impression": StageImpressionInput.model_json_schema(),
     "ux_record_vision_review": VisionReviewInput.model_json_schema(),
@@ -280,6 +282,10 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
 }
 
 _DESCRIPTIONS = {
+    "ux_work_checkpoint": (
+        "Collect SHA-bound design, liaison and domain evidence with two fresh attempts per step "
+        "and an immutable run budget. Coordinator only; executes no tasks and grants no acceptance."
+    ),
     "ux_review_checkpoint": (
         "Persist bounded review collection checkpoints, revalidate SHA/session/delivery evidence, "
         "and issue one fresh native task brief. Coordinator only; never executes or resumes tasks."
@@ -354,6 +360,7 @@ _DESCRIPTIONS = {
 }
 
 _WRITE_TOOLS = {
+    "ux_work_checkpoint",
     "ux_review_checkpoint",
     "ux_record_reconcile",
     "ux_record_insight",
@@ -371,6 +378,7 @@ _WRITE_TOOLS = {
     "ux_record_vision_review",
 }
 _APPEND_RECORD_TOOLS = {
+    "ux_work_checkpoint",  # start reserves a finite attempt; never retry it automatically.
     "ux_review_checkpoint",  # start consumes a finite attempt; it is not idempotent.
     "ux_record_reconcile",
     "ux_record_insight",
@@ -530,6 +538,8 @@ async def list_tools(
 async def dispatch_tool(
     name: str, arguments: dict[str, Any]
 ) -> dict[str, Any] | list[types.ContentBlock]:
+    if name == "ux_work_checkpoint":
+        return work_checkpoint(arguments)
     if name == "ux_review_checkpoint":
         return review_checkpoint(arguments)
     if name == "ux_record_decision":

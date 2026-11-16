@@ -72,6 +72,8 @@ def test_native_fresh_task_limits_and_failure_delivery(
             for tool, payload in [
                 ("ux_review_checkpoint", {"action": "status"}),
                 ("ux_ux_review_checkpoint", {"action": "status"}),
+                ("ux_work_checkpoint", {"action": "status"}),
+                ("ux_ux_work_checkpoint", {"action": "status"}),
                 (
                     "terminal",
                     {"command": "python -m ux_creator review-checkpoint --json input.json"},

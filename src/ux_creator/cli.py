@@ -68,6 +68,7 @@ from .ruby_bridge import contract_from_ruby, mruby_check
 from .sisters import PRODUCT_STAGES, TARGET_AGENTS
 from .vrp_hub import escalate as records_escalate
 from .vrp_hub import hub as records_hub
+from .work_checkpoint import work_checkpoint
 from .workspace import workspace_path, workspace_root
 
 
@@ -541,6 +542,13 @@ def _cmd_review_checkpoint(args: argparse.Namespace) -> int:
     return 0 if result["status"] == "collected" else 1
 
 
+def _cmd_work_checkpoint(args: argparse.Namespace) -> int:
+    payload = json.loads(workspace_path(args.json).read_text(encoding="utf-8"))
+    result = work_checkpoint(payload)
+    _print(result)
+    return 0 if result["status"] == "collected" else 1
+
+
 def _cmd_review_reconcile(args: argparse.Namespace) -> int:
     try:
         contract = load_contract(args.contract)
@@ -822,6 +830,12 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("review-checkpoint", help="collect bounded, SHA-bound review records")
     p.add_argument("--json", required=True, help="workspace JSON request for the checkpoint")
     p.set_defaults(func=_cmd_review_checkpoint)
+
+    p = sub.add_parser("work-checkpoint", help="collect bounded design and sister-work evidence")
+    p.add_argument(
+        "--json", required=True, help="JSON action with the native coordinator session ID"
+    )
+    p.set_defaults(func=_cmd_work_checkpoint)
 
     p = sub.add_parser("record", help="append a VibeBB Record Protocol record")
     p.add_argument(
