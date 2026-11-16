@@ -194,14 +194,13 @@ def test_changed_parent_blocks_checkpoint_reuse(tmp_path: Path) -> None:
         )
 
 
-def test_formal_changed_source_requires_new_hash(tmp_path: Path, stop_hook: ModuleType) -> None:
+def test_formal_changed_source_retains_observed_hash(tmp_path: Path, stop_hook: ModuleType) -> None:
     observation = _deliver(tmp_path, [_image(tmp_path, "source.png")])[0]
     (tmp_path / "source.png").write_bytes(b"new formal revision")
     keys, warning = stop_hook._observation_keys(observation, tmp_path, "ux")
     assert warning and "unknown" in warning
-    assert keys == [
-        (str(tmp_path / "source.png"), hashlib.sha256(b"new formal revision").hexdigest())
-    ]
+    assert keys == [(str(tmp_path / "source.png"), observation["image_sha256"])]
+    assert keys[0][1] != hashlib.sha256(b"new formal revision").hexdigest()
 
 
 def test_producer_rejects_unrelated_copied_and_recursive_parents(tmp_path: Path) -> None:

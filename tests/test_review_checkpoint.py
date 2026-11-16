@@ -131,7 +131,7 @@ def _collect(root: Path, started: dict[str, Any], event: str) -> dict[str, Any]:
 
 
 @pytest.mark.parametrize("replacement_tile", ["tile.png", "replacement.png"])
-def test_reviewing_current_original_clears_retired_auxiliary_gap(
+def test_current_review_keeps_prior_original_debt_after_auxiliary_replacement(
     workspace: Path, monkeypatch: pytest.MonkeyPatch, replacement_tile: str
 ) -> None:
     """Use real MCP receipts, VRP writers and native Stop without an LLM call."""
@@ -199,6 +199,7 @@ def test_reviewing_current_original_clears_retired_auxiliary_gap(
 
     assert hook("record-context") == 0
     deliver("tile.png")
+    original_sha = _vrp.sha256_file(image)
     image.write_bytes(b"Idle Ready: updated formal revision")
     deliver(replacement_tile)
     assert hook("stop") == 2
@@ -207,11 +208,13 @@ def test_reviewing_current_original_clears_retired_auxiliary_gap(
     assert any("viewed image" in problem for problem in before["problems"])
     assert not any("ancestry unknown" in problem for problem in before["problems"])
     _write_review(workspace, "primary")
-    assert hook("stop") == 0
+    assert hook("stop") == 2
     after = json.loads(status_path.read_text(encoding="utf-8"))
-    assert after["problems"] == [] and after["stop_denials"] == 1
-    # Retired receipts remain advisory warnings, not permanent missing-review gaps.
-    assert after["record_compliance"] == "unknown"
+    assert len(after["problems"]) == 1 and original_sha[:12] in after["problems"][0]
+    assert "ancestry unknown" not in after["problems"][0]
+    assert after["stop_denials"] == 2
+    # Auxiliary debt retires, but the unreviewed historical original still fails.
+    assert after["record_compliance"] == "fail"
     assert after["acceptance"] == after["run_completion"] == "unknown"
 
 
