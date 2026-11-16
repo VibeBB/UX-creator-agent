@@ -17,9 +17,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .sisters import SHA256, TargetAgent
+from .workspace import workspace_path
 
 
 class ImageIdentity(BaseModel):
@@ -33,13 +34,87 @@ class ImageIdentity(BaseModel):
     origin: Literal["renderer", "liaison-response"]
 
 
+class ImageDetail(BaseModel):
+    """An explicitly auxiliary view, never an additional formal product output."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
+
+    path: str = Field(min_length=1)
+    parents: list[str] = Field(min_length=1, max_length=16)
+    operation: Literal["crop", "tile", "composite"]
+
+    @model_validator(mode="after")
+    def _arity(self) -> ImageDetail:
+        if self.operation != "composite" and len(self.parents) != 1:
+            raise ValueError("crop/tile needs exactly one parent")
+        return self
+
+
+class DerivedImageIdentity(BaseModel):
+    """Hash-bound declared ancestry; it does not certify a pixel transformation."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
+
+    path: str = Field(min_length=1)
+    sha256: str = Field(pattern=SHA256.pattern)
+    owner_plugin: Literal["ux"] = "ux"
+    origin: Literal["derived"] = "derived"
+    operation: Literal["crop", "tile", "composite"]
+    parents: list[ImageIdentity] = Field(min_length=1, max_length=16)
+
+    @model_validator(mode="after")
+    def _parents(self) -> DerivedImageIdentity:
+        paths = [parent.path for parent in self.parents]
+        if len(set(paths)) != len(paths) or self.path in paths:
+            raise ValueError("ancestry must name unique original parents")
+        if self.operation != "composite" and len(paths) != 1:
+            raise ValueError("crop/tile needs exactly one original parent")
+        return self
+
+
 @dataclass(frozen=True)
 class RenderResult:
     source: Path
     output: Path | None
     status: str  # "ok" | "unknown"
     detail: str
-    image_identity: ImageIdentity | None = None
+    image_identity: ImageIdentity | DerivedImageIdentity | None = None
+
+
+def with_image_details(
+    renders: list[RenderResult], details: list[ImageDetail], root: Path
+) -> list[RenderResult]:
+    """Bind auxiliary bytes only to intact originals from this producer response."""
+    originals = {
+        str(r.output.resolve()): r.image_identity
+        for r in renders
+        if r.status == "ok" and r.output and isinstance(r.image_identity, ImageIdentity)
+    }
+    results = list(renders)
+    seen = set(originals)
+    for detail in details:
+        path = workspace_path(detail.path, root)
+        if str(path) in seen:
+            raise ValueError("image detail cannot replace an original or duplicate a path")
+        parents: list[ImageIdentity] = []
+        for source in detail.parents:
+            parent = workspace_path(source, root)
+            identity = originals.get(str(parent))
+            if (
+                identity is None
+                or hashlib.sha256(parent.read_bytes()).hexdigest() != identity.sha256
+            ):
+                raise ValueError("image detail parent is not an intact producer original")
+            parents.append(identity)
+        derived = DerivedImageIdentity(
+            path=str(path),
+            sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+            parents=parents,
+            operation=detail.operation,
+        )
+        results.append(RenderResult(path, path, "ok", "declared auxiliary ancestry", derived))
+        seen.add(str(path))
+    return results
 
 
 def _rendered(source: Path, output: Path) -> RenderResult:

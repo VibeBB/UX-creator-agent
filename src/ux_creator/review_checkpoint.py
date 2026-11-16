@@ -13,7 +13,7 @@ from typing import Literal, cast
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
 from . import _vrp
-from .image_delivery import ImageDelivery, review_image_delivery
+from .image_delivery import ImageDelivery, original_review_images, review_image_delivery
 from .workspace import workspace_path, workspace_root
 
 _SHA = r"^[0-9a-f]{64}$"
@@ -348,13 +348,23 @@ def review_checkpoint(
         if request.action == "create":
             if path.exists():
                 raise ValueError("checkpoint already exists; use status/start without resetting it")
+            originals: dict[str, tuple[_Artifact, str]] = {}
+            for source in request.sources:
+                for image in original_review_images(
+                    base / "observations/ux/image-observations.jsonl",
+                    workspace_path(source.image_path, base),
+                    base,
+                ):
+                    artifact = _artifact(str(image), base)
+                    previous = originals.get(artifact.path)
+                    if previous and previous[1] != source.checklist:
+                        raise ValueError("an original image must have one checklist")
+                    originals[artifact.path] = (artifact, source.checklist)
             pairs = [
-                _new_pair(_artifact(s.image_path, base), s.checklist, role)
-                for s in request.sources
+                _new_pair(image, checklist, role)
+                for image, checklist in originals.values()
                 for role in ("primary", "blind")
             ]
-            if len({p.image.path for p in pairs}) != len(request.sources):
-                raise ValueError("sources must have unique resolved image paths")
             state = _Checkpoint(
                 id=request.checkpoint_id,
                 session_id=request.session_id,

@@ -24,11 +24,11 @@ _EXPECTED_RECORDS_NORMALIZED_AST_SHA256 = (
     "031bf027f9fcb3c58470f70f5601b7587d082bc148099b22dda0ed75238d01c0"
 )
 _EXPECTED_REQUIRE_RECORDS_NORMALIZED_AST_SHA256 = (
-    "3b60e28729bb5e6e66c7d43a38be67cd1a9af2f8980a80d114a2b939ee72e67e"
+    "a63a2d19bac713e03f865ac274ac99e35aa0322a828ac64c840e01eea8689d58"
 )
 _EXPECTED_RECORDS_SOURCE_SHA256 = "eeb3b0a0f4d2a1751d1b4c3a92d8096c51a7d01ab397aae1a47abc5d7d5374c9"
 _EXPECTED_REQUIRE_RECORDS_SOURCE_SHA256 = (
-    "dc6aa78e9b67004687e59ef62ee13ae23ec40809c546c319d37dae662a527a14"
+    "44e8bc92dc02b23641994196b6e33fcaa0b74a37661584a399c85c64918494c4"
 )
 EXPECTED: dict[str, str] = {
     "ensure_llm_profiles.py": _EXPECTED_ENSURE_LLM_PROFILES_NORMALIZED_AST_SHA256,
@@ -74,9 +74,12 @@ def _strip_docstrings(node: ast.AST) -> None:
 
 def _digest(path: Path, plugin_name: str) -> str:
     source = path.read_text(encoding="utf-8")
-    source = re.sub(rf"\b{re.escape(plugin_name)}\b", "PLUGIN", source)
-    if plugin_name == "ux":
-        source = re.sub(r"\bux_creator\b", "PLUGIN", source)
+    # Byte-identical canonical scripts contain the full family owner vocabulary.
+    # Replacing one member's name would give each repository a different AST.
+    if path.name not in RAW_SHA256_EXPECTED:
+        source = re.sub(rf"\b{re.escape(plugin_name)}\b", "PLUGIN", source)
+        if plugin_name == "ux":
+            source = re.sub(r"\bux_creator\b", "PLUGIN", source)
     tree = ast.parse(source, filename=str(path))
     _strip_docstrings(tree)
     dump = cast(Callable[..., str], ast.dump)

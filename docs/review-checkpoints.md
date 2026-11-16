@@ -20,6 +20,9 @@ never product acceptance, workflow completion, or Stop permission.
 ```
 
 Every action requires the same `checkpoint_id` and coordinator `session_id`.
+Receipted [auxiliary crops, tiles and composites](image-lineage.md) normalize
+to their intact original subjects before pairs are created. Repeating an
+original through several auxiliary views does not create additional pairs.
 If `OPENHANDS_SESSION_ID` is set, it must match. Paths are resolved within
 the workspace. Each unique source creates primary and blind pairs. The
 checkpoint lives at `observations/ux/review-checkpoints/<checkpoint_id>.json`

@@ -56,7 +56,7 @@ from .records import (
     records_search,
     records_summary,
 )
-from .render import ImageIdentity, RenderResult, render_all
+from .render import ImageDetail, ImageIdentity, RenderResult, render_all, with_image_details
 from .report import write_report
 from .requests import build_request, load_request, write_request
 from .responses import LiaisonStatus, UXResponse, liaison_status
@@ -65,7 +65,7 @@ from .ruby_bridge import contract_from_ruby, mruby_check
 from .sisters import PRODUCT_STAGES, TARGET_AGENTS
 from .vrp_hub import escalate as records_escalate
 from .vrp_hub import hub as records_hub
-from .workspace import workspace_path
+from .workspace import workspace_path, workspace_root
 
 _SCHEMAS: dict[str, dict[str, Any]] = {
     "ux_review_checkpoint": ReviewCheckpointInput.model_json_schema(),
@@ -237,6 +237,11 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
             "workspace": {"type": "string"},
             "liaison_dir": {"type": "string"},
             "attach_images": {"type": "boolean"},
+            "image_details": {
+                "type": "array",
+                "items": ImageDetail.model_json_schema(),
+                "maxItems": 32,
+            },
         },
         "required": [],
         "additionalProperties": False,
@@ -261,7 +266,14 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
     },
     "ux_render": {
         "type": "object",
-        "properties": {"dir": {"type": "string"}},
+        "properties": {
+            "dir": {"type": "string"},
+            "image_details": {
+                "type": "array",
+                "items": ImageDetail.model_json_schema(),
+                "maxItems": 32,
+            },
+        },
         "required": ["dir"],
         "additionalProperties": False,
     },
@@ -746,6 +758,14 @@ async def dispatch_tool(
             renders = (
                 _liaison_image_renders(status, workspace) if arguments.get("attach_images") else []
             )
+            if arguments.get("image_details"):
+                if not arguments.get("attach_images"):
+                    raise ValueError("image_details requires attach_images")
+                renders = with_image_details(
+                    renders,
+                    [ImageDetail.model_validate(d) for d in arguments["image_details"]],
+                    workspace,
+                )
         except (OSError, ValueError) as exc:
             return {"verdict": FAIL, "stage": "liaison", "detail": str(exc)}
         payload = status.model_dump()
@@ -768,6 +788,11 @@ async def dispatch_tool(
         return payload
     if name == "ux_render":
         results = render_all(_path_arg(arguments, "dir"), fmts=("svg", "png"))
+        results = with_image_details(
+            results,
+            [ImageDetail.model_validate(d) for d in arguments.get("image_details", [])],
+            workspace_root(),
+        )
         return _render_content(
             {
                 "verdict": PASS,
