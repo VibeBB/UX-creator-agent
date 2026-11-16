@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
 
@@ -60,10 +60,10 @@ def original_review_images(log: Path, image: Path, root: Path) -> list[Path]:
     identities: dict[str, DerivedImageIdentity] = {}
     for row in rows:
         claim = row.get("image_identity")
+        claim = cast(dict[str, JsonValue], claim) if isinstance(claim, dict) else {}
         if (
             row.get("image_path") != str(image)
             or row.get("image_sha256") != digest
-            or not isinstance(claim, dict)
             or claim.get("origin") != "derived"
         ):
             continue

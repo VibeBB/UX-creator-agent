@@ -348,10 +348,15 @@ def review_checkpoint(
         if request.action == "create":
             if path.exists():
                 raise ValueError("checkpoint already exists; use status/start without resetting it")
+            log = Path(
+                os.environ.get("UX_IMAGE_OBSERVATIONS")
+                or "observations/ux/image-observations.jsonl"
+            ).expanduser()
+            log = log if log.is_absolute() else workspace_path(log, base)
             originals: dict[str, tuple[_Artifact, str]] = {}
             for source in request.sources:
                 for image in original_review_images(
-                    base / "observations/ux/image-observations.jsonl",
+                    log,
                     workspace_path(source.image_path, base),
                     base,
                 ):

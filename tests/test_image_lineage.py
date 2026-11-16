@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import Any, Literal
 
 import pytest
 
@@ -33,7 +33,7 @@ def stop_hook() -> ModuleType:
     return module
 
 
-def _image(root: Path, name: str, owner: str = "ux") -> RenderResult:
+def _image(root: Path, name: str, owner: Literal["ux", "bard"] = "ux") -> RenderResult:
     path = root / name
     path.write_bytes(name.encode())
     return RenderResult(
@@ -68,7 +68,7 @@ def _details(
 
 
 def _deliver(root: Path, renders: list[RenderResult]) -> list[dict[str, Any]]:
-    blocks = mcp_server._render_content({}, renders)
+    blocks = mcp_server._render_content({}, renders)  # pyright: ignore[reportPrivateUsage]
     result = subprocess.run(
         [sys.executable, str(HOOKS / "record_image_observation.py")],
         input=json.dumps(
@@ -95,13 +95,17 @@ def _deliver(root: Path, renders: list[RenderResult]) -> list[dict[str, Any]]:
     ]
 
 
+@pytest.mark.parametrize("override", [False, True])
 def test_tile_receipt_and_checkpoint_use_one_original_pair(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     stop_hook: ModuleType,
+    override: bool,
 ) -> None:
     monkeypatch.delenv("OPENHANDS_SESSION_ID", raising=False)
+    monkeypatch.delenv("UX_IMAGE_OBSERVATIONS", raising=False)
     source = _image(tmp_path, "source.png")
+    assert source.image_identity is not None
     renders = _details(tmp_path, [source])
     observations = _deliver(tmp_path, renders)
     log = tmp_path / "observations/ux/image-observations.jsonl"
@@ -117,6 +121,11 @@ def test_tile_receipt_and_checkpoint_use_one_original_pair(
     ]
     contract = tmp_path / "contract.json"
     contract.write_text("{}")
+    if override:
+        custom_log = tmp_path / "custom-images.jsonl"
+        custom_log.write_bytes(log.read_bytes())
+        log.unlink()
+        monkeypatch.setenv("UX_IMAGE_OBSERVATIONS", "custom-images.jsonl")
     checkpoint = review_checkpoint(
         {
             "action": "create",
@@ -130,7 +139,8 @@ def test_tile_receipt_and_checkpoint_use_one_original_pair(
         },
         tmp_path,
     )
-    assert len(checkpoint["pairs"]) == 2
+    pairs = checkpoint["pairs"]
+    assert isinstance(pairs, list) and len(pairs) == 2
     assert checkpoint["acceptance"] == "unknown"
 
 
@@ -139,6 +149,7 @@ def test_multisource_preserves_each_parent_owner(tmp_path: Path, stop_hook: Modu
     observations = _deliver(tmp_path, _details(tmp_path, roots, composite=True))
     tile = observations[-1]
     for owner, source in zip(("ux", "bard"), roots, strict=True):
+        assert source.image_identity is not None
         assert stop_hook._observation_keys(tile, tmp_path, owner)[0] == [
             (str(source.output), source.image_identity.sha256)
         ]
