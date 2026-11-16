@@ -111,6 +111,12 @@ for the evidence trail.
   `ux-tools` Docker image. Docker and access to that image are required for
   those operations.
 
+The [fixed-release family verification](docs/research/session-reassessment-2026-11-15/family-domain-validation.md)
+records the tested fixtures and remaining gaps. Asset loading, SHA-bound
+acknowledgements and generated diagrams do not establish eleven completed
+native workflows. In particular, the pinned Bard v1.1.0 lacks its SLP CLI;
+current-source fixes and release availability are reported separately.
+
 ## Documentation
 
 - [Architecture](docs/architecture.md) and [workflow](docs/workflow.md)
@@ -227,6 +233,11 @@ UX-creator-agent はファミリー内の 11 リポジトリの一つです。UX
   プロトコルであり、受信・回答処理は各姉妹リポジトリが所有します。
 - 作成・描画ツールは固定された `ux-tools` Docker イメージ内で実行されます。
   これらの操作には Docker とイメージへのアクセスが必要です。
+
+[固定リリースの検証結果](docs/research/session-reassessment-2026-11-15/family-domain-validation.md)に、
+確認した入力例と残る不足を記録しています。ロード成功・SHA付き応答・図面生成は、
+11者のネイティブ工程完了を意味しません。固定した Bard v1.1.0 には SLP 用 CLI がなく、
+現行ソースの修正と配布版で利用できる機能を分けて報告しています。
 
 ### ドキュメント
 

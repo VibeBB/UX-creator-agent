@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "scope": "release-pinned-plugin-installation",
+  "plugins": [
+    {
+      "plugin": "ux",
+      "repository": "VibeBB/UX-creator-agent",
+      "source_commit": "d52d620b3baba121a619b4553ce20ad565c61ee1",
+      "release": "v1.0.0",
+      "release_url": "https://github.com/VibeBB/UX-creator-agent/releases/tag/v1.0.0",
+      "published_at": "2026-11-15T05:39:31Z",
+      "repo_path": "plugins/ux"
+    },
+    {
+      "plugin": "bard",
+      "repository": "VibeBB/bard-agent",
+      "source_commit": "fd1f5db03bbd0516cc5510169cb2e4276520db09",
+      "release": "v1.1.0",
+      "release_url": "https://github.com/VibeBB/bard-agent/releases/tag/v1.1.0",
+      "published_at": "2026-09-23T10:52:47Z",
+      "repo_path": "plugins/bard"
+    },
+    {
+      "plugin": "circuit",
+      "repository": "VibeBB/electrical-circuit-agent",
+      "source_commit": "b3c3047457d08669e5d5bbcbecbb698949cd85ce",
+      "release": "v1.0.0",
+      "release_url": "https://github.com/VibeBB/electrical-circuit-agent/releases/tag/v1.0.0",
+      "published_at": "2026-11-15T07:15:33Z",
+      "repo_path": "plugins/circuit"
+    },
+    {
+      "plugin": "dashboard",
+      "repository": "VibeBB/dashboard-agent",
+      "source_commit": "8670c9c553ad74133ef303904d19ba0218616ec2",
+      "release": "v1.0.0",
+      "release_url": "https://github.com/VibeBB/dashboard-agent/releases/tag/v1.0.0",
+      "published_at": "2026-11-15T05:36:04Z",
+      "repo_path": "plugins/dashboard"
+    },
+    {
+      "plugin": "doc",
+      "repository": "VibeBB/document-agent",
+      "source_commit": "029ff7b269fd3e5e4e149139889fadf6b6e67fd2",
+      "release": "v1.0.0",
+      "release_url": "https://github.com/VibeBB/document-agent/releases/tag/v1.0.0",
+      "published_at": "2026-11-15T05:36:33Z",
+      "repo_path": "plugins/doc"
+    },
+    {
+      "plugin": "firmware",
+      "repository": "VibeBB/firmware-agent",
+      "source_commit": "392ff762f717ef5c27d77c9747d0810a54a16d4e",
+      "release": "v1.0.0",
+      "release_url": "https://github.com/VibeBB/firmware-agent/releases/tag/v1.0.0",
+      "published_at": "2026-11-15T06:40:26Z",
+      "repo_path": "plugins/firmware"
+    },
+    {
+      "plugin": "fpga",
+      "repository": "VibeBB/fpga-agent",
+      "source_commit": "5c6e83a766ab99485e0c177fcc78fed2a51dc9c9",
+      "release": "v1.0.0",
+      "release_url": "https://github.com/VibeBB/fpga-agent/releases/tag/v1.0.0",
+      "published_at": "2026-11-15T06:25:55Z",
+      "repo_path": "plugins/fpga"
+    },
+    {
+      "plugin": "mech",
+      "repository": "VibeBB/mechanical-agent",
+      "source_commit": "96ff08a3bf458a065ebb62081402e4aa2ac32dbe",
+      "release": "v1.0.0",
+      "release_url": "https://github.com/VibeBB/mechanical-agent/releases/tag/v1.0.0",
+      "published_at": "2026-11-15T05:35:06Z",
+      "repo_path": "plugins/mech"
+    },
+    {
+      "plugin": "prodeng",
+      "repository": "VibeBB/production-engineering-agent",
+      "source_commit": "b2e7db5b8ecddce98ea0633c1c022d8aa1327bd3",
+      "release": "v1.0.0",
+      "release_url": "https://github.com/VibeBB/production-engineering-agent/releases/tag/v1.0.0",
+      "published_at": "2026-11-15T05:39:57Z",
+      "repo_path": "plugins/prodeng"
+    },
+    {
+      "plugin": "sim",
+      "repository": "VibeBB/simulation-agent",
+      "source_commit": "cae2630bdfe9621d34b6be607b1dfea6a59a94da",
+      "release": "v1.0.0",
+      "release_url": "https://github.com/VibeBB/simulation-agent/releases/tag/v1.0.0",
+      "published_at": "2026-11-15T05:41:12Z",
+      "repo_path": "plugins/sim"
+    },
+    {
+      "plugin": "wire",
+      "repository": "VibeBB/wire-agent",
+      "source_commit": "a1225d392b9e651bf87447f220bda85545bf6e99",
+      "release": "v1.0.0",
+      "release_url": "https://github.com/VibeBB/wire-agent/releases/tag/v1.0.0",
+      "published_at": "2026-11-15T05:39:14Z",
+      "repo_path": "plugins/wire"
+    }
+  ]
+}

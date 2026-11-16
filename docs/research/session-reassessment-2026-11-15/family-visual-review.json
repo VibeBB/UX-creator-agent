@@ -1,0 +1,1300 @@
+{
+  "scope": "generated PNG overview inventory",
+  "paths": 118,
+  "distinct_sha256": 90,
+  "overview_inspected": 90,
+  "detailed_score_inspections": 2,
+  "native_sdk_image_selection": "unknown",
+  "native_vrp_review_records_created": 0,
+  "acceptance": "unknown",
+  "images": [
+    {
+      "sha256": "63cbcdc3434c6391877d3fe472ded1c39bdb99bf4291aacaf2fa137b68521fbe",
+      "paths": [
+        "out/dashboard-release-recheck/examples/smart-kettle/out/smart-kettle/tauri/src-tauri/icons/icon.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-01.png",
+      "review_number": 1,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "940fdb31934851f0909e5d3acbac3e663ead2821161a7306dc580183ecd1fec6",
+      "paths": [
+        "out/dashboard-release-recheck/examples/smart-kettle/out/smart-kettle.screens/desktop.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-01.png",
+      "review_number": 2,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Static generated screen; idle/no device, unavailable transport, and limited Servo framing are visible. No interactive device acceptance claimed."
+    },
+    {
+      "sha256": "1f141c6c539ff29271f7222fea7ced9aad773674f464e8823309368931af4505",
+      "paths": [
+        "out/dashboard-release-recheck/examples/smart-kettle/out/smart-kettle.screens/mobile.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-01.png",
+      "review_number": 3,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Static generated screen; idle/no device, unavailable transport, and limited Servo framing are visible. No interactive device acceptance claimed."
+    },
+    {
+      "sha256": "a3374eb13f97f759ec8b461d18af550e45bf9f26f9dabc08f5c750e078f555eb",
+      "paths": [
+        "out/dashboard-release-recheck/examples/smart-kettle/out/smart-kettle.screens/servo.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-01.png",
+      "review_number": 4,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Static generated screen; idle/no device, unavailable transport, and limited Servo framing are visible. No interactive device acceptance claimed."
+    },
+    {
+      "sha256": "ec7a0ed416e0b08ce250c2b1d87e2a9ab217ceb83ba089681abb53124aa66f43",
+      "paths": [
+        "out/domain-release-checks/circuit/design/.konnect/baselines/led_loop.png",
+        "out/domain-release-checks/circuit/design/konnect-exports/render_schematic_png/schematic.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-01.png",
+      "review_number": 5,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "26e19dcbe01e61c48b3cdcddb760ae5022be991f6abf4bbe3adcd71621f238ad",
+      "paths": [
+        "out/domain-release-checks/circuit/design/circuit-reports/render/led_loop-bottom.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-01.png",
+      "review_number": 6,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "6125d8819dfeb49286947c4bf606cc35b6243f67a678f19d3da22bcd3cc9f3c6",
+      "paths": [
+        "out/domain-release-checks/circuit/design/circuit-reports/render/led_loop-top.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-01.png",
+      "review_number": 7,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "b500c933d31116cfbcf0bf2f899ec9ae19b57f63c08a1975d5d8c45a8953ef0b",
+      "paths": [
+        "out/firmware-release-checks/examples/desk-lamp-s3/fw-reports/desk-lamp.fw-report.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-01.png",
+      "review_number": 8,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "38d8fa4f8d952ae5190c8b05d6f5f44017ba2e1809972d61d3463f94359e392e",
+      "paths": [
+        "out/firmware-release-checks/examples/desk-lamp-s3/fw-reports/desk-lamp.hcp.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-01.png",
+      "review_number": 9,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "ff8059dad61e7fd0721e47f4a2034d40fd9f24951288a7f427f5cbdb32ddafd8",
+      "paths": [
+        "out/firmware-release-checks/examples/desk-lamp-s3/fw-reports/desk-lamp.pinmap.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-01.png",
+      "review_number": 10,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "013fdc29bc750d6f785267500eb6a41a7409314508e81c29768eb2ba9f020465",
+      "paths": [
+        "out/firmware-release-checks/examples/mruby-ux/fw-reports/mruby-ux.fw-report.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-01.png",
+      "review_number": 11,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "10d66343ca8d0ba2a5f396fb119ff3eeadded4db9a3094e5f9b1e52eb4c6b4f6",
+      "paths": [
+        "out/firmware-release-checks/examples/mruby-ux/fw-reports/mruby-ux.pinmap.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-01.png",
+      "review_number": 12,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "b0562dac6b5aa31de61d639e54fc0590f9698b9932f64489128a077e4881dd58",
+      "paths": [
+        "out/release-bard-01/english/score.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-02.png",
+      "review_number": 13,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": true,
+      "note": "Transparent black notation is legible when composited on white; original PNG unchanged. White-background preview inspected at full size."
+    },
+    {
+      "sha256": "0235e4e046af22307d05ada9f63caedb1f6377f1cd95374eb9da64ec08cad0f5",
+      "paths": [
+        "out/release-bard-01/japanese/score.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-02.png",
+      "review_number": 14,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": true,
+      "note": "Transparent black notation is legible when composited on white; original PNG unchanged. White-background preview inspected at full size."
+    },
+    {
+      "sha256": "0af2d09abffa947d95c3b64369a0dd47b2fbdeab50faaa77e9ecdaf81764fc9e",
+      "paths": [
+        "out/release-domain-final-01/fpga/examples/blinky-tangnano9k/fpga-reports/blinky.fpga-pinmap.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-02.png",
+      "review_number": 15,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "f59f01362bb1646a63bb25d83937776e95c6f5933d51cc149f5fb14f54f0f80c",
+      "paths": [
+        "out/release-domain-final-01/fpga/examples/blinky-tangnano9k/fpga-reports/blinky.fpga-report.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-02.png",
+      "review_number": 16,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Historical failed gate report intentionally retained; do not substitute for successful absolute-path or provisioned-dependency rerun."
+    },
+    {
+      "sha256": "fc9b20aa773256bde8142bf64d39d451093ace9eaf49b401baf05d35ab1e55b6",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangnano20k/blinky.fpga-floorplan.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-02.png",
+      "review_number": 17,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "5e011948ce77c142a7d9082049af6b03ad38b8e8747380f53d1a18e2918098e7",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangnano20k/blinky.fpga-pinmap.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-02.png",
+      "review_number": 18,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "c24529549fb34c488c041901d41197d1a59e31fa7ae4af987ed02b7d07904716",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangnano20k/blinky.fpga-report.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-02.png",
+      "review_number": 19,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "a9b39fad95d672e78c47932148eadb8227de045cc528b48c935515f80681cf6d",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangnano20k/blinky.fpga-timing.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-02.png",
+      "review_number": 20,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "95be77da019a107ae228c76ffaba24b4d62811c126c4a815585741d5fc463ef9",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangnano20k/blinky.fpga-utilization.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-02.png",
+      "review_number": 21,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "9ac2cb20b97eb013b115a248e423943a2e988ba014ca19b37fa46dbe5b64ced4",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangnano20k/blinky.fpga-wave-count.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-02.png",
+      "review_number": 22,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "8b0686a3cdf39b38ad24d6c82cd4dd201654c6060bbf3ca843e72902b38a8d6a",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangnano9k/blinky.fpga-floorplan.png",
+        "out/release-domain-final-01/fpga/out/nano9k-absolute/blinky.fpga-floorplan.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-02.png",
+      "review_number": 23,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "202b314cf021c313ea24ae0479dfcce94f2ef28fd35b1143cc081d5a4b094185",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangnano9k/blinky.fpga-pinmap.png",
+        "out/release-domain-final-01/fpga/out/nano9k-absolute/blinky.fpga-pinmap.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-02.png",
+      "review_number": 24,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "a84ea5112d5c93da495c0025db108869de74761b56c103552bb72c5821f53ed1",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangnano9k/blinky.fpga-report.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-03.png",
+      "review_number": 25,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Historical failed gate report intentionally retained; do not substitute for successful absolute-path or provisioned-dependency rerun."
+    },
+    {
+      "sha256": "e8af0bb73968e64c8044bfd965023b8ab75d51b5842b8cde388c208255a52372",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangnano9k/blinky.fpga-timing.png",
+        "out/release-domain-final-01/fpga/out/nano9k-absolute/blinky.fpga-timing.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-03.png",
+      "review_number": 26,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "2c7046c3d117770adc47c356e910d421471bf12d21a5b1dcfad6701e6949478d",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangnano9k/blinky.fpga-utilization.png",
+        "out/release-domain-final-01/fpga/out/nano9k-absolute/blinky.fpga-utilization.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-03.png",
+      "review_number": 27,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "6897fc5bb105e206653d2bde87af480c45926f14636a0858c7c5d23663280f9d",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangprimer20k/blinky.fpga-floorplan.png",
+        "out/release-domain-final-01/fpga/out/primer20k-absolute/blinky.fpga-floorplan.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-03.png",
+      "review_number": 28,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "48cb4c7e2d348c1a0c4fc58028f66340174772cffadf6d232f3e4df3fba36723",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangprimer20k/blinky.fpga-pinmap.png",
+        "out/release-domain-final-01/fpga/out/primer20k-absolute/blinky.fpga-pinmap.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-03.png",
+      "review_number": 29,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "3faa0c8dce5287264d3425bc200284380a6530abf370f692c9050fd66e94b7ea",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangprimer20k/blinky.fpga-report.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-03.png",
+      "review_number": 30,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Historical failed gate report intentionally retained; do not substitute for successful absolute-path or provisioned-dependency rerun."
+    },
+    {
+      "sha256": "6a9fe9c0fd7d3a63f76279ffc264a173e685910e9e902a64f229a5e077d29de1",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangprimer20k/blinky.fpga-timing.png",
+        "out/release-domain-final-01/fpga/out/primer20k-absolute/blinky.fpga-timing.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-03.png",
+      "review_number": 31,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "ac287ff7a24fddd3ad6701eb9ba743a25bc95689fe0198fe0b9048c2ef919692",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-tangprimer20k/blinky.fpga-utilization.png",
+        "out/release-domain-final-01/fpga/out/primer20k-absolute/blinky.fpga-utilization.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-03.png",
+      "review_number": 32,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "2428264233f9953bdde592ccb721ae50988453bcf2ebae07a2af959621bd3d59",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-ulx3s/blinky.fpga-floorplan.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-03.png",
+      "review_number": 33,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "1286a1c4230349bd24130c82b0715db79214f338c742f8542fa59fa04d93913e",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-ulx3s/blinky.fpga-pinmap.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-03.png",
+      "review_number": 34,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "9a90b7bd81c715329349cf0e6a6fc12d1f80618dbfd95245687abee15fd0add7",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-ulx3s/blinky.fpga-report.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-03.png",
+      "review_number": 35,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "052a11f0aeeaba82a3edd0d5c7f84c5cb6959abcc0d4730b219e31299313539e",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-ulx3s/blinky.fpga-timing.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-03.png",
+      "review_number": 36,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "ed50964a79fd8f2dcbdd12e2e57150cb1d0dddec728e6243216198d5567d0c54",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-ulx3s/blinky.fpga-utilization.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-04.png",
+      "review_number": 37,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "f52e96f70a14aa489c557a747ffe37b32a80008077845bbd43754571097bfdd2",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/blinky-ulx3s/blinky.fpga-wave-count.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-04.png",
+      "review_number": 38,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "abe4ecc4e05e95964ba17e43337c6cb6fdb5da075d8fb726fab43f07ff050dcc",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/nano9k-absolute/blinky.fpga-report.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-04.png",
+      "review_number": 39,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "efafe7329f984edaca7634201f84dd5b14986065b73a4738a31d4aaeef704389",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/nano9k-absolute/blinky.fpga-wave-count.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-04.png",
+      "review_number": 40,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "4232ca1ea395efecb439b1206e4b94c90e33737582cea9a2d82959a0996b1e8e",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/primer20k-absolute/blinky.fpga-report.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-04.png",
+      "review_number": 41,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "8ad3742894660c1f576b2d20d7eef6b39f5796b51228086b1ecf7c5861a68dad",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/primer20k-absolute/blinky.fpga-wave-count.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-04.png",
+      "review_number": 42,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "c5a7779ab4f60399e2e71ee44dd72aef80f92d7e02d30626ff6d652fda79a601",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/uart-echo-icebreaker/uart-echo.fpga-pinmap.png",
+        "out/release-domain-final-01/fpga/out/uart-with-colibri/uart-echo.fpga-pinmap.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-04.png",
+      "review_number": 43,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "805aece93195e2aff71c835ac7575db3d43543001f8d117ec083aa20efc11955",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/uart-echo-icebreaker/uart-echo.fpga-report.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-04.png",
+      "review_number": 44,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Historical failed gate report intentionally retained; do not substitute for successful absolute-path or provisioned-dependency rerun."
+    },
+    {
+      "sha256": "4a81b90cd816a67837f42fd2dab77065a17f75478601fd062c6234cfd0336dff",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/uart-with-colibri/uart-echo.fpga-floorplan.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-04.png",
+      "review_number": 45,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "0c3d062e0f75f11f9fdb8f7c0a3749eeb1613bbf66944c94b980d0c796bcb186",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/uart-with-colibri/uart-echo.fpga-report.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-04.png",
+      "review_number": 46,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "cea3fbb58473db09568546d8857fda5786b88b1a06dfdb666fbb24567a06155a",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/uart-with-colibri/uart-echo.fpga-timing.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-04.png",
+      "review_number": 47,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "98a408a85a7602a107e6c4204f0d807bb2ff7b59c4f8d60faf4dd5992378d750",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/uart-with-colibri/uart-echo.fpga-utilization.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-04.png",
+      "review_number": 48,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "5467a1a356e05c73c4c687a9321307ea52e5072b71ec7df2068cf621136b3086",
+      "paths": [
+        "out/release-domain-final-01/fpga/out/uart-with-colibri/uart-echo.fpga-wave-echo.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-05.png",
+      "review_number": 49,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "3a5f61a9e630acd225ee0eba18d84914e7ce72350b75da5fec59a2e2bc4f8b9c",
+      "paths": [
+        "out/release-domain-final-01/prodeng/out/kettle/renders/control-plan.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-05.png",
+      "review_number": 50,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "13da900e3357e9c480200fbae2ec5d1fe08eb510a9b62c49c8e396167defd9fb",
+      "paths": [
+        "out/release-domain-final-01/prodeng/out/kettle/renders/factory-test-spec.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-05.png",
+      "review_number": 51,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "1dedef01577f6937d8c3c8240e22c2cfe4408849b564fbdf6ad28115fcd6e702",
+      "paths": [
+        "out/release-domain-final-01/prodeng/out/kettle/renders/line-balance.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-05.png",
+      "review_number": 52,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "9b96e1af953210f007f8394f18c5c785b71c7906ffe6d5017f801b3b62bc7ead",
+      "paths": [
+        "out/release-domain-final-01/prodeng/out/kettle/renders/pfmea.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-05.png",
+      "review_number": 53,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "be1d34830709afdf1ad1e98ae92b39491191212f80b4d3d05fe2506240ac5fab",
+      "paths": [
+        "out/release-domain-final-01/prodeng/out/kettle/renders/work-instruction-OP01.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-05.png",
+      "review_number": 54,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "cf2e129a9a8f30465801a92cdab12a68b4c9f4140adfbf8e6792d4b4745f5c39",
+      "paths": [
+        "out/release-domain-final-01/prodeng/out/kettle/renders/work-instruction-OP02.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-05.png",
+      "review_number": 55,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "53098a89b600b34e14d01c253f1c24c5b7cd6cf540c638af01f449820b14271c",
+      "paths": [
+        "out/release-domain-final-01/prodeng/out/kettle/renders/work-instruction-OP03.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-05.png",
+      "review_number": 56,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "5da9aff21680b18ac619519ade5a6e1a8c3ad0190d12f69b02f4e46597edeb14",
+      "paths": [
+        "out/release-domain-final-01/prodeng/out/kettle/renders/work-instruction-OP04.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-05.png",
+      "review_number": 57,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "d91b70217ba2f6b4795edd263161dfffc9ff9be8c216bac628a47c9d0572b0d2",
+      "paths": [
+        "out/release-domain-final-01/prodeng/out/kettle/renders/work-instruction-OP05.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-05.png",
+      "review_number": 58,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "a218768026f87b0b6d777950e5991853c835973e96dfc345a14b83b305d496e9",
+      "paths": [
+        "out/release-domain-final-01/prodeng/out/kettle/renders/work-instruction-OP06.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-05.png",
+      "review_number": 59,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "a9ed041b925e22f51d69c60f1846399bd26200e13b0c1f4b96b82dc4cb78636a",
+      "paths": [
+        "out/release-domain-final-01/sim/out/buck/buck_regulator/plots/dft-testpoints.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-05.png",
+      "review_number": 60,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "d1e258eec8cb77063a6320007851443c6ab5b60427bc2be1de05effe91168f98",
+      "paths": [
+        "out/release-domain-final-01/sim/out/buck/buck_regulator/plots/fem-deflection.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-06.png",
+      "review_number": 61,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "09f9d75369f06d55956d0990b1d5f8d493bfeaec0e4ba069b704c9fff3cb57a8",
+      "paths": [
+        "out/release-domain-final-01/sim/out/buck/buck_regulator/plots/margin-dft.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-06.png",
+      "review_number": 62,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "3e4d5c809dae464c2ac64ab13d4f739ebb5207e54471ec9e6b2e8a134f765290",
+      "paths": [
+        "out/release-domain-final-01/sim/out/buck/buck_regulator/plots/margin-emc.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-06.png",
+      "review_number": 63,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "2c1f9663844274ba3a4db2c88a96692473b1175b166f64e18b291e1ae9d23d6f",
+      "paths": [
+        "out/release-domain-final-01/sim/out/buck/buck_regulator/plots/margin-fem.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-06.png",
+      "review_number": 64,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "a2cc08cc2879bf7c5d97673cd6a312aeca30ccc15dad348a2ecb0125de314b52",
+      "paths": [
+        "out/release-domain-final-01/sim/out/buck/buck_regulator/plots/margin-pdn.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-06.png",
+      "review_number": 65,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "cda4c9c92f7a37c6e26e239fe4f69b369cf5ae821645910117fe7ad1a342c58d",
+      "paths": [
+        "out/release-domain-final-01/sim/out/buck/buck_regulator/plots/margin-rf.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-06.png",
+      "review_number": 66,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "25ac2c44136f01359bb342fc45606ddde2774d92d10cf1631571f20baf25b87d",
+      "paths": [
+        "out/release-domain-final-01/sim/out/buck/buck_regulator/plots/margin-spice.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-06.png",
+      "review_number": 67,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "717809f66723f562e90bfef0dd678d1ecc5fe1a3d85f1462e0610ee676bd2a9a",
+      "paths": [
+        "out/release-domain-final-01/sim/out/buck/buck_regulator/plots/margin-thermal.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-06.png",
+      "review_number": 68,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "32558bc83933fde761ba488a95e021e57c39aa6af6e1272304b2eb26ccfe7a66",
+      "paths": [
+        "out/release-domain-final-01/sim/out/buck/buck_regulator/plots/margin-wca.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-06.png",
+      "review_number": 69,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "83a46706179351cc8cfb42e62d31f155bc93dd1d9bdcbee0c4838533b156291d",
+      "paths": [
+        "out/release-domain-final-01/sim/out/buck/buck_regulator/plots/rf-sparams.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-06.png",
+      "review_number": 70,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "b5e1c9cb6a35e722181a074b61e0b2fef480f6f593636cf28b6fa4f371cdab1e",
+      "paths": [
+        "out/release-domain-final-01/sim/out/buck/buck_regulator/plots/spice-ac-analysis.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-06.png",
+      "review_number": 71,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "d7ef8b4f1aaee68bf6b78a08b2970ca743f4e0d5d436134ce991288d290cadd6",
+      "paths": [
+        "out/release-domain-final-01/sim/out/buck/buck_regulator/plots/summary.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-06.png",
+      "review_number": 72,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "40e645f8c27323e38890af5a511fa26ea2e28afede8d972084eeee4293982bf6",
+      "paths": [
+        "out/release-domain-more-01/mech/out/enclosure/demo-lid.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-07.png",
+      "review_number": 73,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "35afeee92460c6c73f4563dac9510bed35a96d9b2ad154d49f084671824b37c9",
+      "paths": [
+        "out/release-domain-more-01/mech/out/enclosure/demo-lid.views.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-07.png",
+      "review_number": 74,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "07a22ef5025557da946c709202c2b51b2859d2c3872fcefac969c741ffdd600c",
+      "paths": [
+        "out/release-domain-more-01/mech/out/enclosure/demo-shell.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-07.png",
+      "review_number": 75,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "285bfb47aef00ab99f697277d7f729c062a4f5068982a51f1d8d3116cb1febc6",
+      "paths": [
+        "out/release-domain-more-01/mech/out/enclosure/demo-shell.views.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-07.png",
+      "review_number": 76,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "a7999bfd429f942aa3dd022105ffba5e00fc7610795555eba00754e2b80aa20d",
+      "paths": [
+        "out/release-domain-more-01/mech/out/enclosure/demo.views.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-07.png",
+      "review_number": 77,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    },
+    {
+      "sha256": "057ac9eddcd7f8b027fd4e80347a454044e16579a2355437e7addfe91eeb2ac7",
+      "paths": [
+        "out/release-domain-more-01/ux/examples/smart-kettle-product/out/fixed-product/smart-kettle.blueprint.png",
+        "out/release-domain-more-01/ux/out/smart-kettle/smart-kettle.blueprint.png",
+        "out/release-domain-more-01/ux/out/smart-kettle-product/smart-kettle.blueprint.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-07.png",
+      "review_number": 78,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Projection structure visible; small or pale labels need detailed readability/accessibility review. Skeleton projections are not a finished interactive application."
+    },
+    {
+      "sha256": "8867057208b1ad2e7e6284d2bc6e35b94da2e66d3aeb2e1f5ec61bb022686f1d",
+      "paths": [
+        "out/release-domain-more-01/ux/examples/smart-kettle-product/out/fixed-product/smart-kettle.experience-loops.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-07.png",
+      "review_number": 79,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Projection structure visible; small or pale labels need detailed readability/accessibility review. Skeleton projections are not a finished interactive application."
+    },
+    {
+      "sha256": "9904e8e0d48bd949d83c1eda02ad39a3f0d14169b51ef6d760e811e16b2e341c",
+      "paths": [
+        "out/release-domain-more-01/ux/examples/smart-kettle-product/out/fixed-product/smart-kettle.mindmap.png",
+        "out/release-domain-more-01/ux/out/smart-kettle/smart-kettle.mindmap.png",
+        "out/release-domain-more-01/ux/out/smart-kettle-product/smart-kettle.mindmap.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-07.png",
+      "review_number": 80,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Projection structure visible; small or pale labels need detailed readability/accessibility review. Skeleton projections are not a finished interactive application."
+    },
+    {
+      "sha256": "c4ff0325e68bcbec635486218158728e324a8f1795818cbbb91498a6db7082b0",
+      "paths": [
+        "out/release-domain-more-01/ux/examples/smart-kettle-product/out/fixed-product/smart-kettle.morning.emotion.png",
+        "out/release-domain-more-01/ux/out/smart-kettle/smart-kettle.morning.emotion.png",
+        "out/release-domain-more-01/ux/out/smart-kettle-product/smart-kettle.morning.emotion.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-07.png",
+      "review_number": 81,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Projection structure visible; small or pale labels need detailed readability/accessibility review. Skeleton projections are not a finished interactive application."
+    },
+    {
+      "sha256": "8c83228f93fb2b869ae071295325d095cc31c886eaf9ec841631f7f7e33ee7b7",
+      "paths": [
+        "out/release-domain-more-01/ux/examples/smart-kettle-product/out/fixed-product/smart-kettle.morning.journey.png",
+        "out/release-domain-more-01/ux/out/smart-kettle/smart-kettle.morning.journey.png",
+        "out/release-domain-more-01/ux/out/smart-kettle-product/smart-kettle.morning.journey.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-07.png",
+      "review_number": 82,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Projection structure visible; small or pale labels need detailed readability/accessibility review. Skeleton projections are not a finished interactive application."
+    },
+    {
+      "sha256": "513b54f2adc9988b04cff369b5eab28cdb7a5ce1d80882ac1cd7ff7ff52e4c6f",
+      "paths": [
+        "out/release-domain-more-01/ux/examples/smart-kettle-product/out/fixed-product/smart-kettle.morning.sequence.png",
+        "out/release-domain-more-01/ux/out/smart-kettle/smart-kettle.morning.sequence.png",
+        "out/release-domain-more-01/ux/out/smart-kettle-product/smart-kettle.morning.sequence.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-07.png",
+      "review_number": 83,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Projection structure visible; small or pale labels need detailed readability/accessibility review. Skeleton projections are not a finished interactive application."
+    },
+    {
+      "sha256": "d0fd480158a8c63f080fcf83ed2fa732219189312a0d66dff93f44f3f12641e0",
+      "paths": [
+        "out/release-domain-more-01/ux/examples/smart-kettle-product/out/fixed-product/smart-kettle.power.statechart.mmd.png",
+        "out/release-domain-more-01/ux/out/smart-kettle/smart-kettle.power.statechart.mmd.png",
+        "out/release-domain-more-01/ux/out/smart-kettle-product/smart-kettle.power.statechart.mmd.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-07.png",
+      "review_number": 84,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Projection structure visible; small or pale labels need detailed readability/accessibility review. Skeleton projections are not a finished interactive application."
+    },
+    {
+      "sha256": "5543a259781c12213bae0ecc131ea0ef51a4fe07509528477b88ba68f484a8f9",
+      "paths": [
+        "out/release-domain-more-01/ux/examples/smart-kettle-product/out/fixed-product/smart-kettle.power.statechart.puml.png",
+        "out/release-domain-more-01/ux/out/smart-kettle/smart-kettle.power.statechart.puml.png",
+        "out/release-domain-more-01/ux/out/smart-kettle-product/smart-kettle.power.statechart.puml.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-08.png",
+      "review_number": 85,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Projection structure visible; small or pale labels need detailed readability/accessibility review. Skeleton projections are not a finished interactive application."
+    },
+    {
+      "sha256": "aac37cc5893ca8a5fe7e9d863324b890e2908528e00a7f3654adc42e66ddc22f",
+      "paths": [
+        "out/release-domain-more-01/ux/examples/smart-kettle-product/out/fixed-product/smart-kettle.wbs.png",
+        "out/release-domain-more-01/ux/out/smart-kettle/smart-kettle.wbs.png",
+        "out/release-domain-more-01/ux/out/smart-kettle-product/smart-kettle.wbs.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-08.png",
+      "review_number": 86,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Projection structure visible; small or pale labels need detailed readability/accessibility review. Skeleton projections are not a finished interactive application."
+    },
+    {
+      "sha256": "9a967e8a3422d4f0c535630473c5d1e8b3a47a00cb9f1fb41ad4d4166a66e663",
+      "paths": [
+        "out/release-domain-more-01/ux/examples/smart-kettle-product/out/fixed-product/smart-kettle.wireframe.png",
+        "out/release-domain-more-01/ux/out/smart-kettle/smart-kettle.wireframe.png",
+        "out/release-domain-more-01/ux/out/smart-kettle-product/smart-kettle.wireframe.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-08.png",
+      "review_number": 87,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Projection structure visible; small or pale labels need detailed readability/accessibility review. Skeleton projections are not a finished interactive application."
+    },
+    {
+      "sha256": "8b74b7a5e0d514071fc0e5b6226372ef39c6f23e452d19d80382784ec62776d8",
+      "paths": [
+        "out/release-domain-more-01/ux/out/smart-kettle/smart-kettle.experience-loops.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-08.png",
+      "review_number": 88,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Projection structure visible; small or pale labels need detailed readability/accessibility review. Skeleton projections are not a finished interactive application."
+    },
+    {
+      "sha256": "79680e6a29f7eb3b0bd649160d484ffec15a327c08c8f1357dbc569161d43425",
+      "paths": [
+        "out/release-domain-more-01/ux/out/smart-kettle-product/smart-kettle.experience-loops.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-08.png",
+      "review_number": 89,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Projection structure visible; small or pale labels need detailed readability/accessibility review. Skeleton projections are not a finished interactive application."
+    },
+    {
+      "sha256": "4ba819dbd8650152707d37736582d6c371f11423a69fd8626938c2e492df7b94",
+      "paths": [
+        "out/release-domain-more-01/wire/out/harness/harness-diagram.png"
+      ],
+      "contact_sheet": "visual-contact-sheets/contact-08.png",
+      "review_number": 90,
+      "review_scope": "contact-sheet overview; not detailed layout or native SDK perception acceptance",
+      "reviewer": "Devin session artifact inspection",
+      "native_execution": "unknown",
+      "acceptance": "unknown",
+      "detailed_view": false,
+      "note": "Nonblank domain artifact visible at overview scale. Fine text, dimensional correctness and physical validity are established only where separately recorded; overview is advisory."
+    }
+  ]
+}
