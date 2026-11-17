@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Keep a blind reviewer blind: deny reads of earlier reviews and impressions.
 
-Declared only by the ``wire-blind-review`` sub-agent. Anchoring research
+Declared only by the ``ux-blind-review`` sub-agent. Anchoring research
 shows a judge drifts toward any earlier verdict it can see, even when told
 to ignore it, so the independent second review must never open the VRP
 logs, the typed advisory records or liaison answers. Paths in tool
@@ -40,15 +40,15 @@ def _strings(value: Any) -> list[str]:
 
 
 def hidden_target(payload: dict[str, Any]) -> str | None:
-    if str(payload.get("tool_name", "")).endswith("ux_review_checkpoint"):
-        return "review checkpoint (coordinator only)"
+    if str(payload.get("tool_name", "")).endswith(("ux_review_checkpoint", "ux_work_checkpoint")):
+        return "checkpoint (coordinator only)"
     if payload.get("tool_name") not in GUARDED_TOOLS:
         return None
     for text in _strings(payload.get("tool_input")):
         if payload.get("tool_name") == "terminal" and re.search(
-            r"\breview-checkpoint(?:\s|$)", text
+            r"\b(?:review|work)-checkpoint(?:\s|$)", text
         ):
-            return "review checkpoint (coordinator only)"
+            return "checkpoint (coordinator only)"
         match = HIDDEN.search(text.replace("\\", "/"))
         if match is not None:
             return match.group(2)

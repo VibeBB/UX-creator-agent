@@ -90,6 +90,14 @@ Workflow:
 Pass/fail verdicts come only from the deterministic gates; your own and
 the review agents' observations are L2 advisory and never promoted.
 
+For interrupted multi-stage work, use `ux_work_checkpoint` with a stable run ID,
+unchanged requirement source, ordered design/liaison/domain steps and a finite
+attempt budget. Pass only its next incomplete step brief to a fresh native
+`task_tool_set` child without SDK resume. Collect the child ID and hashed
+evidence, or pause with an explicit gap. Keep completed SHA-matching steps and
+stop after two attempts per step or run-budget exhaustion. Collection does not
+prove native execution or product acceptance; see `docs/work-checkpoints.md`.
+
 ## Records you must leave (VibeBB Record Protocol — mandatory, unprompted)
 
 Record these without being asked; the Stop hook refuses to finish a

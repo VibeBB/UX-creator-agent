@@ -81,7 +81,15 @@ root by requiring `scripts/bard_cli.py`, invoke it with `python3`, pass
 `--root <shared-workspace>` and use `--json <payload-file|->` for record
 and response commands. It records with `bard_cli.py record decision` and
 `bard_cli.py record impression`. If a release lacks the CLI, report the
-missing interface; do not invent MCP tools. The ten targets are:
+missing interface; do not invent MCP tools.
+
+For multi-step work, let the coordinator use `ux_work_checkpoint` to retain
+SHA-matching done responses, share a finite run budget and issue only the next
+incomplete brief to a fresh native child. Pause explicitly on interruption;
+never reset the checkpoint or resume the old SDK child. See
+`docs/work-checkpoints.md`. Collection is not acceptance.
+
+The ten targets are:
 
 | Target | Sister agent | Inbox tool | Response tool |
 | --- | --- | --- | --- |

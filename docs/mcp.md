@@ -7,6 +7,7 @@ workspace; the server validates paths before reading or writing.
 
 | Tool | Inputs | Reads and writes | Result |
 | --- | --- | --- | --- |
+| `ux_work_checkpoint` | `action`, `checkpoint_id`, coordinator `session_id`; create source/steps/budget, collect step/attempt/child IDs, or pause reason. | Pins workspace inputs, validates design/SLP evidence, maintains `observations/ux/work-checkpoints/`. | Finite step/attempt state and fresh native-task brief; execution and acceptance stay unknown. |
 | `ux_review_checkpoint` | `action`, `checkpoint_id`, coordinator `session_id`; action-specific contract/sources, pair/event IDs or pause reason. | Hashes sources, verifies VRP/image evidence, maintains `observations/ux/review-checkpoints/`. | Record-collection status, gaps, pair attempts, fresh-task brief; acceptance stays unknown. |
 | `ux_record_decision` | VRP decision fields: `id`, `stage`, `question`, `principles`, `options`, `chosen`, `rationale`, `risks`, `revisit_when`, and `evidence`; optional assumptions/unknowns/decided_by. | Reads and hashes cited workspace evidence; appends to `observations/ux/decisions.jsonl`. | `verdict`, log path, validated event. |
 | `ux_record_impression` | `stage`, artifact paths, and long-form `impression`. | Reads and hashes artifact files/directories; appends to the stage-impression log. | `verdict`, log path, event. |
@@ -49,6 +50,10 @@ consumes a finite attempt. Only its `status` action is read-only. It is a
 coordinator tool, denied to blind reviewers. See
 [bounded review collection](review-checkpoints.md) for action inputs and
 the distinction between collected records and accepted work.
+
+`ux_work_checkpoint` has the same mutation annotations. See
+[bounded work collection](work-checkpoints.md) for design, liaison and domain
+steps, recovery, shared attempt budgets and evidence limitations.
 
 ## Outputs and errors
 

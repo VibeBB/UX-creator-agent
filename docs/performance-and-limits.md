@@ -16,6 +16,7 @@ there is no background queue or persistent database.
 | MCP inline images | Up to 8 rendered images, PNG/JPEG only, with a 4 MiB per-image limit. Oversized or unsupported images are not inlined. |
 | Plugin image pull | The launcher uses bounded Docker inspection, attestation, and pull subprocesses; image pulls may wait up to 900 seconds. This is not an authoring-tool timeout. |
 | Bounded image reviews | One active child per checkpoint; at most two fresh attempts per image/checklist/role. Each reviewer uses 20 native iterations and budget 1.5. |
+| Bounded design/liaison/domain collection | One active child, two attempts per step, immutable run attempt budget (default 24); each child uses its agent definition's native limits. See [work checkpoints](work-checkpoints.md). |
 
 A timeout or missing external tool produces an explicit failure/unknown
 render result; the report must not imply that an image was checked when it

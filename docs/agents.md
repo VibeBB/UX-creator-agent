@@ -29,6 +29,9 @@ transport. An agent's narrative is not a gate verdict.
 - Reviewers use 20 native iterations and budget 1.5. Coordinators collect
   SHA-bound reviews with [review checkpoints](review-checkpoints.md) and
   fresh `task_tool_set` children; they do not use SDK `resume` for this path.
+- Coordinators use [work checkpoints](work-checkpoints.md) for design, liaison
+  and domain steps with an immutable run budget and two fresh attempts per step.
+  Native execution and product acceptance remain separate evidence requirements.
 - Use the relevant skill from `plugins/ux/skills/` for domain guidance. See
   [Skills](skills.md) for the complete list.
 - Record user-approved choices and evidence with VRP tools. A prompt's

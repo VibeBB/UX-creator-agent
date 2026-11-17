@@ -32,6 +32,7 @@ review the diff; `protect-generated` blocks direct edits to generated output.
 | `review-record` | Write an image-bound advisory review with checklist, summary, and repeatable `--finding CATEGORY:SEVERITY:WHERE:OBSERVATION`; use `--not-applicable` if a vision-capable review could not be performed. |
 | `review-reconcile` | Compare review advisories in `--out-dir` with contract and gate truth; findings remain advisory. |
 | `review-checkpoint` | Maintain bounded review collection from `--json`; only `collected` exits zero. |
+| `work-checkpoint` | Collect bounded design, liaison and domain work from `--json`; only `collected` exits zero. See [work checkpoints](work-checkpoints.md). |
 | `liaison` | Reconcile requests and responses under `--liaison-dir` (default workspace liaison directory). |
 | `change` | Check that an ECO closes its ECR: positional `<id>.eco.json`, optional `--workspace`; exits 1 unless every check passes. |
 | `produce` | Validate a product plan and write status under required `--out`; `--workspace`, `--liaison-dir`, and `--render` are optional. |

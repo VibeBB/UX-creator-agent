@@ -185,6 +185,11 @@ The [post-merge validation](bounded-review-post-merge-validation.json) adds
 successful image publication and launcher smoke with and without a source
 overlay; it preserves those acceptance boundaries.
 
+The [bounded work collector](bounded-work-checkpoints.md) extends evidence
+reuse and finite fresh attempts to design, liaison and domain stages. Its
+[validation record](bounded-work-validation.json) is separate from released
+image verification and the still-unknown product acceptance.
+
 The complete raw conversations, operational logs, original attachments,
 workspace, runtime hooks, pinned source archives, audit scripts, Japanese
 reports and image atlas remain in the user-delivered research ZIP. They

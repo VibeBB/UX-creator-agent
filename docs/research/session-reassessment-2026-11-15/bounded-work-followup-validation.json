@@ -1,0 +1,118 @@
+{
+  "captured_at": "2026-11-16T17:17:59.141284+00:00",
+  "implementation_commit": "a3356615c5a592372b4533ea592998da7633e1bc",
+  "initial_commit": "6ed1c2d8f18475d11a52105b8e959da7692031e3",
+  "checks": [
+    {
+      "command": [
+        "uv",
+        "run",
+        "python",
+        "scripts/verify_all.py",
+        "--stage",
+        "fast"
+      ],
+      "exit_code": 0,
+      "seconds": 49.194,
+      "log": "followup-00.log",
+      "log_sha256": "b36233282812960812484b5c269e4a13b95c2618405ecffe943ac9b1c21f42d6"
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "tests/test_work_checkpoint.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "seconds": 1.713,
+      "log": "followup-01.log",
+      "log_sha256": "b4fb7e9e662f4f25351df4d0f437062351b26b9691ba8b8ce47cb9f41c24e10b"
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "tests/test_work_checkpoint.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "seconds": 1.901,
+      "log": "followup-02.log",
+      "log_sha256": "cbc867e8a36c4d06fd51222f743fbb8bd332d555ba6ab82440811b5f6bb61c8a"
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "tests/test_work_checkpoint.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "seconds": 2.129,
+      "log": "followup-03.log",
+      "log_sha256": "351b4a6de99c998ba2be8b3e13810a7eba27382c31a12ddbe80f727c6c98a42d"
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "tests/test_work_checkpoint.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "seconds": 1.761,
+      "log": "followup-04.log",
+      "log_sha256": "0796d17f4f40c81ddd64ddf27688ae79b15b19354000cf24f44b468cfb5eb2b7"
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "tests/test_work_checkpoint.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "seconds": 1.852,
+      "log": "followup-05.log",
+      "log_sha256": "9199e6bfd3ca29b89cca2e2f293a841e74bfcb9919aa7ab58d1d8ef662f1323e"
+    }
+  ],
+  "source_sha256": {
+    "src/ux_creator/work_checkpoint.py": "a76aacbfe95ff449cec3e01477ae1fe65fc2a8d16ef462227708551a5dfeb30d",
+    "tests/test_work_checkpoint.py": "18d93437add8f20e956aa30c024bd79719d8b3778357a0fc532f5d78d52b0f08",
+    "docs/work-checkpoints.md": "688dde37c6d8fae6054705eaa8159d9b5fca11e087155f01aa211fe060e47a13"
+  },
+  "failed_regressions": [
+    {
+      "log": "missing-inputs-before-fix.log",
+      "sha256": "34d25db66a294500d7fa520b1fd9d1ffe799f66e1ca6a12eae3f853b53a855b7",
+      "result": "4 failed before the missing-input guard; all pass after correction"
+    },
+    {
+      "log": "directory-inputs-before-fix.log",
+      "sha256": "b39a6be7bbcf3922ad74b31c9f07a37fac6c66751f7ae53609a72816d18fcceb",
+      "result": "6 failed, 2 passed before the checkpoint-ancestor guard; all pass after correction"
+    }
+  ],
+  "acceptance": "unknown",
+  "workflow_completion": "unknown",
+  "native_execution": "unknown",
+  "review": "https://github.com/VibeBB/UX-creator-agent/pull/205",
+  "raw_logs": "Retained privately under out/reassessment-work-checkpoints"
+}
