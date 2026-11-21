@@ -8,7 +8,7 @@ import-linked into `ux_creator` (per ADR-0004).
 
 | Component | Version pin | License | Notes |
 |---|---|---|---|
-| Ruby | `ruby:4.0.9-slim-trixie` (digest-pinned) | Ruby License / BSD-2-Clause | Base image; DSL runtime |
+| Ruby | `ruby:4.0.10-slim-trixie` (digest-pinned) | Ruby License / BSD-2-Clause | Base image; DSL runtime |
 | Debian 13 (trixie) packages | apt `graphviz`, `chromium`, `fonts-ipafont`, `fonts-noto-cjk`, `build-essential`, `bison`, `git`, `curl`, `ca-certificates`, `xz-utils` | various (GPL-family system tools, BSD, OFL, IPA Font License) | OS layer only |
 | uv | `ghcr.io/astral-sh/uv:0.13.6` | Apache-2.0 / MIT | Python + package manager |
 | CPython | 3.14.x via `uv python install` | PSF-2.0 | Agent runtime |
@@ -21,7 +21,7 @@ import-linked into `ux_creator` (per ADR-0004).
 | brace-expansion (npm vendored patch) | `5.0.12` sha256-pinned registry tarball → `/usr/local/lib/node_modules/npm/node_modules` | MIT | Publish-gate fix for npm's vendored copy |
 | undici (npm vendored patch) | `6.28.1` sha256-pinned registry tarball → `/usr/local/lib/node_modules/npm/node_modules` | MIT | Publish-gate fix for npm's vendored copy |
 | mruby | `4.0.0` sha256-pinned tarball → `/opt/mruby` | MIT | `mruby`/`mrbc` for firmware-side UX checks |
-| rubocop | `gem rubocop:1.92.2` | MIT | Ruby linter |
+| rubocop | `gem rubocop:1.92.3` | MIT | Ruby linter |
 | minitest | `gem minitest:6.0.6` | MIT | Ruby test framework |
 | pydantic | `>=2` via `uv.lock` | MIT | Contract models |
 | mcp | `>=1.29,<2` via `uv.lock` | MIT | MCP server SDK |

@@ -71,7 +71,7 @@ def test_docker_base_resolves_ruby_slim_tags():
     status = statuses[0]
     assert status.surface == "docker-base"
     assert status.name == "ruby"
-    assert status.current == "4.0.9-slim-trixie"
+    assert status.current == "4.0.10-slim-trixie"
     assert status.latest == "4.1.0-slim-trixie"
     assert status.outdated is True
     assert status.fetch_failed is False
