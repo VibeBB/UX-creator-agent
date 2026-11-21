@@ -4,6 +4,17 @@ This document records the pinned versions in use, where they come from, and
 the adoption decision for each. Update it in the same change that touches
 `pyproject.toml`, a workflow pin, or a new external source.
 
+## 2026-11-21 update (sdk 1.63.1, uv 0.13.9, actions v5.0.1/v2.6.0/v4.39.4/v2.23.0/v10.4.0)
+
+| Component | From -> to | Changelog review decision |
+| --- | --- | --- |
+| openhands-sdk / openhands-tools | 1.62.0 -> 1.63.1 | All PRs in `v1.62.0..v1.63.1` reviewed ([evaluation](research/sdk-v1.63.1-feature-evaluation.md)). Hook dedupe, disabled-plugin resume cleanup, sub-agent secret sources, image-loss rejection, MCP auto-negotiation adopted implicitly; experimental-features flags not adopted. |
+| uv | 0.13.8 -> 0.13.9 | Adopted across `required-version`, Dockerfile ARG+digest, setup-uv `version:`. |
+| GitHub Actions | harden-runner v2.23.0, setup-uv v10.4.0, codeql-action v4.39.4, dependency-review-action v5.0.1, scorecard-action v2.6.0 | Adopted as pin bumps; `EXPECTED` refreshed from canonical files. |
+| filelock override | `filelock>=4.2.1` -> dropped | litellm 1.108.3 allows filelock<5; lock resolves 4.2.12. |
+| pydantic / ruff / transitive drift | -> 2.14.4 / 0.17.6 | Lock drift via `uv lock --upgrade`. |
+| ruby base image / rubocop | 4.0.9-slim-trixie -> 4.0.10-slim-trixie / 1.92.2 -> 1.92.3 | Adopted; digests and `RUBOCOP_VERSION` refreshed. |
+
 ## 2026-11-14 update (sdk 1.62.0, mcp 2.3.0, uv 0.13.8, node 26.13.1, semeru 27.0.1.0)
 
 sdk `==1.59.0` -> `==1.62.0` (sdk + tools), uv `==0.13.6` -> `==0.13.8`,
