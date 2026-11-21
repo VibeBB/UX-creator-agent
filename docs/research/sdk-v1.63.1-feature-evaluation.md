@@ -68,4 +68,3 @@ Primary sources:
 | ossf/scorecard-action | v2.5.0 -> v2.6.0 | adopted | Scorecard v5.7.0. New `fail_on_publish_error` input evaluated and not adopted: result publishing must never fail the required scorecard check. Example-workflow additions not applicable. |
 | ruby base image | 4.0.9-slim-trixie -> 4.0.10-slim-trixie | adopted | Digest pin refreshed (`sha256:a4b3e62b`); Ruby 4.0.10 patch release. |
 | rubocop | 1.92.2 -> 1.92.3 | adopted | Cop bug-fix releases; `bundle exec rubocop` gates unchanged. |
-
